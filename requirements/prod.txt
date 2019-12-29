@@ -1,0 +1,4 @@
+click
+pkginfo>=1.4.2
+packaging>=17
+setuptools>=38.3  # for pkg_resources
