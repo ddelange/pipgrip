@@ -6,11 +6,24 @@ import sys
 
 import pkg_resources
 from packaging.markers import default_environment
+from packaging.utils import canonicalize_name
 from pkginfo import get_metadata
 
 from pipgrip.compat import PIP_VERSION, urlparse
 
 logger = logging.getLogger(__name__)
+
+
+def parse_req(requirement):
+    req = pkg_resources.Requirement.parse(requirement)
+    req.key = canonicalize_name(req.key)
+    full_str = req.__str__()
+
+    def __str__():
+        return full_str.replace(req.name, req.key)
+
+    req.__str__ = __str__
+    return req
 
 
 def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
@@ -114,7 +127,7 @@ def _get_wheel_requirements(metadata, extras_requested):
     result = []
     env_data = default_environment()
     for req_str in all_requires:
-        req = pkg_resources.Requirement.parse(req_str)
+        req = parse_req(req_str)
         req_short, _sep, _marker = str(req).partition(";")
         if req.marker is None:
             # unconditional dependency
@@ -148,7 +161,7 @@ def discover_dependencies_and_versions(package, index_url, extra_index_url, cach
             'requires': all requirements as found in corresponding wheel (dist_requires)
 
     """
-    req = pkg_resources.Requirement.parse(package)
+    req = parse_req(package)
     extras_requested = sorted(req.extras)
 
     available_versions = _get_available_versions(req.key, index_url, extra_index_url)

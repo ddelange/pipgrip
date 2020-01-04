@@ -1,14 +1,12 @@
 import logging
 from typing import Any, Dict, Hashable, List, Optional
 
-import pkg_resources
-
 from pipgrip.libs.mixology.constraint import Constraint
 from pipgrip.libs.mixology.package_source import PackageSource as BasePackageSource
 from pipgrip.libs.mixology.range import Range
 from pipgrip.libs.mixology.union import Union
 from pipgrip.libs.semver import Version, VersionRange, parse_constraint
-from pipgrip.pipper import discover_dependencies_and_versions
+from pipgrip.pipper import discover_dependencies_and_versions, parse_req
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,8 @@ class Dependency:
 
 
 class PackageSource(BasePackageSource):
-    """
+    """Describe requirements, and discover dependencies on demand.
+
     Provides information about specifications and dependencies to the resolver,
     allowing the VersionResolver class to remain generic while still providing power
     and flexibility.
@@ -65,6 +64,7 @@ class PackageSource(BasePackageSource):
     convert_dependency(dependency) to convert it to a format Mixology understands.
 
     __eq__() should be defined.
+
     """
 
     def __init__(
@@ -73,6 +73,7 @@ class PackageSource(BasePackageSource):
         self._root_version = Version.parse("0.0.0")
         self._root_dependencies = []
         self._packages = {}
+        self._packages_metadata = {}
         self.cache_dir = cache_dir
         self.index_url = index_url
         self.extra_index_url = extra_index_url
@@ -103,7 +104,7 @@ class PackageSource(BasePackageSource):
 
         dependencies = []
         for dep in deps:
-            req = pkg_resources.Requirement.parse(dep)
+            req = parse_req(dep)
             constraint = ",".join(["".join(tup) for tup in req.specs])
             dependencies.append(Dependency(req.key, constraint))
 
@@ -111,7 +112,7 @@ class PackageSource(BasePackageSource):
 
     def discover_and_add(self, package):  # type: (str, str) -> None
         # converting from semver constraint to pkg_resources string
-        req = pkg_resources.Requirement.parse(package)
+        req = parse_req(package)
         to_create = discover_dependencies_and_versions(
             package, self.index_url, self.extra_index_url, self.cache_dir
         )
@@ -120,9 +121,16 @@ class PackageSource(BasePackageSource):
         self.add(
             req.key, to_create["version"], deps=to_create["requires"],
         )
+        if req.key not in self._packages_metadata:
+            self._packages_metadata[req.key] = {}
+        self._packages_metadata[req.key][to_create["version"]] = {
+            "pip_string": req.__str__(),
+            "requires": to_create["requires"],
+            "available": to_create["available"],
+        }
 
     def root_dep(self, package):  # type: (str, str) -> None
-        req = pkg_resources.Requirement.parse(package)
+        req = parse_req(package)
         constraint = ",".join(["".join(tup) for tup in req.specs])
         self._root_dependencies.append(Dependency(req.key, constraint))
         self.discover_and_add(req.__str__())
@@ -130,12 +138,11 @@ class PackageSource(BasePackageSource):
     def _versions_for(
         self, package, constraint=None
     ):  # type: (Hashable, Any) -> List[Hashable]
-        """
-        Search for the specifications that match the given constraint.
+        """Search for the specifications that match the given constraint.
 
         Called by BasePackageSource.versions_for
-        """
 
+        """
         if package not in self._packages:
             self.discover_and_add(
                 package + str(constraint).replace("||", "|").replace(" ", "")
@@ -162,10 +169,7 @@ class PackageSource(BasePackageSource):
         return self._packages[package][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint
-        """
-        Converts a user-defined dependency (returned by dependencies_for())
-        into a format Mixology understands.
-        """
+        """Convert a user-defined dependency into a format Mixology understands."""
         if isinstance(dependency.constraint, VersionRange):
             constraint = Range(
                 dependency.constraint.min,
@@ -178,13 +182,13 @@ class PackageSource(BasePackageSource):
             # VersionUnion
             ranges = [
                 Range(
-                    range.min,
-                    range.max,
-                    range.include_min,
-                    range.include_max,
-                    str(range),
+                    _range.min,
+                    _range.max,
+                    _range.include_min,
+                    _range.include_max,
+                    str(_range),
                 )
-                for range in dependency.constraint.ranges
+                for _range in dependency.constraint.ranges
             ]
             constraint = Union.of(*ranges)
 

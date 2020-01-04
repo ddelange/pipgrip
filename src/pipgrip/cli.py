@@ -1,8 +1,11 @@
 import logging
 import os
 import tempfile
+from collections import OrderedDict
 
 import click
+from anytree import Node, RenderTree
+from anytree.search import findall_by_attr
 
 from pipgrip.compat import USER_CACHE_DIR
 from pipgrip.libs.mixology.package import Package
@@ -11,11 +14,11 @@ from pipgrip.package_source import PackageSource
 
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 def flatten(d):
-    out = {}
+    out = OrderedDict()
     for key0, val0 in d.items():
         out[key0[0]] = key0[1]
         if not val0:
@@ -44,22 +47,56 @@ def _find_version(source, dep):
     return versions[-1]
 
 
-def _recurse_dependencies(source, decision_packages, dependencies):
-    packages = {}
+def _recurse_dependencies(
+    source, decision_packages, dependencies, tree_root, tree_parent
+):
+    packages = OrderedDict()
     for dep in dependencies:
         name = dep.name
         resolved_version = decision_packages.get(name) or _find_version(source, dep)
+
+        # detect circular depenencies
+        matches = findall_by_attr(tree_root, name)
+        tree_node = Node(
+            name,
+            version=resolved_version,
+            parent=tree_parent,
+            metadata=source._packages_metadata[name][str(resolved_version)],
+        )
+        if matches:
+            if matches[0] in tree_node.ancestors:
+                logger.warning(
+                    "Circular dependency found: %s depends on %s and vice versa.",
+                    tree_node.name,
+                    tree_parent.name,
+                )
+                tree_node.parent = None
+                tree_node = Node(
+                    name,
+                    version=resolved_version,
+                    parent=tree_parent,
+                    metadata=source._packages_metadata[name][str(resolved_version)],
+                    circular=True,
+                )
+                packages[(name, str(resolved_version))] = {}
+                continue
+
         packages[(name, str(resolved_version))] = _recurse_dependencies(
-            source, decision_packages, source._packages[name][resolved_version]
+            source,
+            decision_packages,
+            source._packages[name][resolved_version],
+            tree_root,
+            tree_node,
         )
     return packages
 
 
 def exhaustive_packages(source, decision_packages):
+    tree_root = Node("root")
     exhaustive = _recurse_dependencies(
-        source, decision_packages, source._root_dependencies
+        source, decision_packages, source._root_dependencies, tree_root, tree_root
     )
-    return flatten(exhaustive)
+    return flatten(exhaustive), tree_root
 
 
 @click.command()
@@ -75,7 +112,7 @@ def exhaustive_packages(source, decision_packages):
     "--no-cache-dir",
     # envvar='PIP_NO_CACHE_DIR',  #  this would be counter-intuitive https://github.com/pypa/pip/issues/2897#issuecomment-231753826
     is_flag=True,
-    help="Disable pip cache for the wheels downloaded by pipper. Overwrites --cache-dir.",
+    help="Disable pip cache for the wheels downloaded by pipper. Overrides --cache-dir.",
 )
 @click.option("--index-url", envvar="PIP_INDEX_URL")
 @click.option("--extra_index-url", envvar="PIP_EXTRA_INDEX_URL")
@@ -84,16 +121,19 @@ def exhaustive_packages(source, decision_packages):
     is_flag=True,
     help="Stop top-down recursion when constraints have been solved. Will not result in exhaustive output when dependencies are satisfied and further down the branch no potential clashes exist.",
 )
-# @click.option(
-#     "--tree",
-#     is_flag=True,
-#     help="Output human readable dependency tree (top-down). Overwrites --stop-early.",
-# )
-# @click.option(
-#     "--reversed-tree",
-#     is_flag=True,
-#     help="Output human readable dependency tree (bottom-up). Overwrites --tree and --stop-early.",
-# )
+@click.option(
+    "--tree",
+    is_flag=True,
+    help="Output human readable dependency tree (top-down). Overrides --stop-early.",
+)
+@click.option(
+    "--reversed-tree",
+    is_flag=True,
+    help="Output human readable dependency tree (bottom-up). Overrides --tree and --stop-early.",
+)
+@click.option(
+    "--debug", is_flag=True, help="Set logging level to DEBUG.",
+)
 def main(
     dependencies,
     *,
@@ -103,9 +143,12 @@ def main(
     extra_index_url,
     tree,
     reversed_tree,
-    stop_early
+    stop_early,
+    debug,
 ):
     try:
+        if debug:
+            logger.setLevel(logging.DEBUG)
         if no_cache_dir:
             cache_dir = tempfile.TemporaryDirectory().name
         source = PackageSource(
@@ -126,16 +169,34 @@ def main(
 
             decision_packages[package] = version
 
-        logger.info(decision_packages)
+        logger.debug(decision_packages)
+
+        if tree or reversed_tree:
+            stop_early = False
 
         if stop_early:
             packages = {k: str(v) for k, v in decision_packages.items()}
         else:
-            packages = exhaustive_packages(source, decision_packages)
+            packages, root_tree = exhaustive_packages(source, decision_packages)
 
-        pinned = "\n".join(["==".join(x) for x in packages.items()])
-        click.echo(pinned)
-        # return pinned
+        if tree:
+            for child in root_tree.children:
+                lines = []
+                for pre, _, node in RenderTree(child):
+                    lines.append(
+                        "{}{} ({}{})".format(
+                            pre,
+                            node.metadata["pip_string"],
+                            node.version,
+                            ", circular" if hasattr(node, "circular") else "",
+                        )
+                    )
+                click.echo("\n".join(lines))
+        elif reversed_tree:
+            raise NotImplementedError()
+        else:
+            pinned = "\n".join(["==".join(x) for x in packages.items()])
+            click.echo(pinned)
     except Exception as exc:
         logger.exception(exc, exc_info=exc)
         raise click.ClickException(str(exc))
