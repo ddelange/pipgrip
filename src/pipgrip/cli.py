@@ -176,6 +176,8 @@ def exhaustive_packages(source, decision_packages):
 def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_dir, no_cache_dir, index_url, extra_index_url, stop_early, pre, verbose):
     # fmt: on
     try:
+        from packaging.markers import default_environment
+        raise click.ClickException(str(default_environment()))
         if verbose == 1:
             logger.setLevel(logging.WARNING)
         if verbose == 2:
@@ -215,7 +217,7 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
         solver = VersionSolver(source)
         solution = solver.solve()
 
-        decision_packages = {}
+        decision_packages = OrderedDict()
         for package, version in solution.decisions.items():
             if package == Package.root():
                 continue
@@ -224,7 +226,7 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
         logger.debug(decision_packages)
 
         if stop_early:
-            packages = {k: str(v) for k, v in decision_packages.items()}
+            packages = OrderedDict((k, str(v)) for k, v in decision_packages.items())
         else:
             packages, root_tree = exhaustive_packages(source, decision_packages)
 
