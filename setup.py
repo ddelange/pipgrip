@@ -15,7 +15,7 @@ def read_requirements(path):
         with io.open(path, mode="rt", encoding="utf-8") as fp:
             return list(filter(bool, [line.split("#")[0].strip() for line in fp]))
     except IndexError:
-        raise RuntimeError(f"{path} is broken")
+        raise RuntimeError("{} is broken".format(path))
 
 
 def read_readme(path):
