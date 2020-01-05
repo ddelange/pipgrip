@@ -13,9 +13,7 @@ flake8-mutable>=1.2.0 ; python_version >= "3.6"
 flake8-print>=3.1.1 ; python_version >= "3.6"
 flake8-quotes>=2.1.0 ; python_version >= "3.6"
 flake8-tuple>=0.4.0 ; python_version >= "3.6"
-pytest>=5.2.2
-pytest-asyncio>=0.10.0
-pytest-cov>=2.8.1
+pytest==4.6.9  # py2
 pytest-env>=0.6.2
 pytest-sugar>=0.9.2
 testfixtures>=6.10.0
