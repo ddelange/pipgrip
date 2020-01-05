@@ -1,9 +1,9 @@
 # pipgrip
 
-[![Current Release Version](https://img.shields.io/github/release/ddelange/pipgrip.svg&logo=github)](https://github.com/ddelange/pipgrip/releases/latest)
-[![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg&logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
+[![Current Release Version](https://img.shields.io/github/release/ddelange/pipgrip.svg?logo=github)](https://github.com/ddelange/pipgrip/releases/latest)
+[![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-[![python](https://img.shields.io/static/v1?label=python&message=3.7%2B&color=informational&logo=python&logoColor=white)](https://github.com/ddelange/pipgrip/releases/latest)
+[![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://github.com/ddelange/pipgrip/releases/latest)
 <!-- [![codecov](https://codecov.io/gh/ddelange/pipgrip/branch/master/graph/badge.svg?token=<add_token_here>)](https://codecov.io/gh/ddelange/pipgrip) -->
 [![Actions Status](https://github.com/ddelange/pipgrip/workflows/GH/badge.svg)](https://github.com/ddelange/pipgrip/actions)  <!-- use badge.svg?branch=develop to deviate from default branch -->
 
