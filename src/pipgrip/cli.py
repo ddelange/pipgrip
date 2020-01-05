@@ -198,11 +198,15 @@ def main(
             logger.setLevel(logging.DEBUG)
 
         if sum((pipe, json, tree, reversed_tree)) > 1:
-            raise ValueError("Illegal combination of output formats selected")
+            raise click.ClickException("Illegal combination of output formats selected")
         if max_depth == 0 or max_depth < -1:
-            raise ValueError("Illegal --max_depth selected: {}".format(max_depth))
-        if max_depth and not (tree or reversed_tree):
-            raise ValueError(
+            raise click.ClickException(
+                "Illegal --max_depth selected: {}".format(max_depth)
+            )
+        if max_depth == -1:
+            max_depth = 0
+        elif max_depth and not (tree or reversed_tree):
+            raise click.ClickException(
                 "--max-depth has no effect without --tree or --reversed-tree"
             )
 
@@ -270,7 +274,7 @@ def main(
         else:
             output = "\n".join(["==".join(x) for x in packages.items()])
         click.echo(output)
-    except SolverFailure as exc:
+    except (SolverFailure, click.ClickException) as exc:
         raise click.ClickException(str(exc))
     except Exception as exc:
         logger.exception(exc, exc_info=exc)
