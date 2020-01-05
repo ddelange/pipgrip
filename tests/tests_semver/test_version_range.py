@@ -1,5 +1,6 @@
 import pytest
-from semver import EmptyConstraint, Version, VersionRange
+
+from pipgrip.libs.semver import EmptyConstraint, Version, VersionRange
 
 
 @pytest.fixture()

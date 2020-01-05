@@ -1,5 +1,6 @@
 import pytest
-from semver import Version, VersionRange, VersionUnion, parse_constraint
+
+from pipgrip.libs.semver import Version, VersionRange, VersionUnion, parse_constraint
 
 
 @pytest.mark.parametrize(

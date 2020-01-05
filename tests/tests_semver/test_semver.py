@@ -1,4 +1,4 @@
-from semver import __version__
+from pipgrip.libs.semver import __version__
 
 
 def test_version():
