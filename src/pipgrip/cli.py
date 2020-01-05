@@ -10,6 +10,7 @@ from anytree import Node, RenderTree
 from anytree.search import findall_by_attr
 
 from pipgrip.compat import USER_CACHE_DIR
+from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource
@@ -57,7 +58,7 @@ def _recurse_dependencies(
         name = dep.name
         resolved_version = decision_packages.get(name) or _find_version(source, dep)
 
-        # detect circular depenencies
+        # detect cyclic depenencies
         matches = findall_by_attr(tree_root, name)
         tree_node = Node(
             name,
@@ -68,7 +69,7 @@ def _recurse_dependencies(
         if matches:
             if matches[0] in tree_node.ancestors:
                 logger.warning(
-                    "Circular dependency found: %s depends on %s and vice versa.",
+                    "Cyclic dependency found: %s depends on %s and vice versa.",
                     tree_node.name,
                     tree_parent.name,
                 )
@@ -78,7 +79,7 @@ def _recurse_dependencies(
                     version=resolved_version,
                     parent=tree_parent,
                     metadata=source._packages_metadata[name][str(resolved_version)],
-                    circular=True,
+                    cyclic=True,
                 )
                 packages[(name, str(resolved_version))] = {}
                 continue
@@ -206,6 +207,9 @@ def main(
             ) as fp:
                 fp.write("\n".join(["==".join(x) for x in packages.items()]) + "\n")
 
+        if reversed_tree:
+            raise NotImplementedError()
+            # TODO tree = reverse_tree(root_tree)
         if tree:
             output = ""
             for child in root_tree.children:
@@ -216,12 +220,10 @@ def main(
                             pre,
                             node.metadata["pip_string"],
                             node.version,
-                            ", circular" if hasattr(node, "circular") else "",
+                            ", cyclic" if hasattr(node, "cyclic") else "",
                         )
                     )
                 output += "\n".join(lines)
-        elif reversed_tree:
-            raise NotImplementedError()
         elif pipe:
             output = " ".join(["==".join(x) for x in packages.items()])
         elif json:
@@ -229,6 +231,8 @@ def main(
         else:
             output = "\n".join(["==".join(x) for x in packages.items()])
         click.echo(output)
+    except SolverFailure as exc:
+        raise click.ClickException(str(exc))
     except Exception as exc:
         logger.exception(exc, exc_info=exc)
         raise click.ClickException(str(exc))

@@ -71,7 +71,6 @@ def _get_available_versions(package, index_url, extra_index_url):
     else:
         logger.warning(out)
         raise RuntimeError("Unexpected success:" + " ".join(args))
-    logger.debug("Pip exited successfully")
     out = out.decode("utf-8").splitlines()
     for line in out[::-1]:
         if "Could not find a version that satisfies the requirement" in line:
@@ -91,7 +90,6 @@ def _download_wheel(package, index_url, extra_index_url, cache_dir):
         output = getattr(err, "output", b"").decode("utf-8")
         logger.exception(output)
         raise
-    logger.debug("Pip exited successfully")
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):
         if cache_dir in line:
