@@ -1,7 +1,9 @@
+import io
 import logging
 import os
 import tempfile
 from collections import OrderedDict
+from json import dumps
 
 import click
 from anytree import Node, RenderTree
@@ -14,7 +16,7 @@ from pipgrip.package_source import PackageSource
 
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.ERROR)
 
 
 def flatten(d):
@@ -102,6 +104,29 @@ def exhaustive_packages(source, decision_packages):
 @click.command()
 @click.argument("dependencies", nargs=-1)
 @click.option(
+    "--lock", is_flag=True, help="Write out pins to './pipgrip.lock'.",
+)
+@click.option(
+    "--pipe",
+    is_flag=True,
+    help="Output space-separated pins instead of newline-separated pins.",
+)
+@click.option(
+    "--json",
+    is_flag=True,
+    help="Output pins as json dict instead of newline-separated pins.",
+)
+@click.option(
+    "--tree",
+    is_flag=True,
+    help="Output human readable dependency tree (top-down). Overrides --stop-early.",
+)
+@click.option(
+    "--reversed-tree",
+    is_flag=True,
+    help="Output human readable dependency tree (bottom-up). Overrides --stop-early.",
+)
+@click.option(
     "--cache-dir",
     envvar="PIP_CACHE_DIR",
     type=click.Path(exists=False, dir_okay=True),
@@ -122,64 +147,67 @@ def exhaustive_packages(source, decision_packages):
     help="Stop top-down recursion when constraints have been solved. Will not result in exhaustive output when dependencies are satisfied and further down the branch no potential clashes exist.",
 )
 @click.option(
-    "--tree",
-    is_flag=True,
-    help="Output human readable dependency tree (top-down). Overrides --stop-early.",
-)
-@click.option(
-    "--reversed-tree",
-    is_flag=True,
-    help="Output human readable dependency tree (bottom-up). Overrides --tree and --stop-early.",
-)
-@click.option(
     "--debug", is_flag=True, help="Set logging level to DEBUG.",
 )
 def main(
     dependencies,
     *,
+    lock,
+    pipe,
+    json,
+    tree,
+    reversed_tree,
     cache_dir,
     no_cache_dir,
     index_url,
     extra_index_url,
-    tree,
-    reversed_tree,
     stop_early,
     debug,
 ):
     try:
         if debug:
             logger.setLevel(logging.DEBUG)
+
+        if sum((pipe, json, tree, reversed_tree)) > 1:
+            raise ValueError("Illegal combination of output formats selected")
+
+        if reversed_tree:
+            tree = True
+        if tree:
+            stop_early = False
         if no_cache_dir:
             cache_dir = tempfile.TemporaryDirectory().name
+
         source = PackageSource(
             cache_dir=cache_dir, index_url=index_url, extra_index_url=extra_index_url,
         )
-
         for root_dependency in dependencies:
             source.root_dep(root_dependency)
 
         solver = VersionSolver(source)
-
         solution = solver.solve()
 
         decision_packages = {}
         for package, version in solution.decisions.items():
             if package == Package.root():
                 continue
-
             decision_packages[package] = version
 
         logger.debug(decision_packages)
-
-        if tree or reversed_tree:
-            stop_early = False
 
         if stop_early:
             packages = {k: str(v) for k, v in decision_packages.items()}
         else:
             packages, root_tree = exhaustive_packages(source, decision_packages)
 
+        if lock:
+            with io.open(
+                os.path.join(os.getcwd(), "pipgrip.lock"), mode="w", encoding="utf-8"
+            ) as fp:
+                fp.write("\n".join(["==".join(x) for x in packages.items()]) + "\n")
+
         if tree:
+            output = ""
             for child in root_tree.children:
                 lines = []
                 for pre, _, node in RenderTree(child):
@@ -191,12 +219,16 @@ def main(
                             ", circular" if hasattr(node, "circular") else "",
                         )
                     )
-                click.echo("\n".join(lines))
+                output += "\n".join(lines)
         elif reversed_tree:
             raise NotImplementedError()
+        elif pipe:
+            output = " ".join(["==".join(x) for x in packages.items()])
+        elif json:
+            output = dumps(packages)
         else:
-            pinned = "\n".join(["==".join(x) for x in packages.items()])
-            click.echo(pinned)
+            output = "\n".join(["==".join(x) for x in packages.items()])
+        click.echo(output)
     except Exception as exc:
         logger.exception(exc, exc_info=exc)
         raise click.ClickException(str(exc))
