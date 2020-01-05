@@ -1,7 +1,6 @@
 from typing import List
 
-import semver
-
+import pipgrip.libs.semver
 from pipgrip.libs.semver.empty_constraint import EmptyConstraint
 from pipgrip.libs.semver.version_constraint import VersionConstraint
 
@@ -76,7 +75,7 @@ class VersionUnion(VersionConstraint):
     def is_any(self):
         return False
 
-    def allows(self, version):  # type: (semver.Version) -> bool
+    def allows(self, version):  # type: (pipgrip.libs.semver.Version) -> bool
         return any([constraint.allows(version) for constraint in self._ranges])
 
     def allows_all(self, other):  # type: (VersionConstraint) -> bool
@@ -218,7 +217,7 @@ class VersionUnion(VersionConstraint):
 
     def _ranges_for(
         self, constraint
-    ):  # type: (VersionConstraint) -> List[semver.VersionRange]
+    ):  # type: (VersionConstraint) -> List[pipgrip.libs.semver.VersionRange]
         from pipgrip.libs.semver.version_range import VersionRange
 
         if constraint.is_empty():

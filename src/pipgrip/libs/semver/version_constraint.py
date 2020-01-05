@@ -1,4 +1,4 @@
-import semver
+import pipgrip.libs.semver
 
 
 class VersionConstraint:
@@ -8,7 +8,7 @@ class VersionConstraint:
     def is_any(self):  # type: () -> bool
         raise NotImplementedError()
 
-    def allows(self, version):  # type: (semver.Version) -> bool
+    def allows(self, version):  # type: (pipgrip.libs.semver.Version) -> bool
         raise NotImplementedError()
 
     def allows_all(self, other):  # type: (VersionConstraint) -> bool

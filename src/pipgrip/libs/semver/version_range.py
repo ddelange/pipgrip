@@ -1,7 +1,6 @@
 from typing import List
 
-import semver
-
+import pipgrip.libs.semver
 from pipgrip.libs.semver.empty_constraint import EmptyConstraint
 from pipgrip.libs.semver.version_constraint import VersionConstraint
 from pipgrip.libs.semver.version_union import VersionUnion
@@ -62,7 +61,7 @@ class VersionRange(VersionConstraint):
     def is_any(self):
         return self._min is None and self._max is None
 
-    def allows(self, other):  # type: (semver.Version) -> bool
+    def allows(self, other):  # type: (pipgrip.libs.semver.Version) -> bool
         if self._min is not None:
             if other < self._min:
                 return False
