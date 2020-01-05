@@ -7,7 +7,6 @@ from pipgrip.cli import flatten, main
 @pytest.mark.parametrize(
     "arguments, expected",
     [
-        (["click==7.0"], ["click==7.0"]),
         (
             ["--stop-early", "requests==2.22.0"],
             [
@@ -35,6 +34,7 @@ from pipgrip.cli import flatten, main
             ],
         ),
     ],
+    ids=("--stop-early requests", "--stop-early aiobotocore",),
 )
 def test_cli(arguments, expected):
     runner = CliRunner()
