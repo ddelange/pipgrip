@@ -101,6 +101,7 @@ def exhaustive_packages(source, decision_packages):
     return flatten(exhaustive), tree_root
 
 
+# fmt: off
 @click.command()
 @click.argument("dependencies", nargs=-1)
 @click.option(
@@ -172,23 +173,8 @@ def exhaustive_packages(source, decision_packages):
     count=True,
     help="Control verbosity: -v will print cyclic dependencies (WARNING), -vv will show solving decisions (INFO), -vvv for development (DEBUG).",
 )
-def main(
-    dependencies,
-    *,
-    lock,
-    pipe,
-    json,
-    tree,
-    reversed_tree,
-    max_depth,
-    cache_dir,
-    no_cache_dir,
-    index_url,
-    extra_index_url,
-    stop_early,
-    pre,
-    verbose,
-):
+def main(dependencies, *, lock, pipe, json, tree, reversed_tree, max_depth, cache_dir, no_cache_dir, index_url, extra_index_url, stop_early, pre, verbose):
+    # fmt: on
     try:
         if verbose == 1:
             logger.setLevel(logging.WARNING)
