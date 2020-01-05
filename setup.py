@@ -27,6 +27,7 @@ setup(
     name="pipgrip",
     description="Composable command line interface toolkit",
     long_description=read_readme(readme_path),
+    long_description_content_type="text/markdown",
     setup_requires=["setuptools_scm"],
     install_requires=read_requirements(requirements_path),
     use_scm_version={
