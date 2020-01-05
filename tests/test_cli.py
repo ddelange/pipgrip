@@ -37,6 +37,9 @@ from pipgrip.cli import flatten, main
     ids=("--stop-early requests", "--stop-early aiobotocore",),
 )
 def test_cli(arguments, expected):
+    from packaging.markers import default_environment
+
+    raise Exception(str(default_environment()))
     runner = CliRunner()
     result = runner.invoke(main, arguments)
 

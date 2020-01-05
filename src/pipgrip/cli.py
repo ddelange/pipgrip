@@ -176,8 +176,6 @@ def exhaustive_packages(source, decision_packages):
 def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_dir, no_cache_dir, index_url, extra_index_url, stop_early, pre, verbose):
     # fmt: on
     try:
-        from packaging.markers import default_environment
-        raise click.ClickException(str(default_environment()))
         if verbose == 1:
             logger.setLevel(logging.WARNING)
         if verbose == 2:
