@@ -7,7 +7,8 @@
 <!-- [![codecov](https://codecov.io/gh/ddelange/pipgrip/branch/master/graph/badge.svg?token=<add_token_here>)](https://codecov.io/gh/ddelange/pipgrip) -->
 [![Actions Status](https://github.com/ddelange/pipgrip/workflows/GH/badge.svg)](https://github.com/ddelange/pipgrip/actions)  <!-- use badge.svg?branch=develop to deviate from default branch -->
 
-pipgrip is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry).
+pipgrip is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally discovers and renders the full resulting dependency tree.
+
 
 ## Installation
 
@@ -21,9 +22,44 @@ pip install pipgrip
 ## Usage
 
 This package can be used to:
-- Alleviate Python [dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
+- Alleviate [Python dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
 - Render an exhaustive dependency tree for any given pip-compatible package(s)
 - Detect version conflicts for given constraints and give human readable feedback about it
+
+```sh
+$ pipgrip --help
+
+Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
+
+Options:
+  --lock                  Write out pins to './pipgrip.lock'.
+  --pipe                  Output space-separated pins instead of newline-
+                          separated pins.
+  --json                  Output pins as json dict instead of newline-
+                          separated pins.
+  --tree                  Output human readable dependency tree (top-down).
+                          Overrides --stop-early.
+  --reversed-tree         Output human readable dependency tree (bottom-up).
+                          Overrides --stop-early.
+  --max-depth INTEGER     Maximum tree rendering depth (defaults to -1).
+  --cache-dir PATH        Use a custom cache dir.
+  --no-cache-dir          Disable pip cache for the wheels downloaded by
+                          pipper. Overrides --cache-dir.
+  --index-url TEXT        Base URL of the Python Package Index (default
+                          https://pypi.org/simple).
+  --extra_index-url TEXT  Extra URLs of package indexes to use in addition to
+                          --index-url.
+  --stop-early            Stop top-down recursion when constraints have been
+                          solved. Will not result in exhaustive output when
+                          dependencies are satisfied and further down the
+                          branch no potential conflicts exist.
+  --pre                   Include pre-release and development versions. By
+                          default, pip only finds stable versions.
+  -v, --verbose           Control verbosity: -v will print cyclic dependencies
+                          (WARNING), -vv will show solving decisions (INFO),
+                          -vvv for development (DEBUG).
+  --help                  Show this message and exit.
+```
 
 #### Lockfile generation
 
@@ -86,7 +122,9 @@ keras==2.2.2 (2.2.2)
 
 ## Known caveats
 
-- --reversed-tree isn't implemented yet
+- `--reversed-tree` isn't implemented yet
+- `pipgrip --stop-early --pipe package | pip install -U --no-deps` may result in incomplete installation
+- `pipgrip --stop-early --pipe package | pip install -U` is unsafe and leaves room for interpretation by pip
 
 ## Development
 
@@ -115,6 +153,7 @@ pip install -e .
 
 ## See also
 
+- [PubGrub spec](https://github.com/dart-lang/pub/blob/SDK-2.2.1-dev.3.0/doc/solver.md)
 - [pip needs a dependency resolver](https://github.com/pypa/pip/issues/988)
 - [pipdeptree](https://github.com/naiquevin/pipdeptree)
 - [mixology](https://github.com/sdispater/mixology)

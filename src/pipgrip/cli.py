@@ -44,7 +44,6 @@ def flatten(d):
 
 def _find_version(source, dep):
     if dep.name not in source._packages:
-        # bug in mixology? discover versions and dependencies anyway  see --stop-early flag and tests
         source._versions_for(dep.name, source.convert_dependency(dep).constraint)
     versions = [k for k, v in source._packages[dep.name].items() if v is not None]
     return versions[-1]
@@ -128,6 +127,12 @@ def exhaustive_packages(source, decision_packages):
     help="Output human readable dependency tree (bottom-up). Overrides --stop-early.",
 )
 @click.option(
+    "--max-depth",
+    type=int,
+    default=-1,
+    help="Maximum tree rendering depth (defaults to -1).",
+)
+@click.option(
     "--cache-dir",
     envvar="PIP_CACHE_DIR",
     type=click.Path(exists=False, dir_okay=True),
@@ -139,16 +144,33 @@ def exhaustive_packages(source, decision_packages):
     # envvar='PIP_NO_CACHE_DIR',  #  this would be counter-intuitive https://github.com/pypa/pip/issues/2897#issuecomment-231753826
     is_flag=True,
     help="Disable pip cache for the wheels downloaded by pipper. Overrides --cache-dir.",
+    # alternatively https://click.palletsprojects.com/en/7.x/options/#boolean-flags
 )
-@click.option("--index-url", envvar="PIP_INDEX_URL")
-@click.option("--extra_index-url", envvar="PIP_EXTRA_INDEX_URL")
+@click.option(
+    "--index-url",
+    envvar="PIP_INDEX_URL",
+    help="Base URL of the Python Package Index (default https://pypi.org/simple).",
+)
+@click.option(
+    "--extra_index-url",
+    envvar="PIP_EXTRA_INDEX_URL",
+    help="Extra URLs of package indexes to use in addition to --index-url.",
+)
 @click.option(
     "--stop-early",
     is_flag=True,
-    help="Stop top-down recursion when constraints have been solved. Will not result in exhaustive output when dependencies are satisfied and further down the branch no potential clashes exist.",
+    help="Stop top-down recursion when constraints have been solved. Will not result in exhaustive output when dependencies are satisfied and further down the branch no potential conflicts exist.",
 )
 @click.option(
-    "--debug", is_flag=True, help="Set logging level to DEBUG.",
+    "--pre",
+    is_flag=True,
+    help="Include pre-release and development versions. By default, pip only finds stable versions.",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Control verbosity: -v will print cyclic dependencies (WARNING), -vv will show solving decisions (INFO), -vvv for development (DEBUG).",
 )
 def main(
     dependencies,
@@ -158,19 +180,31 @@ def main(
     json,
     tree,
     reversed_tree,
+    max_depth,
     cache_dir,
     no_cache_dir,
     index_url,
     extra_index_url,
     stop_early,
-    debug,
+    pre,
+    verbose,
 ):
     try:
-        if debug:
+        if verbose == 1:
+            logger.setLevel(logging.WARNING)
+        if verbose == 2:
+            logger.setLevel(logging.INFO)
+        if verbose >= 3:
             logger.setLevel(logging.DEBUG)
 
         if sum((pipe, json, tree, reversed_tree)) > 1:
             raise ValueError("Illegal combination of output formats selected")
+        if max_depth == 0 or max_depth < -1:
+            raise ValueError("Illegal --max_depth selected: {}".format(max_depth))
+        if max_depth and not (tree or reversed_tree):
+            raise ValueError(
+                "--max-depth has no effect without --tree or --reversed-tree"
+            )
 
         if reversed_tree:
             tree = True
@@ -180,7 +214,10 @@ def main(
             cache_dir = tempfile.TemporaryDirectory().name
 
         source = PackageSource(
-            cache_dir=cache_dir, index_url=index_url, extra_index_url=extra_index_url,
+            cache_dir=cache_dir,
+            index_url=index_url,
+            extra_index_url=extra_index_url,
+            pre=pre,
         )
         for root_dependency in dependencies:
             source.root_dep(root_dependency)
@@ -214,10 +251,12 @@ def main(
             output = ""
             for child in root_tree.children:
                 lines = []
-                for pre, _, node in RenderTree(child):
+                for fill, _, node in RenderTree(child):
+                    if max_depth and node.depth > max_depth:
+                        continue
                     lines.append(
                         "{}{} ({}{})".format(
-                            pre,
+                            fill,
                             node.metadata["pip_string"],
                             node.version,
                             ", cyclic" if hasattr(node, "cyclic") else "",

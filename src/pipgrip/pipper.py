@@ -26,7 +26,7 @@ def parse_req(requirement):
     return req
 
 
-def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
+def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
     args = [
         sys.executable,
         "-m",
@@ -35,6 +35,8 @@ def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
         "--no-deps",
         "--disable-pip-version-check",
     ]
+    if pre:
+        args += ["--pre"]
     if cache_dir is not None:
         args += [
             "--wheel-dir",
@@ -59,9 +61,9 @@ def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
     return args
 
 
-def _get_available_versions(package, index_url, extra_index_url):
+def _get_available_versions(package, index_url, extra_index_url, pre):
     logger.debug("Finding possible versions for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url) + [package + "==rubbish"]
+    args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
 
     try:
         out = subprocess.check_output(args, stderr=subprocess.STDOUT)
@@ -75,15 +77,17 @@ def _get_available_versions(package, index_url, extra_index_url):
     for line in out[::-1]:
         if "Could not find a version that satisfies the requirement" in line:
             all_versions = line.split("from versions: ", 1)[1].rstrip(")").split(", ")
+            if pre:
+                return all_versions
             # filter out pre-releases
             return [v for v in all_versions if not re.findall(r"[a-zA-Z]", v)]
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
 
-def _download_wheel(package, index_url, extra_index_url, cache_dir):
+def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
     logger.debug("Downloading/building wheel for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url, cache_dir) + [package]
+    args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
     try:
         out = subprocess.check_output(args, stderr=subprocess.STDOUT,)
     except subprocess.CalledProcessError as err:
@@ -143,7 +147,9 @@ def _get_wheel_requirements(metadata, extras_requested):
     return result
 
 
-def discover_dependencies_and_versions(package, index_url, extra_index_url, cache_dir):
+def discover_dependencies_and_versions(
+    package, index_url, extra_index_url, cache_dir, pre
+):
     """Get information for a package.
 
     Args:
@@ -151,6 +157,7 @@ def discover_dependencies_and_versions(package, index_url, extra_index_url, cach
         index_url (str): primary PyPI index url
         extra_index_url (str): secondary PyPI index url
         cache_dir (str): directory for storing wheels
+        pre (bool): pip --pre flag
 
     Returns:
         dict: package information:
@@ -162,8 +169,12 @@ def discover_dependencies_and_versions(package, index_url, extra_index_url, cach
     req = parse_req(package)
     extras_requested = sorted(req.extras)
 
-    available_versions = _get_available_versions(req.key, index_url, extra_index_url)
-    wheel_fname = _download_wheel(req.__str__(), index_url, extra_index_url, cache_dir)
+    available_versions = _get_available_versions(
+        req.key, index_url, extra_index_url, pre
+    )
+    wheel_fname = _download_wheel(
+        req.__str__(), index_url, extra_index_url, pre, cache_dir
+    )
     wheel_metadata = _extract_metadata(wheel_fname)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = wheel_metadata["version"]
