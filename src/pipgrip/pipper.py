@@ -80,6 +80,15 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
             if pre:
                 return all_versions
             # filter out pre-releases
+            logger.debug(
+                str(
+                    {
+                        package: [
+                            v for v in all_versions if not re.findall(r"[a-zA-Z]", v)
+                        ]
+                    }
+                )
+            )
             return [v for v in all_versions if not re.findall(r"[a-zA-Z]", v)]
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
@@ -87,6 +96,7 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
 def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
     logger.debug("Downloading/building wheel for {}".format(package))
+    abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
     args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
     try:
         out = subprocess.check_output(args, stderr=subprocess.STDOUT,)
@@ -96,7 +106,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         raise
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):
-        if cache_dir in line:
+        if cache_dir in line or abs_cache_dir in line:
             if line.strip().startswith("Stored in directory"):
                 # wheel was built
                 fname = [
@@ -106,7 +116,15 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                 ][0]
             else:
                 # wheel was fetched
-                fname = line.split(cache_dir, 1)[1].split(".whl", 1)[0] + ".whl"
+                fname = (
+                    line.split(
+                        abs_cache_dir if abs_cache_dir in line else cache_dir, 1
+                    )[1].split(".whl", 1)[0]
+                    + ".whl"
+                )
+            logger.debug(
+                str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))})
+            )
             return os.path.join(cache_dir, fname.lstrip(os.path.sep))
     raise RuntimeError("Failed to download wheel for {}".format(package))
 

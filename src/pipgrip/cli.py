@@ -245,7 +245,7 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
                     if max_depth and node.depth > max_depth:
                         continue
                     lines.append(
-                        "{}{} ({}{})".format(
+                        u"{}{} ({}{})".format(
                             fill,
                             node.metadata["pip_string"],
                             node.version,
@@ -262,6 +262,6 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
         click.echo(output)
     except (SolverFailure, click.ClickException) as exc:
         raise click.ClickException(str(exc))
-    except Exception as exc:
-        logger.exception(exc, exc_info=exc)
-        raise click.ClickException(str(exc))
+    # except Exception as exc:
+    #     logger.exception(exc, exc_info=exc)
+    #     raise click.ClickException(str(exc))
