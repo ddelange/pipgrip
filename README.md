@@ -61,6 +61,23 @@ Options:
   --help                  Show this message and exit.
 ```
 
+#### Dependency trees
+
+Exhaustive dependency trees without the need to install any packages (at most build some wheels).
+```sh
+$ pipgrip pipgrip --tree
+
+pipgrip (0.0.1rc1)
+├── anytree (2.7.3)
+│   └── six (1.13.0)
+├── click (7.0)
+├── packaging>=17 (20.0)
+│   ├── pyparsing>=2.0.2 (2.4.6)
+│   └── six (1.13.0)
+├── pkginfo>=1.4.2 (1.5.0.1)
+└── setuptools>=38.3 (44.0.0)
+```
+
 #### Lockfile generation
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.

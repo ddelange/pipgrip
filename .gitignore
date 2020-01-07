@@ -2,3 +2,4 @@
 _repo_version.py
 
 pipgrip.lock
+tests/assets/pipgrip*

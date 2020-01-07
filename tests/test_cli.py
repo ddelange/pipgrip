@@ -2,39 +2,57 @@ import pytest
 from click.testing import CliRunner
 
 import pipgrip.pipper
+from pipgrip import __version__
 from pipgrip.cli import flatten, main
+from pipgrip.pipper import _download_wheel
+
+self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
 
 
 # fmt: off
 def mock_download_wheel(package, *args, **kwargs):
     wheelhouse = {
-        u"requests==2.22.0": u"./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
-        "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1": u"./tests/assets/urllib3-1.25-py2.py3-none-any.whl",
-        "urllib3==1.25.7": u"./tests/assets/urllib3-1.25.7-py2.py3-none-any.whl",
-        "idna<2.9,>=2.5": u"./tests/assets/idna-2.8-py2.py3-none-any.whl",
-        "chardet<3.1.0,>=3.0.2": u"./tests/assets/chardet-3.0.4-py2.py3-none-any.whl",
-        "certifi>=2017.4.17": u"./tests/assets/certifi-2019.11.28-py2.py3-none-any.whl",
-        u"keras==2.2.2": u"./tests/assets/Keras-2.2.2-py2.py3-none-any.whl",
-        "six>=1.9.0": u"./tests/assets/six-1.13.0-py2.py3-none-any.whl",
-        "scipy>=0.14": u"./tests/assets/scipy-1.2.2-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl",
-        "pyyaml": u"./tests/assets/PyYAML-5.3-cp27-cp27m-macosx_10_14_x86_64.whl",
-        "numpy>=1.9.1": u"./tests/assets/numpy-1.16.6-cp27-cp27m-macosx_10_9_x86_64.whl",
-        "keras-preprocessing==1.0.2": u"./tests/assets/Keras_Preprocessing-1.0.2-py2.py3-none-any.whl",
-        "keras-applications==1.0.4": u"./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
-        "h5py": u"./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
+        ".": self_wheel,
+        "setuptools>=38.3": "./tests/assets/setuptools-44.0.0-py2.py3-none-any.whl",
+        "pkginfo>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
+        "packaging>=17": "./tests/assets/packaging-20.0-py2.py3-none-any.whl",
+        "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
+        "anytree": "./tests/assets/anytree-2.7.3-py2.py3-none-any.whl",
+        "six": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
+        "pyparsing>=2.0.2": "./tests/assets/pyparsing-2.4.6-py2.py3-none-any.whl",
+        "requests==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1": "./tests/assets/urllib3-1.25-py2.py3-none-any.whl",
+        "urllib3==1.25.7": "./tests/assets/urllib3-1.25.7-py2.py3-none-any.whl",
+        "idna<2.9,>=2.5": "./tests/assets/idna-2.8-py2.py3-none-any.whl",
+        "chardet<3.1.0,>=3.0.2": "./tests/assets/chardet-3.0.4-py2.py3-none-any.whl",
+        "certifi>=2017.4.17": "./tests/assets/certifi-2019.11.28-py2.py3-none-any.whl",
+        "keras==2.2.2": "./tests/assets/Keras-2.2.2-py2.py3-none-any.whl",
+        "six>=1.9.0": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
+        "scipy>=0.14": "./tests/assets/scipy-1.2.2-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl",
+        "pyyaml": "./tests/assets/PyYAML-5.3-cp27-cp27m-macosx_10_14_x86_64.whl",
+        "numpy>=1.9.1": "./tests/assets/numpy-1.16.6-cp27-cp27m-macosx_10_9_x86_64.whl",
+        "keras-preprocessing==1.0.2": "./tests/assets/Keras_Preprocessing-1.0.2-py2.py3-none-any.whl",
+        "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
+        "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
     }
     return wheelhouse[package]
 
 
 def mock_get_available_versions(package, *args, **kwargs):
     versions = {
-        u"requests": [u"0.2.0", u"0.2.1", u"0.2.2", u"0.2.3", u"0.2.4", u"0.3.0", u"0.3.1", u"0.3.2", u"0.3.3", u"0.3.4", u"0.4.0", u"0.4.1", u"0.5.0", u"0.5.1", u"0.6.0", u"0.6.1", u"0.6.2", u"0.6.3", u"0.6.4", u"0.6.5", u"0.6.6", u"0.7.0", u"0.7.1", u"0.7.2", u"0.7.3", u"0.7.4", u"0.7.5", u"0.7.6", u"0.8.0", u"0.8.1", u"0.8.2", u"0.8.3", u"0.8.4", u"0.8.5", u"0.8.6", u"0.8.7", u"0.8.8", u"0.8.9", u"0.9.0", u"0.9.1", u"0.9.2", u"0.9.3", u"0.10.0", u"0.10.1", u"0.10.2", u"0.10.3", u"0.10.4", u"0.10.6", u"0.10.7", u"0.10.8", u"0.11.1", u"0.11.2", u"0.12.0", u"0.12.1", u"0.13.0", u"0.13.1", u"0.13.2", u"0.13.3", u"0.13.4", u"0.13.5", u"0.13.6", u"0.13.7", u"0.13.8", u"0.13.9", u"0.14.0", u"0.14.1", u"0.14.2", u"1.0.0", u"1.0.1", u"1.0.2", u"1.0.3", u"1.0.4", u"1.1.0", u"1.2.0", u"1.2.1", u"1.2.2", u"1.2.3", u"2.0.0", u"2.0.1", u"2.1.0", u"2.2.0", u"2.2.1", u"2.3.0", u"2.4.0", u"2.4.1", u"2.4.2", u"2.4.3", u"2.5.0", u"2.5.1", u"2.5.2", u"2.5.3", u"2.6.0", u"2.6.1", u"2.6.2", u"2.7.0", u"2.8.0", u"2.8.1", u"2.9.0", u"2.9.1", u"2.9.2", u"2.10.0", u"2.11.0", u"2.11.1", u"2.12.0", u"2.12.1", u"2.12.2", u"2.12.3", u"2.12.4", u"2.12.5", u"2.13.0", u"2.14.0", u"2.14.1", u"2.14.2", u"2.15.1", u"2.16.0", u"2.16.1", u"2.16.2", u"2.16.3", u"2.16.4", u"2.16.5", u"2.17.0", u"2.17.1", u"2.17.2", u"2.17.3", u"2.18.0", u"2.18.1", u"2.18.2", u"2.18.3", u"2.18.4", u"2.19.0", u"2.19.1", u"2.20.0", u"2.20.1", u"2.21.0", u"2.22.0"],
+        "setuptools": [u"44.0.0"],
+        "pkginfo": [u"0.1", u"0.1.1", u"0.2", u"0.3", u"0.4", u"0.4.1", u"0.5", u"0.6", u"0.7", u"0.8", u"0.9", u"0.9.1", u"1.0", u"1.1", u"1.2", u"1.2.1", u"1.3.0", u"1.3.1", u"1.3.2", u"1.4.0", u"1.4.1", u"1.4.2", u"1.5.0", u"1.5.0.1"],
+        "packaging": [u"14.0", u"14.1", u"14.2", u"14.3", u"14.4", u"14.5", u"15.0", u"15.1", u"15.2", u"15.3", u"16.0", u"16.1", u"16.2", u"16.3", u"16.4", u"16.5", u"16.6", u"16.7", u"16.8", u"17.0", u"17.1", u"18.0", u"19.0", u"19.1", u"19.2", u"20.0"],
+        "click": [u"0.1", u"0.2", u"0.3", u"0.4", u"0.5", u"0.5.1", u"0.6", u"0.7", u"1.0", u"1.1", u"2.0", u"2.1", u"2.2", u"2.3", u"2.4", u"2.5", u"2.6", u"3.0", u"3.1", u"3.2", u"3.3", u"4.0", u"4.1", u"5.0", u"5.1", u"6.0", u"6.1", u"6.2", u"6.3", u"6.4", u"6.5", u"6.6", u"6.7", u"7.0"],
+        "anytree": [u"0.0.1", u"1.0.0", u"1.0.1", u"1.0.2", u"1.0.4", u"2.0.0", u"2.1.0", u"2.1.1", u"2.1.2", u"2.1.3", u"2.1.4", u"2.2.0", u"2.2.1", u"2.2.2", u"2.3.0", u"2.4.0", u"2.4.1", u"2.4.2", u"2.4.3", u"2.5.0", u"2.6.0", u"2.7.0", u"2.7.1", u"2.7.2", u"2.7.3"],
+        "six": [u"0.9.0", u"0.9.1", u"0.9.2", u"1.0.0", u"1.1.0", u"1.2.0", u"1.3.0", u"1.4.0", u"1.4.1", u"1.5.0", u"1.5.1", u"1.5.2", u"1.6.0", u"1.6.1", u"1.7.0", u"1.7.1", u"1.7.2", u"1.7.3", u"1.8.0", u"1.9.0", u"1.10.0", u"1.11.0", u"1.12.0", u"1.13.0"],
+        "pyparsing": [u"1.4.6", u"1.4.7", u"1.4.8", u"1.4.11", u"1.5.0", u"1.5.1", u"1.5.2", u"1.5.3", u"1.5.4", u"1.5.5", u"1.5.6", u"1.5.7", u"2.0.0", u"2.0.1", u"2.0.2", u"2.0.3", u"2.0.4", u"2.0.5", u"2.0.6", u"2.0.7", u"2.1.0", u"2.1.1", u"2.1.2", u"2.1.3", u"2.1.4", u"2.1.5", u"2.1.6", u"2.1.7", u"2.1.8", u"2.1.9", u"2.1.10", u"2.2.0", u"2.2.1", u"2.2.2", u"2.3.0", u"2.3.1", u"2.4.0", u"2.4.1.1", u"2.4.2", u"2.4.3", u"2.4.4", u"2.4.5", u"2.4.6"],
+        u"requests": [u"2.22.0"],
         "urllib3": [u"0.3", u"1.0", u"1.0.1", u"1.0.2", u"1.1", u"1.2", u"1.2.1", u"1.2.2", u"1.3", u"1.4", u"1.5", u"1.6", u"1.7", u"1.7.1", u"1.8", u"1.8.2", u"1.8.3", u"1.9", u"1.9.1", u"1.10", u"1.10.1", u"1.10.2", u"1.10.3", u"1.10.4", u"1.11", u"1.12", u"1.13", u"1.13.1", u"1.14", u"1.15", u"1.15.1", u"1.16", u"1.17", u"1.18", u"1.18.1", u"1.19", u"1.19.1", u"1.20", u"1.21", u"1.21.1", u"1.22", u"1.23", u"1.24", u"1.24.1", u"1.24.2", u"1.24.3", u"1.25", u"1.25.1", u"1.25.2", u"1.25.3", u"1.25.4", u"1.25.5", u"1.25.6", u"1.25.7"],
         "idna": [u"0.2", u"0.3", u"0.4", u"0.5", u"0.6", u"0.7", u"0.8", u"0.9", u"1.0", u"1.1", u"2.0", u"2.1", u"2.2", u"2.3", u"2.4", u"2.5", u"2.6", u"2.7", u"2.8"],
         "chardet": [u"1.0", u"1.0.1", u"1.1", u"2.1.1", u"2.2.1", u"2.3.0", u"3.0.0", u"3.0.1", u"3.0.2", u"3.0.3", u"3.0.4"],
         "certifi": [u"0.0.1", u"0.0.2", u"0.0.3", u"0.0.4", u"0.0.5", u"0.0.6", u"0.0.7", u"0.0.8", u"1.0.0", u"1.0.1", u"14.5.14", u"2015.4.28", u"2015.9.6", u"2015.9.6.1", u"2015.9.6.2", u"2015.11.20", u"2015.11.20.1", u"2016.2.28", u"2016.8.2", u"2016.8.8", u"2016.8.31", u"2016.9.26", u"2017.1.23", u"2017.4.17", u"2017.7.27", u"2017.7.27.1", u"2017.11.5", u"2018.1.18", u"2018.4.16", u"2018.8.13", u"2018.8.24", u"2018.10.15", u"2018.11.29", u"2019.3.9", u"2019.6.16", u"2019.9.11", u"2019.11.28"],
         u"keras": [u"0.2.0", u"0.3.0", u"0.3.1", u"0.3.2", u"0.3.3", u"1.0.0", u"1.0.1", u"1.0.2", u"1.0.3", u"1.0.4", u"1.0.5", u"1.0.6", u"1.0.7", u"1.0.8", u"1.1.0", u"1.1.1", u"1.1.2", u"1.2.0", u"1.2.1", u"1.2.2", u"2.0.0", u"2.0.1", u"2.0.2", u"2.0.3", u"2.0.4", u"2.0.5", u"2.0.6", u"2.0.7", u"2.0.8", u"2.0.9", u"2.1.0", u"2.1.1", u"2.1.2", u"2.1.3", u"2.1.4", u"2.1.5", u"2.1.6", u"2.2.0", u"2.2.1", u"2.2.2", u"2.2.3", u"2.2.4", u"2.2.5", u"2.3.0", u"2.3.1"],
-        "six": [u"0.9.0", u"0.9.1", u"0.9.2", u"1.0.0", u"1.1.0", u"1.2.0", u"1.3.0", u"1.4.0", u"1.4.1", u"1.5.0", u"1.5.1", u"1.5.2", u"1.6.0", u"1.6.1", u"1.7.0", u"1.7.1", u"1.7.2", u"1.7.3", u"1.8.0", u"1.9.0", u"1.10.0", u"1.11.0", u"1.12.0", u"1.13.0"],
         "scipy": [u"0.8.0", u"0.9.0", u"0.10.0", u"0.10.1", u"0.11.0", u"0.12.0", u"0.12.1", u"0.13.0", u"0.13.1", u"0.13.2", u"0.13.3", u"0.14.0", u"0.14.1", u"0.15.0", u"0.15.1", u"0.16.0", u"0.16.1", u"0.17.0", u"0.17.1", u"0.18.0", u"0.18.1", u"0.19.0", u"0.19.1", u"1.0.0", u"1.0.1", u"1.1.0", u"1.2.0", u"1.2.1", u"1.2.2"],
         "pyyaml": [u"3.10", u"3.11", u"3.12", u"3.13", u"5.1", u"5.1.1", u"5.1.2", u"5.2", u"5.3"],
         "numpy": [u"1.3.0", u"1.4.1", u"1.5.0", u"1.5.1", u"1.6.0", u"1.6.1", u"1.6.2", u"1.7.0", u"1.7.1", u"1.7.2", u"1.8.0", u"1.8.1", u"1.8.2", u"1.9.0", u"1.9.1", u"1.9.2", u"1.9.3", u"1.10.1", u"1.10.2", u"1.10.4", u"1.11.0", u"1.11.1", u"1.11.2", u"1.11.3", u"1.12.0", u"1.12.1", u"1.13.0", u"1.13.1", u"1.13.3", u"1.14.0", u"1.14.1", u"1.14.2", u"1.14.3", u"1.14.4", u"1.14.5", u"1.14.6", u"1.15.0", u"1.15.1", u"1.15.2", u"1.15.3", u"1.15.4", u"1.16.0", u"1.16.1", u"1.16.2", u"1.16.3", u"1.16.4", u"1.16.5", u"1.16.6"],
@@ -49,6 +67,19 @@ def mock_get_available_versions(package, *args, **kwargs):
 @pytest.mark.parametrize(
     "arguments, expected",
     [
+        (
+            ["."],
+            [
+                ".==" + __version__,
+                "anytree==2.7.3",
+                "six==1.13.0",
+                "click==7.0",
+                "packaging==20.0",
+                "pyparsing==2.4.6",
+                "pkginfo==1.5.0.1",
+                "setuptools==44.0.0",
+            ],
+        ),
         (
             ["--stop-early", "requests==2.22.0"],
             [
@@ -116,6 +147,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         # ),
     ],
     ids=(
+        "pipgrip pipgrip",
         "--stop-early requests",
         "--stop-early keras (cyclic)",
         "--tree keras (cyclic)",
