@@ -4,6 +4,7 @@ import os
 import tempfile
 from collections import OrderedDict
 from json import dumps
+from subprocess import CalledProcessError
 
 import click
 from anytree import Node, RenderTree
@@ -63,25 +64,20 @@ def _recurse_dependencies(
             name,
             version=resolved_version,
             parent=tree_parent,
+            # pip_string in metadata might be the wrong one (populated differently beforehand, higher up in the tree)
+            # left here in case e.g. versions_available is needed in rendered tree
             metadata=source._packages_metadata[name][str(resolved_version)],
+            pip_string=dep.pip_string,
         )
-        if matches:
-            if matches[0] in tree_node.ancestors:
-                logger.warning(
-                    "Cyclic dependency found: %s depends on %s and vice versa.",
-                    tree_node.name,
-                    tree_parent.name,
-                )
-                tree_node.parent = None
-                tree_node = Node(
-                    name,
-                    version=resolved_version,
-                    parent=tree_parent,
-                    metadata=source._packages_metadata[name][str(resolved_version)],
-                    cyclic=True,
-                )
-                packages[(name, str(resolved_version))] = {}
-                continue
+        if matches and matches[0] in tree_node.ancestors:
+            logger.warning(
+                "Cyclic dependency found: %s depends on %s and vice versa.",
+                tree_node.name,
+                tree_parent.name,
+            )
+            setattr(tree_node, "cyclic", True)
+            packages[(name, str(resolved_version))] = {}
+            continue
 
         packages[(name, str(resolved_version))] = _recurse_dependencies(
             source,
@@ -101,7 +97,25 @@ def exhaustive_packages(source, decision_packages):
     return flatten(exhaustive), tree_root
 
 
-# fmt: off
+def render_tree(root_tree, max_depth):
+    output = []
+    for child in root_tree.children:
+        lines = []
+        for fill, _, node in RenderTree(child):
+            if max_depth and node.depth > max_depth:
+                continue
+            lines.append(
+                u"{}{} ({}{})".format(
+                    fill,
+                    node.pip_string,
+                    node.version,
+                    ", cyclic" if hasattr(node, "cyclic") else "",
+                )
+            )
+        output += lines
+    return "\n".join(output)
+
+
 @click.command()
 @click.argument("dependencies", nargs=-1)
 @click.option(
@@ -173,35 +187,48 @@ def exhaustive_packages(source, decision_packages):
     count=True,
     help="Control verbosity: -v will print cyclic dependencies (WARNING), -vv will show solving decisions (INFO), -vvv for development (DEBUG).",
 )
-def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_dir, no_cache_dir, index_url, extra_index_url, stop_early, pre, verbose):
-    # fmt: on
+def main(
+    dependencies,
+    lock,
+    pipe,
+    json,
+    tree,
+    reversed_tree,
+    max_depth,
+    cache_dir,
+    no_cache_dir,
+    index_url,
+    extra_index_url,
+    stop_early,
+    pre,
+    verbose,
+):
+    if verbose == 1:
+        logger.setLevel(logging.WARNING)
+    if verbose == 2:
+        logger.setLevel(logging.INFO)
+    if verbose >= 3:
+        logger.setLevel(logging.DEBUG)
+
+    if sum((pipe, json, tree, reversed_tree)) > 1:
+        raise click.ClickException("Illegal combination of output formats selected")
+    if max_depth == 0 or max_depth < -1:
+        raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
+    if max_depth == -1:
+        max_depth = 0
+    elif max_depth and not (tree or reversed_tree):
+        raise click.ClickException(
+            "--max-depth has no effect without --tree or --reversed-tree"
+        )
+
+    if reversed_tree:
+        tree = True
+    if tree:
+        stop_early = False
+    if no_cache_dir:
+        cache_dir = tempfile.mkdtemp()
+
     try:
-        if verbose == 1:
-            logger.setLevel(logging.WARNING)
-        if verbose == 2:
-            logger.setLevel(logging.INFO)
-        if verbose >= 3:
-            logger.setLevel(logging.DEBUG)
-
-        if sum((pipe, json, tree, reversed_tree)) > 1:
-            raise click.ClickException("Illegal combination of output formats selected")
-        if max_depth == 0 or max_depth < -1:
-            raise click.ClickException(
-                "Illegal --max_depth selected: {}".format(max_depth)
-            )
-        if max_depth == -1:
-            max_depth = 0
-        elif max_depth and not (tree or reversed_tree):
-            raise click.ClickException(
-                "--max-depth has no effect without --tree or --reversed-tree"
-            )
-
-        if reversed_tree:
-            tree = True
-        if tree:
-            stop_early = False
-        if no_cache_dir:
-            cache_dir = tempfile.mkdtemp()
 
         source = PackageSource(
             cache_dir=cache_dir,
@@ -232,27 +259,23 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
             with io.open(
                 os.path.join(os.getcwd(), "pipgrip.lock"), mode="w", encoding="utf-8"
             ) as fp:
-                fp.write("\n".join(["==".join(x) for x in packages.items()]) + "\n")
+                # a lockfile containing `.` will break pip install -r
+                fp.write(
+                    "\n".join(
+                        [
+                            "==".join(x)
+                            for x in packages.items()
+                            if not x[0].startswith(".")
+                        ]
+                    )
+                    + "\n"
+                )
 
         if reversed_tree:
             raise NotImplementedError()
-            # TODO tree = reverse_tree(root_tree)
+            # TODO root_tree = reverse_tree(root_tree)
         if tree:
-            output = ""
-            for child in root_tree.children:
-                lines = []
-                for fill, _, node in RenderTree(child):
-                    if max_depth and node.depth > max_depth:
-                        continue
-                    lines.append(
-                        u"{}{} ({}{})".format(
-                            fill,
-                            node.metadata["pip_string"],
-                            node.version,
-                            ", cyclic" if hasattr(node, "cyclic") else "",
-                        )
-                    )
-                output += "\n".join(lines)
+            output = render_tree(root_tree, max_depth)
         elif pipe:
             output = " ".join(["==".join(x) for x in packages.items()])
         elif json:
@@ -260,8 +283,8 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
         else:
             output = "\n".join(["==".join(x) for x in packages.items()])
         click.echo(output)
-    except (SolverFailure, click.ClickException) as exc:
+    except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))
     except Exception as exc:
-        logger.exception(exc, exc_info=exc)
+        logger.error(exc, exc_info=exc)
         raise click.ClickException(str(exc))

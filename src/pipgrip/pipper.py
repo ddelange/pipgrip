@@ -18,11 +18,11 @@ def parse_req(requirement):
     if requirement.startswith("."):
         req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
         req.key = "."
+        full_str = req.__str__().replace(req.name, req.key)
     else:
         req = pkg_resources.Requirement.parse(requirement)
         req.key = canonicalize_name(req.key)
-    full_str = req.__str__().replace(req.name, req.key)
-    req.name = req.key
+        full_str = req.__str__()  # .replace(req.name, req.key)
 
     def __str__():
         return full_str
@@ -107,7 +107,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         out = subprocess.check_output(args, stderr=subprocess.STDOUT,)
     except subprocess.CalledProcessError as err:
         output = getattr(err, "output", b"").decode("utf-8")
-        logger.exception(output)
+        logger.error(output)
         raise
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):

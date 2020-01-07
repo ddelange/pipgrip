@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class Dependency:
-    def __init__(self, name, constraint):  # type: (str, str) -> None
+    def __init__(self, name, constraint, pip_string):  # type: (str, str) -> None
         self.name = name
         self.constraint = parse_constraint(constraint or "*")
         self.pretty_constraint = constraint
+        self.pip_string = pip_string
 
     def __str__(self):  # type: () -> str
         return self.pretty_constraint
@@ -107,7 +108,7 @@ class PackageSource(BasePackageSource):
         for dep in deps:
             req = parse_req(dep)
             constraint = ",".join(["".join(tup) for tup in req.specs])
-            dependencies.append(Dependency(req.key, constraint))
+            dependencies.append(Dependency(req.key, constraint, req.__str__()))
 
         self._packages[name][version] = dependencies
 
@@ -133,7 +134,7 @@ class PackageSource(BasePackageSource):
     def root_dep(self, package):  # type: (str, str) -> None
         req = parse_req(package)
         constraint = ",".join(["".join(tup) for tup in req.specs])
-        self._root_dependencies.append(Dependency(req.key, constraint))
+        self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))
         self.discover_and_add(req.__str__())
 
     def _versions_for(
