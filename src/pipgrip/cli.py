@@ -201,7 +201,7 @@ def main(dependencies, lock, pipe, json, tree, reversed_tree, max_depth, cache_d
         if tree:
             stop_early = False
         if no_cache_dir:
-            cache_dir = tempfile.TemporaryDirectory().name
+            cache_dir = tempfile.mkdtemp()
 
         source = PackageSource(
             cache_dir=cache_dir,

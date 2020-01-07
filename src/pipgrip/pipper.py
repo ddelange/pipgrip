@@ -15,12 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 def parse_req(requirement):
-    req = pkg_resources.Requirement.parse(requirement)
-    req.key = canonicalize_name(req.key)
-    full_str = req.__str__()
+    if requirement.startswith("."):
+        req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
+        req.key = "."
+    else:
+        req = pkg_resources.Requirement.parse(requirement)
+        req.key = canonicalize_name(req.key)
+    full_str = req.__str__().replace(req.name, req.key)
+    req.name = req.key
 
     def __str__():
-        return full_str.replace(req.name, req.key)
+        return full_str
 
     req.__str__ = __str__
     return req
@@ -187,19 +192,22 @@ def discover_dependencies_and_versions(
     req = parse_req(package)
     extras_requested = sorted(req.extras)
 
-    available_versions = _get_available_versions(
-        req.key, index_url, extra_index_url, pre
-    )
     wheel_fname = _download_wheel(
         req.__str__(), index_url, extra_index_url, pre, cache_dir
     )
     wheel_metadata = _extract_metadata(wheel_fname)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = wheel_metadata["version"]
+    available_versions = (
+        _get_available_versions(req.key, index_url, extra_index_url, pre)
+        if req.key != "."
+        else [wheel_version]
+    )
     if wheel_version not in available_versions:
         available_versions.append(wheel_version)
 
     return {
+        "name": wheel_metadata["name"],
         "version": wheel_version,
         "available": available_versions,
         "requires": wheel_requirements,
