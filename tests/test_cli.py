@@ -191,7 +191,7 @@ def test_cli(arguments, expected, monkeypatch):
     result = runner.invoke(main, arguments)
 
     if result.exit_code:
-        raise result.exception(exc_info=result.exc_info)
+        raise result.exception
     assert set(result.output.strip().split("\n")) == set(expected)
 
 
