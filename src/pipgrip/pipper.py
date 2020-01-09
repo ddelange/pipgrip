@@ -138,7 +138,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
 def _extract_metadata(wheel_fname):
     wheel_fname = os.path.abspath(wheel_fname)
     logger.debug("Searching metadata in %s", wheel_fname)
-    if not os.path.exists():
+    if not os.path.exists(wheel_fname):
         raise RuntimeError("File not found: {}".format(wheel_fname))
     info = get_metadata(wheel_fname)
     if info is None:
