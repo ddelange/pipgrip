@@ -1,6 +1,7 @@
 import pytest
-from semver import EmptyConstraint, Version, VersionRange
-from semver.exceptions import ParseVersionError
+
+from pipgrip.libs.semver import EmptyConstraint, Version, VersionRange
+from pipgrip.libs.semver.exceptions import ParseVersionError
 
 
 @pytest.mark.parametrize(

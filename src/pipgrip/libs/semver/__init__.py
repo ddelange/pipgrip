@@ -1,5 +1,6 @@
 import re
 
+from pipgrip.libs.semver.empty_constraint import EmptyConstraint  # noqa:F401
 from pipgrip.libs.semver.patterns import (
     BASIC_CONSTRAINT,
     CARET_CONSTRAINT,

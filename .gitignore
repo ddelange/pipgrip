@@ -1,2 +1,5 @@
 # setuptools_scm
 _repo_version.py
+
+pipgrip.lock
+tests/assets/pipgrip*

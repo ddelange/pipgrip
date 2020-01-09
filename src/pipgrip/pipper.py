@@ -6,6 +6,7 @@ import sys
 
 import pkg_resources
 from packaging.markers import default_environment
+from packaging.utils import canonicalize_name
 from pkginfo import get_metadata
 
 from pipgrip.compat import PIP_VERSION, urlparse
@@ -13,7 +14,25 @@ from pipgrip.compat import PIP_VERSION, urlparse
 logger = logging.getLogger(__name__)
 
 
-def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
+def parse_req(requirement):
+    if requirement.startswith("."):
+        req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
+        req.key = "."
+        full_str = req.__str__().replace(req.name, req.key)
+    else:
+        req = pkg_resources.Requirement.parse(requirement)
+        req.key = canonicalize_name(req.key)
+        req.name = req.key
+        full_str = req.__str__()  # .replace(req.name, req.key)
+
+    def __str__():
+        return full_str
+
+    req.__str__ = __str__
+    return req
+
+
+def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
     args = [
         sys.executable,
         "-m",
@@ -22,6 +41,8 @@ def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
         "--no-deps",
         "--disable-pip-version-check",
     ]
+    if pre:
+        args += ["--pre"]
     if cache_dir is not None:
         args += [
             "--wheel-dir",
@@ -46,9 +67,9 @@ def _get_wheel_args(index_url, extra_index_url, cache_dir=None):
     return args
 
 
-def _get_available_versions(package, index_url, extra_index_url):
+def _get_available_versions(package, index_url, extra_index_url, pre):
     logger.debug("Finding possible versions for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url) + [package + "==rubbish"]
+    args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
 
     try:
         out = subprocess.check_output(args, stderr=subprocess.STDOUT)
@@ -58,30 +79,40 @@ def _get_available_versions(package, index_url, extra_index_url):
     else:
         logger.warning(out)
         raise RuntimeError("Unexpected success:" + " ".join(args))
-    logger.debug("Pip exited successfully")
     out = out.decode("utf-8").splitlines()
     for line in out[::-1]:
         if "Could not find a version that satisfies the requirement" in line:
             all_versions = line.split("from versions: ", 1)[1].rstrip(")").split(", ")
+            if pre:
+                return all_versions
             # filter out pre-releases
+            logger.debug(
+                str(
+                    {
+                        package: [
+                            v for v in all_versions if not re.findall(r"[a-zA-Z]", v)
+                        ]
+                    }
+                )
+            )
             return [v for v in all_versions if not re.findall(r"[a-zA-Z]", v)]
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
 
-def _download_wheel(package, index_url, extra_index_url, cache_dir):
+def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
     logger.debug("Downloading/building wheel for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url, cache_dir) + [package]
+    abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
+    args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
     try:
         out = subprocess.check_output(args, stderr=subprocess.STDOUT,)
     except subprocess.CalledProcessError as err:
         output = getattr(err, "output", b"").decode("utf-8")
-        logger.exception(output)
+        logger.error(output)
         raise
-    logger.debug("Pip exited successfully")
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):
-        if cache_dir in line:
+        if cache_dir in line or abs_cache_dir in line:
             if line.strip().startswith("Stored in directory"):
                 # wheel was built
                 fname = [
@@ -91,16 +122,27 @@ def _download_wheel(package, index_url, extra_index_url, cache_dir):
                 ][0]
             else:
                 # wheel was fetched
-                fname = line.split(cache_dir, 1)[1].split(".whl", 1)[0] + ".whl"
+                fname = (
+                    line.split(
+                        abs_cache_dir if abs_cache_dir in line else cache_dir, 1
+                    )[1].split(".whl", 1)[0]
+                    + ".whl"
+                )
+            logger.debug(
+                str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))})
+            )
             return os.path.join(cache_dir, fname.lstrip(os.path.sep))
     raise RuntimeError("Failed to download wheel for {}".format(package))
 
 
 def _extract_metadata(wheel_fname):
+    wheel_fname = os.path.abspath(wheel_fname)
     logger.debug("Searching metadata in %s", wheel_fname)
+    if not os.path.exists(wheel_fname):
+        raise RuntimeError("File not found: {}".format(wheel_fname))
     info = get_metadata(wheel_fname)
     if info is None:
-        raise RuntimeError("Failed to get metadata")
+        raise RuntimeError("Failed to extract metadata: {}".format(wheel_fname))
     data = vars(info)
     data.pop("filename", None)
     return data
@@ -114,7 +156,7 @@ def _get_wheel_requirements(metadata, extras_requested):
     result = []
     env_data = default_environment()
     for req_str in all_requires:
-        req = pkg_resources.Requirement.parse(req_str)
+        req = parse_req(req_str)
         req_short, _sep, _marker = str(req).partition(";")
         if req.marker is None:
             # unconditional dependency
@@ -132,7 +174,9 @@ def _get_wheel_requirements(metadata, extras_requested):
     return result
 
 
-def discover_dependencies_and_versions(package, index_url, extra_index_url, cache_dir):
+def discover_dependencies_and_versions(
+    package, index_url, extra_index_url, cache_dir, pre
+):
     """Get information for a package.
 
     Args:
@@ -140,6 +184,7 @@ def discover_dependencies_and_versions(package, index_url, extra_index_url, cach
         index_url (str): primary PyPI index url
         extra_index_url (str): secondary PyPI index url
         cache_dir (str): directory for storing wheels
+        pre (bool): pip --pre flag
 
     Returns:
         dict: package information:
@@ -148,18 +193,25 @@ def discover_dependencies_and_versions(package, index_url, extra_index_url, cach
             'requires': all requirements as found in corresponding wheel (dist_requires)
 
     """
-    req = pkg_resources.Requirement.parse(package)
+    req = parse_req(package)
     extras_requested = sorted(req.extras)
 
-    available_versions = _get_available_versions(req.key, index_url, extra_index_url)
-    wheel_fname = _download_wheel(req.__str__(), index_url, extra_index_url, cache_dir)
+    wheel_fname = _download_wheel(
+        req.__str__(), index_url, extra_index_url, pre, cache_dir
+    )
     wheel_metadata = _extract_metadata(wheel_fname)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = wheel_metadata["version"]
+    available_versions = (
+        _get_available_versions(req.key, index_url, extra_index_url, pre)
+        if req.key != "."
+        else [wheel_version]
+    )
     if wheel_version not in available_versions:
         available_versions.append(wheel_version)
 
     return {
+        "name": wheel_metadata["name"],
         "version": wheel_version,
         "available": available_versions,
         "requires": wheel_requirements,
