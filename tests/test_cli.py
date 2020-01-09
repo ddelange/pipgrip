@@ -85,7 +85,7 @@ def mock_get_available_versions(package, *args, **kwargs):
             ],
         ),
         (
-            ["--stop-early", "requests==2.22.0"],
+            ["requests==2.22.0"],
             [
                 "requests==2.22.0",
                 "chardet==3.0.4",
@@ -137,27 +137,11 @@ def mock_get_available_versions(package, *args, **kwargs):
             ["keras_preprocessing"],
             ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
         ),
-        # (  # py3 only, doesnt add aiohttp with --stop-early
-        #     ["--stop-early", "keras"],
-        #     [
-        #         "aiobotocore==0.11.1",
-        #         "async-generator==1.10",
-        #         "botocore==1.13.14",
-        #         "awscli==1.16.278",
-        #         "s3transfer==0.2.1",
-        #         "wrapt==1.11.2",
-        #         "jmespath==0.9.4",
-        #         "docutils==0.15.2",
-        #         "pyyaml==5.1.2",
-        #         "rsa==3.4.2",
-        #         "colorama==0.4.1",
-        #     ],
-        # ),
     ],
     ids=(
         "pipgrip pipgrip",
-        "--stop-early requests",
-        "--stop-early keras (cyclic)",
+        " requests",
+        " keras (cyclic)",
         "--tree keras (cyclic)",
         "keras_preprocessing (underscore)",
     ),
