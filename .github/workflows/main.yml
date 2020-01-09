@@ -35,6 +35,9 @@ jobs:
     - name: Lint
       run: make lint
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v1
+
     - name: Test
       run: make test
 

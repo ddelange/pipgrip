@@ -22,6 +22,7 @@ def parse_req(requirement):
     else:
         req = pkg_resources.Requirement.parse(requirement)
         req.key = canonicalize_name(req.key)
+        req.name = req.key
         full_str = req.__str__()  # .replace(req.name, req.key)
 
     def __str__():
