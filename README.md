@@ -1,7 +1,6 @@
 # pipgrip
 
 [![Actions Status](https://github.com/ddelange/pipgrip/workflows/GH/badge.svg)](https://github.com/ddelange/pipgrip/actions)  <!-- use badge.svg?branch=develop to deviate from default branch -->
-[![Current Release Version](https://img.shields.io/github/release/ddelange/pipgrip.svg?logo=github)](https://github.com/ddelange/pipgrip/releases/latest)
 [![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://github.com/ddelange/pipgrip/releases/latest)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
@@ -151,6 +150,7 @@ keras==2.2.2 (2.2.2)
 - installing packages using pipgrip is not very intuitive, so maybe pipgrip needs a stable `--install` flag
 - `--reversed-tree` isn't implemented yet
 - [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
+- Package names are normalized in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
 
 ## Development
 
@@ -190,5 +190,5 @@ pip install -e .
 
 BSD 3-Clause License
 
-Copyright (c) 2020, ddelange
+Copyright (c) 2020, ddelange\
 All rights reserved.
