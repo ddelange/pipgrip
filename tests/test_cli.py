@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from click.testing import CliRunner
 
@@ -7,6 +9,8 @@ from pipgrip.cli import flatten, main
 from pipgrip.pipper import _download_wheel
 
 self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
+
+stdin, stdout = sys.stdin, sys.stdout
 
 
 # fmt: off
@@ -186,6 +190,12 @@ def test_cli(arguments, expected, monkeypatch):
     )
     monkeypatch.setattr(
         pipgrip.pipper, "default_environment", default_environment,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper, "stdin", stdin,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper, "stdout", stdout,
     )
     runner = CliRunner()
     result = runner.invoke(main, arguments)

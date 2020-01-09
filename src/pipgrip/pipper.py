@@ -135,9 +135,15 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     raise RuntimeError("Failed to download wheel for {}".format(package))
 
 
+stdin, stdout = None, None
+
+
 def _extract_metadata(wheel_fname):
     logger.debug("Searching metadata in %s", wheel_fname)
-    info = get_metadata(wheel_fname)
+    import pdb
+
+    pdb.Pdb(stdin=stdin, stdout=stdout).set_trace()
+    info = get_metadata(os.path.abspath(wheel_fname))
     if info is None:
         raise RuntimeError("Failed to get metadata")
     data = vars(info)

@@ -229,7 +229,6 @@ def main(
         cache_dir = tempfile.mkdtemp()
 
     try:
-
         source = PackageSource(
             cache_dir=cache_dir,
             index_url=index_url,
@@ -285,6 +284,6 @@ def main(
         click.echo(output)
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))
-    except Exception as exc:
-        logger.error(exc, exc_info=exc)
-        raise click.ClickException(str(exc))
+    # except Exception as exc:
+    #     logger.error(exc, exc_info=exc)
+    #     raise click.ClickException(str(exc))
