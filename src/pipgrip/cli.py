@@ -89,7 +89,7 @@ def _recurse_dependencies(
     return packages
 
 
-def exhaustive_packages(source, decision_packages):
+def build_tree(source, decision_packages):
     tree_root = Node("root")
     exhaustive = _recurse_dependencies(
         source, decision_packages, source._root_dependencies, tree_root, tree_root
@@ -132,14 +132,12 @@ def render_tree(root_tree, max_depth):
     help="Output pins as json dict instead of newline-separated pins.",
 )
 @click.option(
-    "--tree",
-    is_flag=True,
-    help="Output human readable dependency tree (top-down). Overrides --stop-early.",
+    "--tree", is_flag=True, help="Output human readable dependency tree (top-down).",
 )
 @click.option(
     "--reversed-tree",
     is_flag=True,
-    help="Output human readable dependency tree (bottom-up). Overrides --stop-early.",
+    help="Output human readable dependency tree (bottom-up).",
 )
 @click.option(
     "--max-depth",
@@ -164,17 +162,13 @@ def render_tree(root_tree, max_depth):
 @click.option(
     "--index-url",
     envvar="PIP_INDEX_URL",
+    default="https://pypi.org/simple",
     help="Base URL of the Python Package Index (default https://pypi.org/simple).",
 )
 @click.option(
     "--extra_index-url",
     envvar="PIP_EXTRA_INDEX_URL",
     help="Extra URLs of package indexes to use in addition to --index-url.",
-)
-@click.option(
-    "--stop-early",
-    is_flag=True,
-    help="Stop top-down recursion when constraints have been solved. Will not result in exhaustive output when dependencies are satisfied and further down the branch no potential conflicts exist.",
 )
 @click.option(
     "--pre",
@@ -199,7 +193,6 @@ def main(
     no_cache_dir,
     index_url,
     extra_index_url,
-    stop_early,
     pre,
     verbose,
 ):
@@ -223,8 +216,6 @@ def main(
 
     if reversed_tree:
         tree = True
-    if tree:
-        stop_early = False
     if no_cache_dir:
         cache_dir = tempfile.mkdtemp()
 
@@ -249,10 +240,7 @@ def main(
 
         logger.debug(decision_packages)
 
-        if stop_early:
-            packages = OrderedDict((k, str(v)) for k, v in decision_packages.items())
-        else:
-            packages, root_tree = exhaustive_packages(source, decision_packages)
+        packages, root_tree = build_tree(source, decision_packages)
 
         if lock:
             with io.open(

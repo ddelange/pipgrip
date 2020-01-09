@@ -1,7 +1,6 @@
 # pipgrip
 
 [![Actions Status](https://github.com/ddelange/pipgrip/workflows/GH/badge.svg)](https://github.com/ddelange/pipgrip/actions)  <!-- use badge.svg?branch=develop to deviate from default branch -->
-[![Current Release Version](https://img.shields.io/github/release/ddelange/pipgrip.svg?logo=github)](https://github.com/ddelange/pipgrip/releases/latest)
 [![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://github.com/ddelange/pipgrip/releases/latest)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
@@ -23,14 +22,15 @@ pip install pipgrip
 
 This package can be used to:
 - Alleviate [Python dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
-- Render an exhaustive dependency tree for any given pip-compatible package(s)
+- Render an exhaustive dependency tree for any given pip-compatible package(s) with `--tree`
 - Detect version conflicts for given constraints and give human readable feedback about it
+- Find dependency conflicts in local projects:
+  - `pipgrip --tree .`
 - Install complex packages without worries using:
   - ``pip install -U --no-deps `pipgrip --pipe aiobotocore[awscli]` ``
+- Generate a lockfile with a complete working set of dependencies (see [known caveats](#known-caveats))
   - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
   - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
-- Check for dependency conflicts in local projects
-  - `pipgrip --tree .`
 
 ```sh
 $ pipgrip --help
@@ -44,9 +44,7 @@ Options:
   --json                  Output pins as json dict instead of newline-
                           separated pins.
   --tree                  Output human readable dependency tree (top-down).
-                          Overrides --stop-early.
   --reversed-tree         Output human readable dependency tree (bottom-up).
-                          Overrides --stop-early.
   --max-depth INTEGER     Maximum tree rendering depth (defaults to -1).
   --cache-dir PATH        Use a custom cache dir.
   --no-cache-dir          Disable pip cache for the wheels downloaded by
@@ -55,10 +53,6 @@ Options:
                           https://pypi.org/simple).
   --extra_index-url TEXT  Extra URLs of package indexes to use in addition to
                           --index-url.
-  --stop-early            Stop top-down recursion when constraints have been
-                          solved. Will not result in exhaustive output when
-                          dependencies are satisfied and further down the
-                          branch no potential conflicts exist.
   --pre                   Include pre-release and development versions. By
                           default, pip only finds stable versions.
   -v, --verbose           Control verbosity: -v will print cyclic dependencies
@@ -73,7 +67,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```sh
 $ pipgrip --tree pipgrip
 
-pipgrip (0.0.1rc1)
+pipgrip (0.0.1)
 ├── anytree (2.7.3)
 │   └── six (1.13.0)
 ├── click (7.0)
@@ -146,11 +140,12 @@ keras==2.2.2 (2.2.2)
 
 ## Known caveats
 
-- ``pip install -U --no-deps `pipgrip --stop-early package` `` may result in incomplete installation
-- ``pip install -U `pipgrip --stop-early package` `` is unsafe and leaves room for interpretation by pip
-- installing packages using pipgrip is not very intuitive, so maybe pipgrip needs a stable `--install` flag
-- `--reversed-tree` isn't implemented yet
+- ``pip install -U `pipgrip package` `` without `--no-deps` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip
+- Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
 - [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
+- `--reversed-tree` isn't implemented yet
+- Since `pip install -r` does not accept `.` as requirement, `--pipe` format must be used when installing local projects
+- Installing packages using pipgrip is not very intuitive, so maybe pipgrip needs a stable `--install` flag
 
 ## Development
 
@@ -190,5 +185,5 @@ pip install -e .
 
 BSD 3-Clause License
 
-Copyright (c) 2020, ddelange
+Copyright (c) 2020, ddelange\
 All rights reserved.

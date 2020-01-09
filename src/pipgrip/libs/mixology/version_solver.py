@@ -61,12 +61,15 @@ class VersionSolver:
         )
         self._propagate(self._source.root)
 
-        i = 0
-        while not self.is_solved():
-            if not self._run() or i > 10:
+        packages_tried = 0
+        max_tries = 500
+        while True:
+            if packages_tried == max_tries:
+                raise SolverFailure("Stopping, {} packages tried.".format(max_tries))
+            if not self._run():
                 break
 
-            i += 1
+            packages_tried += 1
 
         logger.info("Version solving took {:.3f} seconds.".format(time.time() - start))
         logger.info("Tried {} solutions.".format(self._solution.attempted_solutions))
