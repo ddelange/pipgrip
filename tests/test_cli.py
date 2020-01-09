@@ -200,7 +200,8 @@ def test_cli(arguments, expected, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(main, arguments)
 
-    assert result.exit_code == 0
+    if result.exit_code:
+        raise Exception(result.stderr)
     assert set(result.output.strip().split("\n")) == set(expected)
 
 

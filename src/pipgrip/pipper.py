@@ -140,9 +140,9 @@ stdin, stdout = None, None
 
 def _extract_metadata(wheel_fname):
     logger.debug("Searching metadata in %s", wheel_fname)
-    import pdb
+    # import pdb
 
-    pdb.Pdb(stdin=stdin, stdout=stdout).set_trace()
+    # pdb.Pdb(stdin=stdin, stdout=stdout).set_trace()
     info = get_metadata(os.path.abspath(wheel_fname))
     if info is None:
         raise RuntimeError("Failed to get metadata")
