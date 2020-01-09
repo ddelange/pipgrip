@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 from click.testing import CliRunner
 
@@ -9,8 +7,6 @@ from pipgrip.cli import flatten, main
 from pipgrip.pipper import _download_wheel
 
 self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
-
-stdin, stdout = sys.stdin, sys.stdout
 
 
 # fmt: off
@@ -23,7 +19,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "anytree": "./tests/assets/anytree-2.7.3-py2.py3-none-any.whl",
         "six": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
-        "wheel": "/Users/david.de-lange/Library/Caches/pip/wheels/pipgrip/wheel-0.33.6-py2.py3-none-any.whl",
+        "wheel": ".tests/assets/wheel-0.33.6-py2.py3-none-any.whl",
         "pyparsing>=2.0.2": "./tests/assets/pyparsing-2.4.6-py2.py3-none-any.whl",
         "requests==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1": "./tests/assets/urllib3-1.25-py2.py3-none-any.whl",
@@ -191,17 +187,11 @@ def test_cli(arguments, expected, monkeypatch):
     monkeypatch.setattr(
         pipgrip.pipper, "default_environment", default_environment,
     )
-    monkeypatch.setattr(
-        pipgrip.pipper, "stdin", stdin,
-    )
-    monkeypatch.setattr(
-        pipgrip.pipper, "stdout", stdout,
-    )
     runner = CliRunner()
     result = runner.invoke(main, arguments)
 
     if result.exit_code:
-        raise Exception(result.stderr)
+        raise result.exception(exc_info=result.exc_info)
     assert set(result.output.strip().split("\n")) == set(expected)
 
 
