@@ -19,7 +19,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "anytree": "./tests/assets/anytree-2.7.3-py2.py3-none-any.whl",
         "six": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
-        "wheel": ".tests/assets/wheel-0.33.6-py2.py3-none-any.whl",
+        "wheel": "./tests/assets/wheel-0.33.6-py2.py3-none-any.whl",
         "pyparsing>=2.0.2": "./tests/assets/pyparsing-2.4.6-py2.py3-none-any.whl",
         "requests==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1": "./tests/assets/urllib3-1.25-py2.py3-none-any.whl",
