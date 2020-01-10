@@ -58,8 +58,6 @@ def _recurse_dependencies(
         name = dep.name
         resolved_version = decision_packages.get(name) or _find_version(source, dep)
 
-        # detect cyclic depenencies
-        matches = findall_by_attr(tree_root, name)
         tree_node = Node(
             name,
             version=resolved_version,
@@ -69,6 +67,9 @@ def _recurse_dependencies(
             metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
         )
+
+        # detect cyclic depenencies
+        matches = findall_by_attr(tree_root, name)
         if matches and matches[0] in tree_node.ancestors:
             logger.warning(
                 "Cyclic dependency found: %s depends on %s and vice versa.",

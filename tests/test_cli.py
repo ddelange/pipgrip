@@ -140,8 +140,8 @@ def mock_get_available_versions(package, *args, **kwargs):
     ],
     ids=(
         "pipgrip pipgrip",
-        " requests",
-        " keras (cyclic)",
+        "requests",
+        "keras (cyclic)",
         "--tree keras (cyclic)",
         "keras_preprocessing (underscore)",
     ),

@@ -8,6 +8,16 @@
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally discovers and renders the full resulting dependency tree.
 
+<!-- why is it different from poetry?
+  why is it different from pipdeptry?
+  give example with multiple packages
+  extras down the tree are lost because we pass key not str (e.g. scoutbee==0.13.0 see boto3)
+  0.1.0 as initial release
+  remove 500 max tries
+  reversed tree
+  two times pypi.org in `looking in indexes`?
+-->
+
 
 ## Installation
 
@@ -28,9 +38,9 @@ This package can be used to:
   - `pipgrip --tree .`
 - Install complex packages without worries using:
   - ``pip install -U --no-deps `pipgrip --pipe aiobotocore[awscli]` ``
-- Generate a lockfile with a complete working set of dependencies (see [known caveats](#known-caveats))
-  - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
+- Generate a lockfile with a complete working set of dependencies (see [known caveats](#known-caveats)):
   - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
+  - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
 
 ```sh
 $ pipgrip --help
