@@ -33,7 +33,7 @@ def flatten(d):
             for key2, val2 in deeper:
                 if key2 in out and out[key2] != val2:
                     raise RuntimeError(
-                        "{} has not been solved: both {} and {} found... Please report this bug",
+                        "{} has not been solved: both {} and {} found... Please file an issue on GitHub.",
                         key2,
                         val0,
                         val2,
@@ -43,10 +43,12 @@ def flatten(d):
     return out
 
 
-def _find_version(source, dep):
-    if dep.name not in source._packages:
-        source._versions_for(dep.name, source.convert_dependency(dep).constraint)
-    versions = [k for k, v in source._packages[dep.name].items() if v is not None]
+def _find_version(source, dep, extras):
+    if dep.package not in source._packages:
+        source._versions_for(dep.package, source.convert_dependency(dep).constraint)
+    versions = [
+        k for k, v in source._packages[dep.package][extras].items() if v is not None
+    ]
     return versions[-1]
 
 
@@ -56,7 +58,10 @@ def _recurse_dependencies(
     packages = OrderedDict()
     for dep in dependencies:
         name = dep.name
-        resolved_version = decision_packages.get(name) or _find_version(source, dep)
+        extras = dep.package.req.extras
+        resolved_version = decision_packages.get(name) or _find_version(
+            source, dep, extras
+        )
 
         tree_node = Node(
             name,
@@ -83,7 +88,7 @@ def _recurse_dependencies(
         packages[(name, str(resolved_version))] = _recurse_dependencies(
             source,
             decision_packages,
-            source._packages[name][resolved_version],
+            source._packages[dep.package][extras][resolved_version],
             tree_root,
             tree_node,
         )

@@ -14,13 +14,23 @@ from pipgrip.compat import PIP_VERSION, urlparse
 logger = logging.getLogger(__name__)
 
 
-def parse_req(requirement):
+def parse_req(requirement, extras=None):
+    from pipgrip.libs.mixology.package import Package
+
+    if isinstance(requirement, Package) and extras != requirement.req.extras:
+        raise RuntimeError(
+            "Conflict between package extras and extras kwarg. Please file an issue on GitHub."
+        )
     if requirement.startswith("."):
         req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
+        if extras is not None:
+            req.extras = extras
         req.key = "."
         full_str = req.__str__().replace(req.name, req.key)
     else:
         req = pkg_resources.Requirement.parse(requirement)
+        if extras is not None:
+            req.extras = extras
         req.key = canonicalize_name(req.key)
         req.name = req.key
         full_str = req.__str__()  # .replace(req.name, req.key)
@@ -29,6 +39,7 @@ def parse_req(requirement):
         return full_str
 
     req.__str__ = __str__
+    req.extras = frozenset(req.extras)
     return req
 
 
