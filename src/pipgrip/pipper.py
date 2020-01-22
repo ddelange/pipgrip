@@ -123,7 +123,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         raise
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):
-        if cache_dir in line or abs_cache_dir in line:
+        if cache_dir in line or abs_cache_dir in line or "ephem-wheel-cache" in line:
             if line.strip().startswith("Stored in directory"):
                 # wheel was built
                 fname = [
