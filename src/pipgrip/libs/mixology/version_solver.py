@@ -62,7 +62,7 @@ class VersionSolver:
         self._propagate(self._source.root)
 
         packages_tried = 0
-        max_tries = 500
+        max_tries = -1
         while True:
             if packages_tried == max_tries:
                 raise SolverFailure("Stopping, {} packages tried.".format(max_tries))
