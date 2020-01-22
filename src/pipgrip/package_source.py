@@ -177,7 +177,9 @@ class PackageSource(BasePackageSource):
 
         if self._packages[package][req.extras][version] is None:
             # populate dependencies for version
-            self.discover_and_add(req.__str__())
+            self.discover_and_add(
+                parse_req(str(package), req.extras).__str__() + "==" + str(version)
+            )
         return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint
