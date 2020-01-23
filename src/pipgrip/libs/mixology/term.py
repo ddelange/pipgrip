@@ -141,8 +141,13 @@ class Term(object):
                 to_return = self._non_empty_term(
                     self.constraint.union(other.constraint), False
                 )
-            to_return._constraint._package._req = parse_req(to_return.constraint.package.req.__str__(), extras=self.constraint.package.req.extras | other.constraint.package.req.extras)
-            to_return._package = self.constraint.package
+            if to_return is not None:
+                to_return._constraint._package._req = parse_req(
+                    to_return.constraint.package.req.__str__(),
+                    extras=self.constraint.package.req.extras
+                    | other.constraint.package.req.extras,
+                )
+                to_return._package = self.constraint.package
 
         elif self.is_positive() != other.is_positive():
             to_return = self if self.is_positive() else other

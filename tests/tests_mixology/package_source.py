@@ -1,6 +1,7 @@
 from typing import Any, Dict, Hashable, List, Optional
 
 from pipgrip.libs.mixology.constraint import Constraint
+from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.package_source import PackageSource as BasePackageSource
 from pipgrip.libs.mixology.range import Range
 from pipgrip.libs.mixology.union import Union
@@ -12,6 +13,7 @@ class Dependency:
         self.name = name
         self.constraint = parse_constraint(constraint)
         self.pretty_constraint = constraint
+        self.package = Package(name)
 
     def __str__(self):  # type: () -> str
         return self.pretty_constraint
@@ -85,14 +87,14 @@ class PackageSource(BasePackageSource):
             # VersionUnion
             ranges = [
                 Range(
-                    range.min,
-                    range.max,
-                    range.include_min,
-                    range.include_max,
-                    str(range),
+                    _range.min,
+                    _range.max,
+                    _range.include_min,
+                    _range.include_max,
+                    str(_range),
                 )
-                for range in dependency.constraint.ranges
+                for _range in dependency.constraint.ranges
             ]
             constraint = Union.of(*ranges)
 
-        return Constraint(dependency.name, constraint)
+        return Constraint(dependency.package, constraint)
