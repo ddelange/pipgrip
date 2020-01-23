@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, Hashable, List, Optional
 
 from pipgrip.libs.mixology.constraint import Constraint
+from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.package_source import PackageSource as BasePackageSource
 from pipgrip.libs.mixology.range import Range
 from pipgrip.libs.mixology.union import Union
@@ -17,9 +18,13 @@ class Dependency:
         self.constraint = parse_constraint(constraint or "*")
         self.pretty_constraint = constraint
         self.pip_string = pip_string
+        self.package = Package(pip_string)
 
     def __str__(self):  # type: () -> str
         return self.pretty_constraint
+
+    def __repr__(self):  # type: () -> str
+        return "Dependency({}, {})".format(self.pip_string, self.pretty_constraint)
 
 
 class PackageSource(BasePackageSource):
@@ -87,21 +92,23 @@ class PackageSource(BasePackageSource):
         return self._root_version
 
     def add(
-        self, name, version, deps=None
+        self, name, extras, version, deps=None
     ):  # type: (str, str, Optional[Dict[str, str]]) -> None
         version = Version.parse(version)
         if name not in self._packages:
-            self._packages[name] = {}
+            self._packages[name] = {extras: {}}
+        if extras not in self._packages[name]:
+            self._packages[name][extras] = {}
 
         # if already added without deps, assume now called with discovered deps and overwrite
-        if version in self._packages[name] and not (
-            deps is None or self._packages[name][version] is None
+        if version in self._packages[name][extras] and not (
+            deps is None or self._packages[name][extras][version] is None
         ):
             raise ValueError("{} ({}) already exists".format(name, version))
 
         # not existing and deps undiscovered
         if deps is None:
-            self._packages[name][version] = None
+            self._packages[name][extras][version] = None
             return
 
         dependencies = []
@@ -110,7 +117,7 @@ class PackageSource(BasePackageSource):
             constraint = ",".join(["".join(tup) for tup in req.specs])
             dependencies.append(Dependency(req.key, constraint, req.__str__()))
 
-        self._packages[name][version] = dependencies
+        self._packages[name][extras][version] = dependencies
 
     def discover_and_add(self, package):  # type: (str, str) -> None
         # converting from semver constraint to pkg_resources string
@@ -119,10 +126,12 @@ class PackageSource(BasePackageSource):
             package, self.index_url, self.extra_index_url, self.cache_dir, self.pre
         )
         for version in to_create["available"]:
-            self.add(req.key, version)
+            self.add(req.key, req.extras, version)
         self.add(
-            req.key, to_create["version"], deps=to_create["requires"],
+            req.key, req.extras, to_create["version"], deps=to_create["requires"],
         )
+
+        # currently unused
         if req.key not in self._packages_metadata:
             self._packages_metadata[req.key] = {}
         self._packages_metadata[req.key][to_create["version"]] = {
@@ -145,15 +154,18 @@ class PackageSource(BasePackageSource):
         Called by BasePackageSource.versions_for
 
         """
-        if package not in self._packages:
-            self.discover_and_add(
-                package + str(constraint).replace("||", "|").replace(" ", "")
-            )
+        extras = package.req.extras
+        version_specifier = str(constraint).replace("||", "|").replace(" ", "")
+        if version_specifier and version_specifier[0].isdigit():
+            version_specifier = "==" + version_specifier
+        req = parse_req(str(package) + version_specifier, extras)
+        if package not in self._packages or extras not in self._packages[package]:
+            self.discover_and_add(req.__str__())
         if package not in self._packages:
             return []
 
         versions = []
-        for version in self._packages[package].keys():
+        for version in self._packages[package][extras].keys():
             if not constraint or constraint.allows_any(
                 Range(version, version, True, True)
             ):
@@ -162,13 +174,17 @@ class PackageSource(BasePackageSource):
         return sorted(versions, reverse=True)
 
     def dependencies_for(self, package, version):  # type: (Hashable, Any) -> List[Any]
+        req = package.req
         if package == self.root:
             return self._root_dependencies
 
-        if self._packages[package][version] is None:
+        if (
+            req.extras not in self._packages[package]
+            or self._packages[package][req.extras][version] is None
+        ):
             # populate dependencies for version
-            self.discover_and_add(package + "==" + str(version))
-        return self._packages[package][version]
+            self.discover_and_add(req.extras_name + "==" + str(version))
+        return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint
         """Convert a user-defined dependency into a format Mixology understands."""
@@ -194,4 +210,4 @@ class PackageSource(BasePackageSource):
             ]
             constraint = Union.of(*ranges)
 
-        return Constraint(dependency.name, constraint)
+        return Constraint(dependency.package, constraint)

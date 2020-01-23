@@ -14,13 +14,23 @@ from pipgrip.compat import PIP_VERSION, urlparse
 logger = logging.getLogger(__name__)
 
 
-def parse_req(requirement):
+def parse_req(requirement, extras=None):
+    from pipgrip.libs.mixology.package import Package
+
+    if isinstance(requirement, Package) and extras != requirement.req.extras:
+        raise RuntimeError(
+            "Conflict between package extras and extras kwarg. Please file an issue on GitHub."
+        )
     if requirement.startswith("."):
         req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
+        if extras is not None:
+            req.extras = extras
         req.key = "."
         full_str = req.__str__().replace(req.name, req.key)
     else:
         req = pkg_resources.Requirement.parse(requirement)
+        if extras is not None:
+            req.extras = extras
         req.key = canonicalize_name(req.key)
         req.name = req.key
         full_str = req.__str__()  # .replace(req.name, req.key)
@@ -29,6 +39,10 @@ def parse_req(requirement):
         return full_str
 
     req.__str__ = __str__
+    req.extras_name = (
+        req.name + "[" + ",".join(req.extras) + "]" if req.extras else req.name
+    )
+    req.extras = frozenset(req.extras)
     return req
 
 
@@ -112,8 +126,8 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         raise
     out = out.decode("utf-8").splitlines()[::-1]
     for i, line in enumerate(out):
-        if cache_dir in line or abs_cache_dir in line or "ephem-wheel-cache" in line:
-            if line.strip().startswith("Stored in directory"):
+        if cache_dir in line or abs_cache_dir in line or "Stored in directory" in line:
+            if "Stored in directory" in line:
                 # wheel was built
                 fname = [
                     part.replace("filename=", "")
@@ -149,7 +163,7 @@ def _extract_metadata(wheel_fname):
 
 
 def _get_wheel_requirements(metadata, extras_requested):
-    """Just the strings (name and spec) for my immediate dependencies. Cheap."""
+    """Extract the immediate dependencies from wheel metadata."""
     all_requires = metadata.get("requires_dist", [])
     if not all_requires:
         return []
@@ -203,7 +217,7 @@ def discover_dependencies_and_versions(
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = wheel_metadata["version"]
     available_versions = (
-        _get_available_versions(req.key, index_url, extra_index_url, pre)
+        _get_available_versions(req.extras_name, index_url, extra_index_url, pre)
         if req.key != "."
         else [wheel_version]
     )

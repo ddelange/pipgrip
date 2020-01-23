@@ -1,10 +1,19 @@
-class Package(object):
-    """
-    A project's package.
-    """
+import pkg_resources
 
-    def __init__(self, name):  # type: (str) -> None
-        self._name = name
+from pipgrip.pipper import parse_req
+
+
+class Package(object):
+    """Represent a project's package."""
+
+    def __init__(self, pip_string):  # type: (str) -> None
+        if pip_string == "_root_":
+            req = parse_req(".")
+            req.key = "_root_"
+        else:
+            req = parse_req(pip_string)
+        self._name = req.key
+        self._req = req
 
     @classmethod
     def root(cls):  # type: () -> Package
@@ -14,14 +23,21 @@ class Package(object):
     def name(self):  # type: () -> str
         return self._name
 
+    @property
+    def req(self):  # type: () -> pkg_resources.Requirement
+        return self._req
+
     def __eq__(self, other):  # type: () -> bool
         return str(other) == self.name
+
+    def __ne__(self, other):  # type: () -> bool
+        return not self.__eq__(other)
 
     def __str__(self):  # type: () -> str
         return self._name
 
     def __repr__(self):  # type: () -> str
-        return 'Package("{}")'.format(self.name)
+        return 'Package("{}")'.format(self.req.extras_name)
 
     def __hash__(self):
         return hash(self.name)
