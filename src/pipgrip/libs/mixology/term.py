@@ -5,6 +5,7 @@ from pipgrip.libs.mixology.constraint import Constraint
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.range import EmptyRange
 from pipgrip.libs.mixology.set_relation import SetRelation
+from pipgrip.pipper import parse_req
 
 
 class Term(object):
@@ -127,23 +128,28 @@ class Term(object):
                 positive = self if self.is_positive() else other
                 negative = other if self.is_positive() else self
 
-                return self._non_empty_term(
+                to_return = self._non_empty_term(
                     positive.constraint.difference(negative.constraint), True
                 )
             elif self.is_positive():
                 # foo ^1.0.0 ∩ foo >=1.5.0 <3.0.0 → foo ^1.5.0
-                return self._non_empty_term(
+                to_return = self._non_empty_term(
                     self.constraint.intersect(other.constraint), True
                 )
             else:
                 # not foo ^1.0.0 ∩ not foo >=1.5.0 <3.0.0 → not foo >=1.0.0 <3.0.0
-                return self._non_empty_term(
+                to_return = self._non_empty_term(
                     self.constraint.union(other.constraint), False
                 )
+            to_return._constraint._package._req = parse_req(to_return.constraint.package.req.__str__(), extras=self.constraint.package.req.extras | other.constraint.package.req.extras)
+            to_return._package = self.constraint.package
+
         elif self.is_positive() != other.is_positive():
-            return self if self.is_positive() else other
+            to_return = self if self.is_positive() else other
         else:
-            return Term(Constraint(self.package, EmptyRange()))
+            to_return = Term(Constraint(self.package, EmptyRange()))
+
+        return to_return
 
     def difference(self, other):  # type: (Term) -> Term
         """

@@ -97,6 +97,8 @@ class PackageSource(BasePackageSource):
         version = Version.parse(version)
         if name not in self._packages:
             self._packages[name] = {extras: {}}
+        if extras not in self._packages[name]:
+            self._packages[name][extras] = {}
 
         # if already added without deps, assume now called with discovered deps and overwrite
         if version in self._packages[name][extras] and not (
@@ -153,9 +155,10 @@ class PackageSource(BasePackageSource):
 
         """
         extras = package.req.extras
-        req = parse_req(
-            str(package) + str(constraint).replace("||", "|").replace(" ", ""), extras
-        )
+        version_specifier = str(constraint).replace("||", "|").replace(" ", "")
+        if version_specifier and version_specifier[0].isdigit():
+            version_specifier = "==" + version_specifier
+        req = parse_req(str(package) + version_specifier, extras)
         if package not in self._packages or extras not in self._packages[package]:
             self.discover_and_add(req.__str__())
         if package not in self._packages:
@@ -175,11 +178,9 @@ class PackageSource(BasePackageSource):
         if package == self.root:
             return self._root_dependencies
 
-        if self._packages[package][req.extras][version] is None:
+        if req.extras not in self._packages[package] or self._packages[package][req.extras][version] is None:
             # populate dependencies for version
-            self.discover_and_add(
-                parse_req(str(package), req.extras).__str__() + "==" + str(version)
-            )
+            self.discover_and_add(req.extras_name + "==" + str(version))
         return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint

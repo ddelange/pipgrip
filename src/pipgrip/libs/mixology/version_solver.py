@@ -379,7 +379,7 @@ class VersionSolver:
 
         if not conflict:
             self._solution.decide(term.package, version)
-            logger.info("selecting {} ({})".format(term.package, str(version)))
+            logger.info("selecting {} ({})".format(term.package.req.extras_name, str(version)))
 
         return term.package
 

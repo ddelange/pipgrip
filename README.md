@@ -11,10 +11,9 @@
 <!-- why is it different from poetry?
   why is it different from pipdeptry?
   give example with multiple packages
-  extras down the tree are lost because we pass key not str (e.g. scoutbee==0.13.0 see boto3)
-  0.1.0 as initial release
   reversed tree
   two times pypi.org in `looking in indexes`?
+  multicore pip?
 -->
 
 
@@ -76,7 +75,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```sh
 $ pipgrip --tree pipgrip
 
-pipgrip (0.1.0)
+pipgrip (0.0.3)
 ├── anytree (2.7.3)
 │   └── six (1.13.0)
 ├── click (7.0)

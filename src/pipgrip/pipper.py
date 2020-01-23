@@ -39,6 +39,9 @@ def parse_req(requirement, extras=None):
         return full_str
 
     req.__str__ = __str__
+    req.extras_name = (
+        req.name + "[" + ",".join(req.extras) + "]" if req.extras else req.name
+    )
     req.extras = frozenset(req.extras)
     return req
 
@@ -160,7 +163,7 @@ def _extract_metadata(wheel_fname):
 
 
 def _get_wheel_requirements(metadata, extras_requested):
-    """Just the strings (name and spec) for my immediate dependencies. Cheap."""
+    """Extract the immediate dependencies from wheel metadata."""
     all_requires = metadata.get("requires_dist", [])
     if not all_requires:
         return []
@@ -214,7 +217,7 @@ def discover_dependencies_and_versions(
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = wheel_metadata["version"]
     available_versions = (
-        _get_available_versions(req.key, index_url, extra_index_url, pre)
+        _get_available_versions(req.extras_name, index_url, extra_index_url, pre)
         if req.key != "."
         else [wheel_version]
     )

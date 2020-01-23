@@ -59,7 +59,7 @@ def _recurse_dependencies(
     for dep in dependencies:
         name = dep.name
         extras = dep.package.req.extras
-        resolved_version = decision_packages.get(name) or _find_version(
+        resolved_version = decision_packages.get(dep.package) or _find_version(
             source, dep, extras
         )
 
@@ -88,7 +88,7 @@ def _recurse_dependencies(
         packages[(name, str(resolved_version))] = _recurse_dependencies(
             source,
             decision_packages,
-            source._packages[dep.package][extras][resolved_version],
+            source.dependencies_for(dep.package, resolved_version),
             tree_root,
             tree_node,
         )

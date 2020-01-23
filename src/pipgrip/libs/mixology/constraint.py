@@ -96,7 +96,7 @@ class Constraint(object):
             return "every version of {}".format(self.package)
 
         return "{} ({})".format(
-            self.package, "*" if self.is_any() else str(self.constraint)
+            self.package.req.extras_name, "*" if self.is_any() else str(self.constraint)
         )
 
     def __str__(self):
