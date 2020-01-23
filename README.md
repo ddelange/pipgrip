@@ -21,7 +21,7 @@
 
 #### pipgrip vs. pipdeptree
 
-For offline usage, pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since packages don't need to be installed and all versions available to pip are considered.
+For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since packages don't need to be installed and all versions available to pip are considered.
 
 ## Installation
 
