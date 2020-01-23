@@ -30,6 +30,9 @@ class Package(object):
     def __eq__(self, other):  # type: () -> bool
         return str(other) == self.name
 
+    def __ne__(self, other):  # type: () -> bool
+        return not self.__eq__(other)
+
     def __str__(self):  # type: () -> str
         return self._name
 
