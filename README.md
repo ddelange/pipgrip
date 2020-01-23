@@ -8,14 +8,20 @@
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
-<!-- why is it different from poetry?
-  why is it different from pipdeptry?
+<!--
   give example with multiple packages
   reversed tree
   two times pypi.org in `looking in indexes`?
   multicore pip?
 -->
 
+#### pipgrip vs. poetry
+
+[poetry](https://github.com/python-poetry/poetry) offers package management with dependency resolution, essentially replacing pip/setuptools. This means that poetry packages don't contain `setup.py`, and hence are not compatible with `pip install -e`: poetry projects would have to be converted to setuptools-based projects with e.g. [dephell](https://github.com/dephell/dephell). To avoid such hassle, pipgrip only requires the selected package(s) + dependencies to be available to pip in the ususal way.
+
+#### pipgrip vs. pipdeptree
+
+For offline usage, pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since packages don't need to be installed and all versions available to pip are considered.
 
 ## Installation
 
@@ -36,7 +42,7 @@ This package can be used to:
   - `pipgrip --tree .`
 - Install complex packages without worries using:
   - ``pip install -U --no-deps `pipgrip --pipe aiobotocore[awscli]` ``
-- Generate a lockfile with a complete working set of dependencies (see [known caveats](#known-caveats)):
+- Generate a lockfile with a complete working set of dependencies for worriless installs (see [known caveats](#known-caveats)):
   - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
   - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
 
@@ -152,7 +158,7 @@ keras==2.2.2 (2.2.2)
 - Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
 - [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
 - `--reversed-tree` isn't implemented yet
-- Since `pip install -r` does not accept `.` as requirement, `--pipe` format must be used when installing local projects
+- Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--pipe` should be used when installing local projects
 - Installing packages using pipgrip is not very intuitive, so maybe pipgrip needs a stable `--install` flag
 
 ## Development
