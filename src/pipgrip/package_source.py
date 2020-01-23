@@ -178,7 +178,10 @@ class PackageSource(BasePackageSource):
         if package == self.root:
             return self._root_dependencies
 
-        if req.extras not in self._packages[package] or self._packages[package][req.extras][version] is None:
+        if (
+            req.extras not in self._packages[package]
+            or self._packages[package][req.extras][version] is None
+        ):
             # populate dependencies for version
             self.discover_and_add(req.extras_name + "==" + str(version))
         return self._packages[package][req.extras][version]
