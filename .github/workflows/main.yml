@@ -1,6 +1,10 @@
 name: GH
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: "*"
+  push:
+    tags: "*"
 
 jobs:
   CI:
