@@ -2,7 +2,6 @@ import pytest
 from click.testing import CliRunner
 
 import pipgrip.pipper
-from pipgrip import __version__
 from pipgrip.cli import flatten, main
 from pipgrip.pipper import _download_wheel
 
@@ -73,7 +72,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         (
             ["."],
             [
-                ".==" + __version__,
+                ".",
                 "anytree==2.7.3",
                 "six==1.13.0",
                 "click==7.0",

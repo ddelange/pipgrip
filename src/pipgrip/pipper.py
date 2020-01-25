@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 import pkg_resources
+from click import echo as _echo
 from packaging.markers import default_environment
 from packaging.utils import canonicalize_name
 from pkginfo import get_metadata
@@ -27,6 +28,7 @@ def parse_req(requirement, extras=None):
             req.extras = extras
         req.key = "."
         full_str = req.__str__().replace(req.name, req.key)
+        req.name = req.key
     else:
         req = pkg_resources.Requirement.parse(requirement)
         if extras is not None:
@@ -44,6 +46,70 @@ def parse_req(requirement, extras=None):
     )
     req.extras = frozenset(req.extras)
     return req
+
+
+def stream_bash_command(bash_command, echo=False, **kwargs):
+    # https://gist.github.com/jaketame/3ed43d1c52e9abccd742b1792c449079
+    # https://gist.github.com/bgreenlee/1402841
+    process = subprocess.Popen(
+        bash_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs,
+    )
+
+    def check_io():
+        output = ""
+        while True:
+            line = process.stdout.readline().decode("utf-8")
+            if line:
+                output += line
+                if echo:
+                    _echo(line[:-1])
+            else:
+                break
+        return output
+
+    # keep checking stdout/stderr until the child exits
+    out = ""
+    while process.poll() is None:
+        out += check_io()
+
+    return_code = process.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, bash_command, output=out)
+
+    return out
+
+
+def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable):
+    args = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-U",
+        "--no-deps",
+        "--cache-dir",
+        cache_dir,
+    ]
+    if index_url is not None:
+        args += [
+            "--index-url",
+            index_url,
+            "--trusted-host",
+            urlparse(index_url).hostname,
+        ]
+    if extra_index_url is not None:
+        args += [
+            "--extra-index-url",
+            extra_index_url,
+            "--trusted-host",
+            urlparse(extra_index_url).hostname,
+        ]
+    if PIP_VERSION >= [10]:
+        args.append("--progress-bar=off")
+    if editable:
+        args += ["--editable"]
+
+    return args
 
 
 def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
@@ -81,19 +147,34 @@ def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
     return args
 
 
+def install_packages(packages, index_url, extra_index_url, pre, cache_dir, editable):
+    """Install a list of packages with pip."""
+    args = (
+        _get_install_args(index_url, extra_index_url, pre, cache_dir, editable)
+        + packages
+    )
+    try:
+        out = stream_bash_command(args, echo=True)
+    except subprocess.CalledProcessError as err:
+        output = getattr(err, "output") or ""
+        logger.error(output)
+        raise
+    return out
+
+
 def _get_available_versions(package, index_url, extra_index_url, pre):
     logger.debug("Finding possible versions for {}".format(package))
     args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
 
     try:
-        out = subprocess.check_output(args, stderr=subprocess.STDOUT)
+        out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
         # expected. we forced this by using a non-existing version number.
-        out = getattr(err, "output", b"")
+        out = getattr(err, "output") or ""
     else:
         logger.warning(out)
         raise RuntimeError("Unexpected success:" + " ".join(args))
-    out = out.decode("utf-8").splitlines()
+    out = out.splitlines()
     for line in out[::-1]:
         if "Could not find a version that satisfies the requirement" in line:
             all_versions = line.split("from versions: ", 1)[1].rstrip(")").split(", ")
@@ -119,12 +200,12 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
     args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
     try:
-        out = subprocess.check_output(args, stderr=subprocess.STDOUT,)
+        out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
-        output = getattr(err, "output", b"").decode("utf-8")
+        output = getattr(err, "output") or ""
         logger.error(output)
         raise
-    out = out.decode("utf-8").splitlines()[::-1]
+    out = out.splitlines()[::-1]
     for i, line in enumerate(out):
         if cache_dir in line or abs_cache_dir in line or "Stored in directory" in line:
             if "Stored in directory" in line:

@@ -15,8 +15,9 @@ from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource
+from pipgrip.pipper import install_packages
 
-logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
+logging.basicConfig(format="  %(levelname)s: %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 
@@ -96,7 +97,7 @@ def _recurse_dependencies(
 
 
 def build_tree(source, decision_packages):
-    tree_root = Node("root")
+    tree_root = Node("__root__")
     exhaustive = _recurse_dependencies(
         source, decision_packages, source._root_dependencies, tree_root, tree_root
     )
@@ -124,6 +125,12 @@ def render_tree(root_tree, max_depth):
 
 @click.command()
 @click.argument("dependencies", nargs=-1)
+@click.option(
+    "--install", is_flag=True, help="Install full dependency tree after resolving.",
+)
+@click.option(
+    "-e", "--editable", is_flag=True, help="Install a project in editable mode.",
+)
 @click.option(
     "--lock", is_flag=True, help="Write out pins to './pipgrip.lock'.",
 )
@@ -189,6 +196,8 @@ def render_tree(root_tree, max_depth):
 )
 def main(
     dependencies,
+    install,
+    editable,
     lock,
     pipe,
     json,
@@ -219,6 +228,20 @@ def main(
         raise click.ClickException(
             "--max-depth has no effect without --tree or --reversed-tree"
         )
+    if editable:
+        if not install:
+            raise click.ClickException("--editable has no effect without --install")
+        if len(dependencies) > 1 or not dependencies[0].startswith("."):
+            raise click.ClickException(
+                "--editable does not accept input '{}'".format(" ".join(dependencies))
+            )
+    for dep in dependencies:
+        if os.sep in dep:
+            raise click.ClickException(
+                "'{}' looks like a path, and is not supported yet by pipgrip".format(
+                    dep
+                )
+            )
 
     if reversed_tree:
         tree = True
@@ -274,8 +297,26 @@ def main(
         elif json:
             output = dumps(packages)
         else:
-            output = "\n".join(["==".join(x) for x in packages.items()])
+            output = "\n".join(
+                [
+                    "==".join(x) if not x[0].startswith(".") else x[0]
+                    for x in packages.items()
+                ]
+            )
         click.echo(output)
+
+        if install:
+            install_packages(
+                [
+                    "==".join(x) if not x[0].startswith(".") else x[0]
+                    for x in packages.items()
+                ],
+                index_url,
+                extra_index_url,
+                pre,
+                cache_dir,
+                editable,
+            )
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))
     # except Exception as exc:
