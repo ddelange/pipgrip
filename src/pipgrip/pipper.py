@@ -48,11 +48,11 @@ def parse_req(requirement, extras=None):
     return req
 
 
-def stream_bash_command(bash_command, echo=False, **kwargs):
+def stream_bash_command(bash_command, echo=False):
     # https://gist.github.com/jaketame/3ed43d1c52e9abccd742b1792c449079
     # https://gist.github.com/bgreenlee/1402841
     process = subprocess.Popen(
-        bash_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs,
+        bash_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
 
     def check_io():
