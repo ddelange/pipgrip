@@ -1,6 +1,10 @@
 name: GH
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: "*"
+  push:
+    tags: "*"
 
 jobs:
   CI:
@@ -30,7 +34,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements/ci.txt
         pip install -e .
-    #    pip install codecov
 
     - name: Lint
       run: make lint
@@ -38,10 +41,13 @@ jobs:
     - name: Test
       run: make test
 
-    # - name: Codecov
-    #   env:
-    #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    #   run: codecov
+    - name: Codecov
+      if: matrix.python-version == 3.8
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        pip install codecov
+        codecov
 
   CD:
     needs: CI
