@@ -1,10 +1,11 @@
 # pipgrip
 
-[![Actions Status](https://github.com/ddelange/pipgrip/workflows/GH/badge.svg)](https://github.com/ddelange/pipgrip/actions)  <!-- use badge.svg?branch=develop to deviate from default branch -->
+[![build](https://img.shields.io/github/workflow/status/ddelange/pipgrip/GH/master?logo=github&cacheSeconds=86400)](https://github.com/ddelange/pipgrip/actions)
+[![codecov](https://img.shields.io/codecov/c/github/ddelange/pipgrip/master?logo=codecov&logoColor=white)](https://codecov.io/gh/ddelange/pipgrip)
 [![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://github.com/ddelange/pipgrip/releases/latest)
+[![downloads](https://pepy.tech/badge/pipgrip)](https://pypistats.org/packages/pipgrip)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-<!-- [![codecov](https://codecov.io/gh/ddelange/pipgrip/branch/master/graph/badge.svg?token=<add_token_here>)](https://codecov.io/gh/ddelange/pipgrip) -->
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
@@ -38,8 +39,9 @@ This package can be used to:
 - Alleviate [Python dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
 - Render an exhaustive dependency tree for any given pip-compatible package(s) with `--tree`
 - Detect version conflicts for given constraints and give human readable feedback about it
-- Find dependency conflicts in local projects:
-  - `pipgrip --tree .`
+- Find dependency conflicts or cyclic dependencies in local projects:
+  - `pipgrip -v --tree .`
+- Avoid bugs by running pipgrip as a stage in CI pipelines
 - Install complex packages without worries using:
   - ``pip install -U --no-deps `pipgrip --pipe aiobotocore[awscli]` ``
 - Generate a lockfile with a complete working set of dependencies for worriless installs (see [known caveats](#known-caveats)):
