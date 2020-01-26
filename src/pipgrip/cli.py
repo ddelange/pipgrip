@@ -9,6 +9,7 @@ from subprocess import CalledProcessError
 import click
 from anytree import Node, RenderTree
 from anytree.search import findall_by_attr
+from packaging.markers import default_environment
 
 from pipgrip.compat import USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
@@ -17,7 +18,7 @@ from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource
 from pipgrip.pipper import install_packages
 
-logging.basicConfig(format="  %(levelname)s: %(message)s")
+logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 
@@ -217,6 +218,7 @@ def main(
         logger.setLevel(logging.INFO)
     if verbose >= 3:
         logger.setLevel(logging.DEBUG)
+        logger.debug(str(default_environment()))
 
     if sum((pipe, json, tree, reversed_tree)) > 1:
         raise click.ClickException("Illegal combination of output formats selected")

@@ -166,8 +166,8 @@ If cyclic dependencies are found, it is noted in the resulting tree.
 ```
 $ pipgrip --tree -v keras==2.2.2
 
-  WARNING: Cyclic dependency found: keras depends on keras-applications and vice versa.
-  WARNING: Cyclic dependency found: keras depends on keras-preprocessing and vice versa.
+WARNING: Cyclic dependency found: keras depends on keras-applications and vice versa.
+WARNING: Cyclic dependency found: keras depends on keras-preprocessing and vice versa.
 keras==2.2.2 (2.2.2)
 ├── h5py (2.10.0)
 │   ├── numpy>=1.7 (1.18.1)
