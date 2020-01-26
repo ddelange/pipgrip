@@ -52,7 +52,8 @@ This package can be used to:
   - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
 - **Combine** dependency trees of multiple packages into one unified set of pinned packages:
   - `pipgrip --lock --install --tree -v .[boto3] s3transfer==0.2.1`
-- **See also** [known caveats](#known-caveats)
+
+See also [known caveats](#known-caveats).
 
 ```sh
 $ pipgrip --help
@@ -193,12 +194,11 @@ keras==2.2.2 (2.2.2)
 
 ## Known caveats
 
-- ``pip install -U `pipgrip package` `` without `--no-deps` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip
+- ``pip install -U `pipgrip --pipe package` `` without `--no-deps` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip
 - Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
 - [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
 - `--reversed-tree` isn't implemented yet
-- Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--pipe` should be used when installing local projects
-- Installing packages using pipgrip is not very intuitive, so maybe pipgrip needs a stable `--install` flag
+- Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--install` or `--pipe` should be used when installing local projects
 - The equivalent of e.g. `pip install ../aiobotocore[boto3]` is not yet implemented. However, e.g. `pipgrip --install .[boto3]` is allowed.
 
 

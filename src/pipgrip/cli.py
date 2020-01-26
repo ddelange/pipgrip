@@ -307,10 +307,11 @@ def main(
 
         if install:
             install_packages(
-                [
+                # sort to ensure . is added right after --editable
+                sorted(
                     "==".join(x) if not x[0].startswith(".") else x[0]
                     for x in packages.items()
-                ],
+                ),
                 index_url,
                 extra_index_url,
                 pre,
