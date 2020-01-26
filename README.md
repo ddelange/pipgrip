@@ -29,7 +29,7 @@ For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can ins
 
 This pure-Python, OS independent package is available on [PyPI](https://pypi.org/project/pipgrip/):
 
-```sh
+```
 pip install pipgrip
 ```
 
@@ -55,7 +55,7 @@ This package can be used to:
 
 See also [known caveats](#known-caveats).
 
-```sh
+```
 $ pipgrip --help
 
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
@@ -89,7 +89,7 @@ Options:
 #### Dependency trees
 
 Exhaustive dependency trees without the need to install any packages (at most build some wheels).
-```sh
+```
 $ pipgrip --tree pipgrip
 
 pipgrip (0.1.0)
@@ -107,7 +107,7 @@ pipgrip (0.1.0)
 #### Lockfile generation
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.
-```sh
+```
 $ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10'
 
 botocore==1.13.48 (1.13.48)
@@ -149,7 +149,7 @@ Since the selected botocore version is older than the one required by the recent
 #### Version conflicts
 
 If version conflicts exist for the given (ranges of) package version(s), a verbose explanation is raised.
-```sh
+```
 $ pipgrip auto-sklearn~=0.6 dragnet==2.0.4
 
 Error: Because dragnet (2.0.4) depends on scikit-learn (>=0.15.2,<0.21.0)
@@ -163,7 +163,7 @@ If older versions of auto-sklearn are allowed, PubGrub will try all acceptable v
 #### Cyclic dependencies
 
 If cyclic dependencies are found, it is noted in the resulting tree.
-```sh
+```
 $ pipgrip --tree -v keras==2.2.2
 
   WARNING: Cyclic dependency found: keras depends on keras-applications and vice versa.
@@ -209,7 +209,7 @@ keras==2.2.2 (2.2.2)
 
 Create a virtual environment and get ready to develop:
 
-```sh
+```
 make install
 ```
 
@@ -217,7 +217,7 @@ This [make-command](Makefile) is equivalent to the following steps:
 
 Install pre-commit and other continous integration dependencies in order to make commits and run tests.
 
-```sh
+```
 pip install -r requirements/ci.txt
 pre-commit install
 ```
@@ -226,7 +226,7 @@ With requirements installed, `make lint` and `make test` can now be run. There i
 
 To import the package in the python environment, install the package (`-e` for editable installation, upon import, python will read directly from the repository).
 
-```sh
+```
 pip install -e .
 ```
 
