@@ -205,7 +205,7 @@ keras==2.2.2 (2.2.2)
 ## Development
 
 [![gitmoji](https://img.shields.io/badge/gitmoji-%20%F0%9F%98%9C%20%F0%9F%98%8D-ffdd67)](https://github.com/carloscuesta/gitmoji-cli)
-[![pre-commit](https://img.shields.io/badge/pre--commit-available-green?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 Create a virtual environment and get ready to develop:
 
