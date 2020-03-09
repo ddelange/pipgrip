@@ -25,7 +25,7 @@ def read_readme(path):
 
 setup(
     name="pipgrip",
-    description="Composable command line interface toolkit",
+    description="Lightweight pip dependency resolver with deptree preview functionality based on the PubGrub algorithm",
     long_description=read_readme(readme_path),
     long_description_content_type="text/markdown",
     setup_requires=["setuptools_scm"],
