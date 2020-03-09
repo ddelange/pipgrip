@@ -16,11 +16,10 @@ from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource
-from pipgrip.pipper import install_packages
+from pipgrip.pipper import install_packages, read_requirements
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
 
 
 def flatten(d):
@@ -124,13 +123,23 @@ def render_tree(root_tree, max_depth):
     return "\n".join(output)
 
 
-@click.command()
+@click.command(
+    context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 84},
+    help="pipgrip is a lightweight pip dependency resolver with deptree preview functionality based on the PubGrub algorithm, which is also used by poetry. For one or more PEP 508 dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.",
+)
 @click.argument("dependencies", nargs=-1)
 @click.option(
     "--install", is_flag=True, help="Install full dependency tree after resolving.",
 )
 @click.option(
     "-e", "--editable", is_flag=True, help="Install a project in editable mode.",
+)
+@click.option(
+    "-r",
+    "--requirements-file",
+    multiple=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True),
+    help="Install from the given requirements file. This option can be used multiple times.",
 )
 @click.option(
     "--lock", is_flag=True, help="Write out pins to './pipgrip.lock'.",
@@ -155,14 +164,14 @@ def render_tree(root_tree, max_depth):
 )
 @click.option(
     "--max-depth",
-    type=int,
+    type=click.INT,
     default=-1,
     help="Maximum tree rendering depth (defaults to -1).",
 )
 @click.option(
     "--cache-dir",
     envvar="PIP_CACHE_DIR",
-    type=click.Path(exists=False, dir_okay=True),
+    type=click.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     default=os.path.join(USER_CACHE_DIR, "wheels", "pipgrip"),
     help="Use a custom cache dir.",
 )
@@ -180,7 +189,7 @@ def render_tree(root_tree, max_depth):
     help="Base URL of the Python Package Index (default https://pypi.org/simple).",
 )
 @click.option(
-    "--extra_index-url",
+    "--extra-index-url",
     envvar="PIP_EXTRA_INDEX_URL",
     help="Extra URLs of package indexes to use in addition to --index-url.",
 )
@@ -197,6 +206,7 @@ def render_tree(root_tree, max_depth):
 )
 def main(
     dependencies,
+    requirements_file,
     install,
     editable,
     lock,
@@ -212,6 +222,8 @@ def main(
     pre,
     verbose,
 ):
+    if verbose == 0:
+        logger.setLevel(logging.ERROR)
     if verbose == 1:
         logger.setLevel(logging.WARNING)
     if verbose == 2:
@@ -230,10 +242,18 @@ def main(
         raise click.ClickException(
             "--max-depth has no effect without --tree or --reversed-tree"
         )
+    if requirements_file:
+        if dependencies:
+            raise click.ClickException(
+                "-r can not be used in conjunction with directly passed requirements"
+            )
+        dependencies = []
+        for path in requirements_file:
+            dependencies += read_requirements(path)
     if editable:
         if not install:
             raise click.ClickException("--editable has no effect without --install")
-        if len(dependencies) > 1 or not dependencies[0].startswith("."):
+        if not sorted(dependencies)[0].startswith("."):
             raise click.ClickException(
                 "--editable does not accept input '{}'".format(" ".join(dependencies))
             )

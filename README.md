@@ -60,30 +60,38 @@ $ pipgrip --help
 
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
 
+  pipgrip is a lightweight pip dependency resolver with deptree preview
+  functionality based on the PubGrub algorithm, which is also used by poetry.
+  For one or more PEP 508 dependency specifications, pipgrip recursively
+  fetches/builds the Python wheels necessary for version solving, and optionally
+  renders the full resulting dependency tree.
+
 Options:
-  --install               Install full dependency tree after resolving.
-  -e, --editable          Install a project in editable mode.
-  --lock                  Write out pins to './pipgrip.lock'.
-  --pipe                  Output space-separated pins instead of newline-
-                          separated pins.
-  --json                  Output pins as json dict instead of newline-
-                          separated pins.
-  --tree                  Output human readable dependency tree (top-down).
-  --reversed-tree         Output human readable dependency tree (bottom-up).
-  --max-depth INTEGER     Maximum tree rendering depth (defaults to -1).
-  --cache-dir PATH        Use a custom cache dir.
-  --no-cache-dir          Disable pip cache for the wheels downloaded by
-                          pipper. Overrides --cache-dir.
-  --index-url TEXT        Base URL of the Python Package Index (default
-                          https://pypi.org/simple).
-  --extra_index-url TEXT  Extra URLs of package indexes to use in addition to
-                          --index-url.
-  --pre                   Include pre-release and development versions. By
-                          default, pip only finds stable versions.
-  -v, --verbose           Control verbosity: -v will print cyclic dependencies
-                          (WARNING), -vv will show solving decisions (INFO),
-                          -vvv for development (DEBUG).
-  --help                  Show this message and exit.
+  --install                     Install full dependency tree after resolving.
+  -e, --editable                Install a project in editable mode.
+  -r, --requirements-file FILE  Install from the given requirements file. This
+                                option can be used multiple times.
+  --lock                        Write out pins to './pipgrip.lock'.
+  --pipe                        Output space-separated pins instead of newline-
+                                separated pins.
+  --json                        Output pins as json dict instead of newline-
+                                separated pins.
+  --tree                        Output human readable dependency tree (top-down).
+  --reversed-tree               Output human readable dependency tree (bottom-up).
+  --max-depth INTEGER           Maximum tree rendering depth (defaults to -1).
+  --cache-dir DIRECTORY         Use a custom cache dir.
+  --no-cache-dir                Disable pip cache for the wheels downloaded by
+                                pipper. Overrides --cache-dir.
+  --index-url TEXT              Base URL of the Python Package Index (default
+                                https://pypi.org/simple).
+  --extra_index-url TEXT        Extra URLs of package indexes to use in addition
+                                to --index-url.
+  --pre                         Include pre-release and development versions. By
+                                default, pip only finds stable versions.
+  -v, --verbose                 Control verbosity: -v will print cyclic
+                                dependencies (WARNING), -vv will show solving
+                                decisions (INFO), -vvv for development (DEBUG).
+  -h, --help                    Show this message and exit.
 ```
 
 #### Dependency trees
@@ -92,7 +100,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.1.0)
+pipgrip (0.2.0)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.14.0)
 ├── click (7.0)
@@ -108,26 +116,26 @@ pipgrip (0.1.0)
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.
 ```
-$ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10'
+$ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10,<1.10.50'
 
 botocore==1.13.48 (1.13.48)
 ├── docutils<0.16,>=0.10 (0.15.2)
-├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
 │   └── six>=1.5 (1.14.0)
 └── urllib3<1.26,>=1.20 (1.25.8)
-boto3 (1.10.48)
+boto3<1.10.50,>=1.10 (1.10.48)
 ├── botocore<1.14.0,>=1.13.48 (1.13.48)
 │   ├── docutils<0.16,>=0.10 (0.15.2)
-│   ├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+│   ├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 │   ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
 │   │   └── six>=1.5 (1.14.0)
 │   └── urllib3<1.26,>=1.20 (1.25.8)
-├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 └── s3transfer<0.3.0,>=0.2.0 (0.2.1)
     └── botocore<2.0.0,>=1.12.36 (1.13.48)
         ├── docutils<0.16,>=0.10 (0.15.2)
-        ├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+        ├── jmespath<1.0.0,>=0.7.1 (0.9.5)
         ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
         │   └── six>=1.5 (1.14.0)
         └── urllib3<1.26,>=1.20 (1.25.8)
@@ -136,7 +144,7 @@ $ cat ./pipgrip.lock
 
 botocore==1.13.48
 docutils==0.15.2
-jmespath==0.9.4
+jmespath==0.9.5
 python-dateutil==2.8.1
 six==1.14.0
 urllib3==1.25.8
