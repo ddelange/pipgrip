@@ -162,7 +162,7 @@ def render_tree(root_tree, max_depth):
 )
 @click.option(
     "--max-depth",
-    type=int,
+    type=click.INT,
     default=-1,
     help="Maximum tree rendering depth (defaults to -1).",
 )
