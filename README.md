@@ -60,35 +60,38 @@ $ pipgrip --help
 
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
 
+  pipgrip is a lightweight pip dependency resolver with deptree preview
+  functionality based on the PubGrub algorithm, which is also used by poetry.
+  For one or more PEP 508 dependency specifications, pipgrip recursively
+  fetches/builds the Python wheels necessary for version solving, and optionally
+  renders the full resulting dependency tree.
+
 Options:
   --install                     Install full dependency tree after resolving.
   -e, --editable                Install a project in editable mode.
   -r, --requirements-file FILE  Install from the given requirements file. This
                                 option can be used multiple times.
   --lock                        Write out pins to './pipgrip.lock'.
-  --pipe                        Output space-separated pins instead of
-                                newline-separated pins.
+  --pipe                        Output space-separated pins instead of newline-
+                                separated pins.
   --json                        Output pins as json dict instead of newline-
                                 separated pins.
-  --tree                        Output human readable dependency tree (top-
-                                down).
-  --reversed-tree               Output human readable dependency tree (bottom-
-                                up).
+  --tree                        Output human readable dependency tree (top-down).
+  --reversed-tree               Output human readable dependency tree (bottom-up).
   --max-depth INTEGER           Maximum tree rendering depth (defaults to -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
                                 pipper. Overrides --cache-dir.
   --index-url TEXT              Base URL of the Python Package Index (default
                                 https://pypi.org/simple).
-  --extra_index-url TEXT        Extra URLs of package indexes to use in
-                                addition to --index-url.
-  --pre                         Include pre-release and development versions.
-                                By default, pip only finds stable versions.
+  --extra_index-url TEXT        Extra URLs of package indexes to use in addition
+                                to --index-url.
+  --pre                         Include pre-release and development versions. By
+                                default, pip only finds stable versions.
   -v, --verbose                 Control verbosity: -v will print cyclic
                                 dependencies (WARNING), -vv will show solving
-                                decisions (INFO), -vvv for development
-                                (DEBUG).
-  --help                        Show this message and exit.
+                                decisions (INFO), -vvv for development (DEBUG).
+  -h, --help                    Show this message and exit.
 ```
 
 #### Dependency trees

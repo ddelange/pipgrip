@@ -124,7 +124,10 @@ def render_tree(root_tree, max_depth):
     return "\n".join(output)
 
 
-@click.command()
+@click.command(
+    context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 84},
+    help="pipgrip is a lightweight pip dependency resolver with deptree preview functionality based on the PubGrub algorithm, which is also used by poetry. For one or more PEP 508 dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.",
+)
 @click.argument("dependencies", nargs=-1)
 @click.option(
     "--install", is_flag=True, help="Install full dependency tree after resolving.",
