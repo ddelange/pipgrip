@@ -66,6 +66,35 @@ def mock_get_available_versions(package, *args, **kwargs):
 # fmt: on
 
 
+def invoke_patched(func, arguments, monkeypatch):
+    def default_environment():
+        return {
+            "implementation_name": "cpython",
+            "implementation_version": "3.7.5",
+            "os_name": "posix",
+            "platform_machine": "x86_64",
+            "platform_release": "5.0.0-1027-azure",
+            "platform_system": "Linux",
+            "platform_version": "#29~18.04.1-Ubuntu SMP Mon Nov 25 21:18:57 UTC 2019",
+            "python_full_version": "3.7.5",
+            "platform_python_implementation": "CPython",
+            "python_version": "3.7",
+            "sys_platform": "linux",
+        }
+
+    monkeypatch.setattr(
+        pipgrip.pipper, "_download_wheel", mock_download_wheel,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper, "_get_available_versions", mock_get_available_versions,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper, "default_environment", default_environment,
+    )
+    runner = CliRunner()
+    return runner.invoke(main, arguments)
+
+
 @pytest.mark.parametrize(
     "arguments, expected",
     [
@@ -150,37 +179,70 @@ def mock_get_available_versions(package, *args, **kwargs):
         "-r",
     ),
 )
-def test_cli(arguments, expected, monkeypatch):
-    def default_environment():
-        return {
-            "implementation_name": "cpython",
-            "implementation_version": "3.7.5",
-            "os_name": "posix",
-            "platform_machine": "x86_64",
-            "platform_release": "5.0.0-1027-azure",
-            "platform_system": "Linux",
-            "platform_version": "#29~18.04.1-Ubuntu SMP Mon Nov 25 21:18:57 UTC 2019",
-            "python_full_version": "3.7.5",
-            "platform_python_implementation": "CPython",
-            "python_version": "3.7",
-            "sys_platform": "linux",
-        }
-
-    monkeypatch.setattr(
-        pipgrip.pipper, "_download_wheel", mock_download_wheel,
-    )
-    monkeypatch.setattr(
-        pipgrip.pipper, "_get_available_versions", mock_get_available_versions,
-    )
-    monkeypatch.setattr(
-        pipgrip.pipper, "default_environment", default_environment,
-    )
-    runner = CliRunner()
-    result = runner.invoke(main, arguments)
+def test_solutions(arguments, expected, monkeypatch):
+    result = invoke_patched(main, arguments, monkeypatch)
 
     if result.exit_code:
         raise result.exception
     assert set(result.output.strip().split("\n")) == set(expected)
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        (["-h"]),
+        (["-v", "click"]),
+        (["-vv", "click"]),
+        (
+            [
+                "-vvv",
+                "--json",
+                "click",
+                "--index-url=https://pypi.org/simple",
+                "--extra-index-url=https://pypi.org/simple",
+            ]
+        ),
+        (["--no-cache-dir", "--lock", "--pipe", "click"]),
+        (
+            [
+                "--lock",
+                "--tree",
+                "--max-depth=1",
+                "--pre",
+                "--cache-dir=/tmp/abc",
+                "keras==2.2.2",
+            ]
+        ),
+        (["-r", "tests/test_reqs.txt"]),
+        (["-r", "tests/test_reqs.txt", "-r", "tests/test_reqs.txt"]),
+        (["urllib3==1.25.7", "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1"]),
+        # (["keras-preprocessing==1.0.2", "keras==2.2.2"]),  # fix RecursionError
+    ],
+)
+def test_correct_options(arguments, monkeypatch):
+    result = invoke_patched(main, arguments, monkeypatch)
+
+    if result.exit_code:
+        raise result.exception
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        (["--json", "--pipe", "click"]),
+        (["click", "--tree", "--max-depth=-2"]),
+        (["click", "--max-depth=1"]),
+        (["-e", "click"]),
+        (["--reverse-tree", "click"]),
+        (["click", "-r", "tests/test_reqs.txt"]),
+        (["../."]),
+    ],
+)
+def test_incorrect_options(arguments, monkeypatch):
+    result = invoke_patched(main, arguments, monkeypatch)
+
+    if not result.exit_code:
+        raise result.exception
 
 
 def test_flatten():

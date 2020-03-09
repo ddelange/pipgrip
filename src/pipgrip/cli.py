@@ -20,7 +20,6 @@ from pipgrip.pipper import install_packages, read_requirements
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
 
 
 def flatten(d):
@@ -190,7 +189,7 @@ def render_tree(root_tree, max_depth):
     help="Base URL of the Python Package Index (default https://pypi.org/simple).",
 )
 @click.option(
-    "--extra_index-url",
+    "--extra-index-url",
     envvar="PIP_EXTRA_INDEX_URL",
     help="Extra URLs of package indexes to use in addition to --index-url.",
 )
@@ -223,6 +222,8 @@ def main(
     pre,
     verbose,
 ):
+    if verbose == 0:
+        logger.setLevel(logging.ERROR)
     if verbose == 1:
         logger.setLevel(logging.WARNING)
     if verbose == 2:
@@ -252,7 +253,7 @@ def main(
     if editable:
         if not install:
             raise click.ClickException("--editable has no effect without --install")
-        if len(dependencies) > 1 or not sorted(dependencies)[0].startswith("."):
+        if not sorted(dependencies)[0].startswith("."):
             raise click.ClickException(
                 "--editable does not accept input '{}'".format(" ".join(dependencies))
             )
