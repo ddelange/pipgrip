@@ -136,6 +136,10 @@ def mock_get_available_versions(package, *args, **kwargs):
             ["keras_preprocessing"],
             ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
         ),
+        (
+            ["-r", "tests/test_reqs.txt"],
+            ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
+        ),
     ],
     ids=(
         "pipgrip pipgrip",
@@ -143,6 +147,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras (cyclic)",
         "--tree keras (cyclic)",
         "keras_preprocessing (underscore)",
+        "-r",
     ),
 )
 def test_cli(arguments, expected, monkeypatch):
