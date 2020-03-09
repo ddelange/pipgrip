@@ -116,26 +116,26 @@ pipgrip (0.2.0)
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.
 ```
-$ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10'
+$ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10,<1.10.50'
 
 botocore==1.13.48 (1.13.48)
 ├── docutils<0.16,>=0.10 (0.15.2)
-├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
 │   └── six>=1.5 (1.14.0)
 └── urllib3<1.26,>=1.20 (1.25.8)
-boto3 (1.10.48)
+boto3<1.10.50,>=1.10 (1.10.48)
 ├── botocore<1.14.0,>=1.13.48 (1.13.48)
 │   ├── docutils<0.16,>=0.10 (0.15.2)
-│   ├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+│   ├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 │   ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
 │   │   └── six>=1.5 (1.14.0)
 │   └── urllib3<1.26,>=1.20 (1.25.8)
-├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+├── jmespath<1.0.0,>=0.7.1 (0.9.5)
 └── s3transfer<0.3.0,>=0.2.0 (0.2.1)
     └── botocore<2.0.0,>=1.12.36 (1.13.48)
         ├── docutils<0.16,>=0.10 (0.15.2)
-        ├── jmespath<1.0.0,>=0.7.1 (0.9.4)
+        ├── jmespath<1.0.0,>=0.7.1 (0.9.5)
         ├── python-dateutil<3.0.0,>=2.1 (2.8.1)
         │   └── six>=1.5 (1.14.0)
         └── urllib3<1.26,>=1.20 (1.25.8)
@@ -144,7 +144,7 @@ $ cat ./pipgrip.lock
 
 botocore==1.13.48
 docutils==0.15.2
-jmespath==0.9.4
+jmespath==0.9.5
 python-dateutil==2.8.1
 six==1.14.0
 urllib3==1.25.8
