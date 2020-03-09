@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import re
@@ -13,6 +14,14 @@ from pkginfo import get_metadata
 from pipgrip.compat import PIP_VERSION, urlparse
 
 logger = logging.getLogger(__name__)
+
+
+def read_requirements(path):
+    try:
+        with io.open(path, mode="rt", encoding="utf-8") as fp:
+            return list(filter(bool, [line.split("#")[0].strip() for line in fp]))
+    except IndexError:
+        raise RuntimeError("{} is broken".format(path))
 
 
 def parse_req(requirement, extras=None):

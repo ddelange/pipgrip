@@ -16,7 +16,7 @@ from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource
-from pipgrip.pipper import install_packages
+from pipgrip.pipper import install_packages, read_requirements
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
@@ -133,6 +133,13 @@ def render_tree(root_tree, max_depth):
     "-e", "--editable", is_flag=True, help="Install a project in editable mode.",
 )
 @click.option(
+    "-r",
+    "--requirements-file",
+    multiple=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True),
+    help="Install from the given requirements file. This option can be used multiple times.",
+)
+@click.option(
     "--lock", is_flag=True, help="Write out pins to './pipgrip.lock'.",
 )
 @click.option(
@@ -162,7 +169,7 @@ def render_tree(root_tree, max_depth):
 @click.option(
     "--cache-dir",
     envvar="PIP_CACHE_DIR",
-    type=click.Path(exists=False, dir_okay=True),
+    type=click.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     default=os.path.join(USER_CACHE_DIR, "wheels", "pipgrip"),
     help="Use a custom cache dir.",
 )
@@ -197,6 +204,7 @@ def render_tree(root_tree, max_depth):
 )
 def main(
     dependencies,
+    requirements_file,
     install,
     editable,
     lock,
@@ -230,10 +238,18 @@ def main(
         raise click.ClickException(
             "--max-depth has no effect without --tree or --reversed-tree"
         )
+    if requirements_file:
+        if dependencies:
+            raise click.ClickException(
+                "-r can not be used in conjunction with directly passed requirements"
+            )
+        dependencies = []
+        for path in requirements_file:
+            dependencies += read_requirements(path)
     if editable:
         if not install:
             raise click.ClickException("--editable has no effect without --install")
-        if len(dependencies) > 1 or not dependencies[0].startswith("."):
+        if len(dependencies) > 1 or not sorted(dependencies)[0].startswith("."):
             raise click.ClickException(
                 "--editable does not accept input '{}'".format(" ".join(dependencies))
             )
