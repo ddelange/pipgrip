@@ -242,7 +242,7 @@ def test_incorrect_options(arguments, monkeypatch):
     result = invoke_patched(main, arguments, monkeypatch)
 
     if not result.exit_code:
-        raise result.exception
+        raise RuntimeError("Unexpected result:\n{}".format(result.stdout))
 
 
 def test_flatten():
