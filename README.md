@@ -49,7 +49,7 @@ This package can be used to:
 - **Generate** a lockfile with a complete working set of dependencies for worriless installs:
   - `pipgrip --lock --install --tree -v aiobotocore[awscli]`
   - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
-  - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin`
+  <!-- - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin` -->
 - **Combine** dependency trees of multiple packages into one unified set of pinned packages:
   - `pipgrip --lock --install --tree -v .[boto3] s3transfer==0.2.1`
 
@@ -84,7 +84,7 @@ Options:
                                 pipper. Overrides --cache-dir.
   --index-url TEXT              Base URL of the Python Package Index (default
                                 https://pypi.org/simple).
-  --extra_index-url TEXT        Extra URLs of package indexes to use in addition
+  --extra-index-url TEXT        Extra URLs of package indexes to use in addition
                                 to --index-url.
   --pre                         Include pre-release and development versions. By
                                 default, pip only finds stable versions.
@@ -152,7 +152,7 @@ boto3==1.10.48
 s3transfer==0.2.1
 ```
 NOTE:
-Since the selected botocore version is older than the one required by the recent versions of boto3, all boto3 versions will be checked for compatibility with botocore==1.12.42.
+Since the selected botocore version is older than the one required by the recent versions of boto3, all boto3 versions will be checked for compatibility with botocore==1.13.48.
 
 #### Version conflicts
 
@@ -215,7 +215,7 @@ keras==2.2.2 (2.2.2)
 [![gitmoji](https://img.shields.io/badge/gitmoji-%20%F0%9F%98%9C%20%F0%9F%98%8D-ffdd67)](https://github.com/carloscuesta/gitmoji-cli)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-Create a virtual environment and get ready to develop:
+First, create a virtual environment. Then, get ready to develop:
 
 ```
 make install
