@@ -35,6 +35,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "keras-preprocessing": "./tests/assets/Keras_Preprocessing-1.1.0-py2.py3-none-any.whl",
         "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
+        "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
     }
     return wheelhouse[package]
 
@@ -61,6 +62,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras-preprocessing": ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4", "1.0.5", "1.0.6", "1.0.8", "1.0.9", "1.1.0"],
         "keras-applications": ["1.0.0", "1.0.1", "1.0.2", "1.0.4", "1.0.5", "1.0.6", "1.0.7", "1.0.8"],
         "h5py": ["2.10.0"],
+        "pip": ["20.0.2"],
     }
     return versions[package]
 # fmt: on
@@ -110,6 +112,7 @@ def invoke_patched(func, arguments, monkeypatch):
                 "pkginfo==1.5.0.1",
                 "setuptools==44.0.0",
                 "wheel==0.33.6",
+                "pip==20.0.2",
             ],
         ),
         (

@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+from tempfile import NamedTemporaryFile
 
 import pkg_resources
 from click import echo as _echo
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def read_requirements(path):
     try:
         with io.open(path, mode="rt", encoding="utf-8") as fp:
-            return list(filter(bool, [line.split("#")[0].strip() for line in fp]))
+            return list(filter(None, (line.split("#")[0].strip() for line in fp)))
     except IndexError:
         raise RuntimeError("{} is broken".format(path))
 
@@ -60,6 +61,7 @@ def parse_req(requirement, extras=None):
 def stream_bash_command(bash_command, echo=False):
     # https://gist.github.com/jaketame/3ed43d1c52e9abccd742b1792c449079
     # https://gist.github.com/bgreenlee/1402841
+    logger.debug(bash_command)
     process = subprocess.Popen(
         bash_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
@@ -94,8 +96,6 @@ def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable):
         "-m",
         "pip",
         "install",
-        "-U",
-        "--no-deps",
         "--cache-dir",
         cache_dir,
     ]
@@ -156,19 +156,32 @@ def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
     return args
 
 
-def install_packages(packages, index_url, extra_index_url, pre, cache_dir, editable):
+def install_packages(
+    packages, index_url, extra_index_url, pre, cache_dir, editable, constraints=None
+):
     """Install a list of packages with pip."""
     args = (
         _get_install_args(index_url, extra_index_url, pre, cache_dir, editable)
         + packages
     )
+
+    constraints_file = None
+    if constraints is not None:
+        logger.debug(constraints)
+        with NamedTemporaryFile(delete=False, mode="w+") as fp:
+            constraints_file = fp.name
+            fp.write("\n".join(constraints) + "\n")
+        args += ["--constraint", constraints_file]
+
     try:
-        out = stream_bash_command(args, echo=True)
+        return stream_bash_command(args, echo=True)
     except subprocess.CalledProcessError as err:
         output = getattr(err, "output") or ""
         logger.error(output)
         raise
-    return out
+    finally:
+        if constraints_file is not None:
+            os.remove(constraints_file)
 
 
 def _get_available_versions(package, index_url, extra_index_url, pre):
