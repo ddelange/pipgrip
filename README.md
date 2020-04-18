@@ -45,7 +45,7 @@ This package can be used to:
   - `pipgrip -v --tree . [--install -e]`
 - **Install** complex packages without worries using:
   - `pipgrip --install aiobotocore[awscli]`
-  - ``pip install -U --no-deps `pipgrip --pipe aiobotocore[awscli]` ``
+  - `pipgrip --lock aiobotocore[awscli] && pip install aiobotocore[awscli] --constraint ./pipgrip.lock`
 - **Generate** a lockfile with a complete working set of dependencies for worriless installs:
   - `pipgrip --lock --install --tree -v aiobotocore[awscli]`
   - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
@@ -100,16 +100,17 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.2.0)
+pipgrip (0.2.1)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.14.0)
-├── click (7.0)
-├── packaging>=17 (20.1)
-│   ├── pyparsing>=2.0.2 (2.4.6)
+├── click (7.1.1)
+├── packaging>=17 (20.3)
+│   ├── pyparsing>=2.0.2 (2.4.7)
 │   └── six (1.14.0)
+├── pip>=7.1.0 (20.0.2)
 ├── pkginfo>=1.4.2 (1.5.0.1)
-├── setuptools>=38.3 (45.1.0)
-└── wheel (0.33.6)
+├── setuptools>=38.3 (46.1.3)
+└── wheel (0.34.2)
 ```
 
 #### Lockfile generation

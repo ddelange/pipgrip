@@ -330,15 +330,15 @@ def main(
         if install:
             install_packages(
                 # sort to ensure . is added right after --editable
-                sorted(
-                    "==".join(x) if not x[0].startswith(".") else x[0]
-                    for x in packages.items()
+                packages=sorted(dependencies),
+                constraints=sorted(
+                    "==".join(x) for x in packages.items() if not x[0].startswith(".")
                 ),
-                index_url,
-                extra_index_url,
-                pre,
-                cache_dir,
-                editable,
+                index_url=index_url,
+                extra_index_url=extra_index_url,
+                pre=pre,
+                cache_dir=cache_dir,
+                editable=editable,
             )
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))

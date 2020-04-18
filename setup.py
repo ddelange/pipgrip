@@ -13,7 +13,7 @@ readme_path = path.join(here, "README.md")
 def read_requirements(path):
     try:
         with io.open(path, mode="rt", encoding="utf-8") as fp:
-            return list(filter(bool, [line.split("#")[0].strip() for line in fp]))
+            return list(filter(None, (line.split("#")[0].strip() for line in fp)))
     except IndexError:
         raise RuntimeError("{} is broken".format(path))
 
