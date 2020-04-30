@@ -230,13 +230,33 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     out = out.splitlines()[::-1]
     for i, line in enumerate(out):
         if cache_dir in line or abs_cache_dir in line or "Stored in directory" in line:
-            if "Stored in directory" in line:
+            if "Stored in directory:" in line:
                 # wheel was built
-                fname = [
+                fnames = [
                     part.replace("filename=", "")
                     for part in out[i + 1].split()
                     if part.startswith("filename=")
-                ][0]
+                ]
+                if not fnames:
+                    # older pip might not state filename, only directory
+                    whldir = line.replace("Stored in directory:", "").strip()
+                    for dirpath, dirnames, filenames in os.walk(whldir):
+                        all_wheels = sorted(
+                            filenames,
+                            key=lambda x: os.path.getmtime(os.path.join(dirpath, x)),
+                            reverse=True,
+                        )
+                        if package.startswith("."):
+                            fname = all_wheels[0]
+                        else:
+                            pkg = canonicalize_name(package)
+                            for whl in all_wheels:
+                                if pkg in whl:
+                                    fname = whl
+                                    break
+                        break
+                else:
+                    fname = fnames[0]
             else:
                 # wheel was fetched
                 fname = (
