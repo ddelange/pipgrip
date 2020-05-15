@@ -123,6 +123,15 @@ def render_tree(root_tree, max_depth):
     return "\n".join(output)
 
 
+def render_lock(packages, include_dot=True, sort=False):
+    fn = sorted if sort else list
+    return fn(
+        "==".join(x) if not x[0].startswith(".") else x[0]
+        for x in packages.items()
+        if include_dot or not x[0].startswith(".")
+    )
+
+
 @click.command(
     context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 84},
     help="pipgrip is a lightweight pip dependency resolver with deptree preview functionality based on the PubGrub algorithm, which is also used by poetry. For one or more PEP 508 dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.",
@@ -153,6 +162,11 @@ def render_tree(root_tree, max_depth):
     "--json",
     is_flag=True,
     help="Output pins as json dict instead of newline-separated pins.",
+)
+@click.option(
+    "--sort",
+    is_flag=True,
+    help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock, --pipe, or --json.",
 )
 @click.option(
     "--tree", is_flag=True, help="Output human readable dependency tree (top-down).",
@@ -212,6 +226,7 @@ def main(
     lock,
     pipe,
     json,
+    sort,
     tree,
     reversed_tree,
     max_depth,
@@ -299,13 +314,7 @@ def main(
             ) as fp:
                 # a lockfile containing `.` will break pip install -r
                 fp.write(
-                    "\n".join(
-                        [
-                            "==".join(x)
-                            for x in packages.items()
-                            if not x[0].startswith(".")
-                        ]
-                    )
+                    "\n".join(render_lock(packages, include_dot=False, sort=sort))
                     + "\n"
                 )
 
@@ -315,25 +324,18 @@ def main(
         if tree:
             output = render_tree(root_tree, max_depth)
         elif pipe:
-            output = " ".join(["==".join(x) for x in packages.items()])
+            output = " ".join(render_lock(packages, include_dot=True, sort=sort))
         elif json:
             output = dumps(packages)
         else:
-            output = "\n".join(
-                [
-                    "==".join(x) if not x[0].startswith(".") else x[0]
-                    for x in packages.items()
-                ]
-            )
+            output = "\n".join(render_lock(packages, include_dot=True, sort=sort))
         click.echo(output)
 
         if install:
             install_packages(
                 # sort to ensure . is added right after --editable
                 packages=sorted(dependencies),
-                constraints=sorted(
-                    "==".join(x) for x in packages.items() if not x[0].startswith(".")
-                ),
+                constraints=render_lock(packages, include_dot=False, sort=True),
                 index_url=index_url,
                 extra_index_url=extra_index_url,
                 pre=pre,

@@ -71,26 +71,38 @@ Options:
   -e, --editable                Install a project in editable mode.
   -r, --requirements-file FILE  Install from the given requirements file. This
                                 option can be used multiple times.
+
   --lock                        Write out pins to './pipgrip.lock'.
   --pipe                        Output space-separated pins instead of newline-
                                 separated pins.
+
   --json                        Output pins as json dict instead of newline-
                                 separated pins.
+
+  --sort                        Sort pins alphabetically before writing out. Can
+                                be used bare, or in combination with --lock,
+                                --pipe, or --json.
+
   --tree                        Output human readable dependency tree (top-down).
   --reversed-tree               Output human readable dependency tree (bottom-up).
   --max-depth INTEGER           Maximum tree rendering depth (defaults to -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
                                 pipper. Overrides --cache-dir.
+
   --index-url TEXT              Base URL of the Python Package Index (default
                                 https://pypi.org/simple).
+
   --extra-index-url TEXT        Extra URLs of package indexes to use in addition
                                 to --index-url.
+
   --pre                         Include pre-release and development versions. By
                                 default, pip only finds stable versions.
+
   -v, --verbose                 Control verbosity: -v will print cyclic
                                 dependencies (WARNING), -vv will show solving
                                 decisions (INFO), -vvv for development (DEBUG).
+
   -h, --help                    Show this message and exit.
 ```
 
@@ -100,16 +112,16 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.2.1)
+pipgrip (0.3.0)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.14.0)
-├── click (7.1.1)
+├── click (7.1.2)
 ├── packaging>=17 (20.3)
 │   ├── pyparsing>=2.0.2 (2.4.7)
 │   └── six (1.14.0)
-├── pip>=7.1.0 (20.0.2)
+├── pip>=7.1.0 (20.1)
 ├── pkginfo>=1.4.2 (1.5.0.1)
-├── setuptools>=38.3 (46.1.3)
+├── setuptools>=38.3 (46.3.1)
 └── wheel (0.34.2)
 ```
 
