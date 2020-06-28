@@ -90,7 +90,7 @@ def stream_bash_command(bash_command, echo=False):
     return out
 
 
-def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable):
+def _get_install_args(index_url, extra_index_url, pre, cache_dir, user, editable):
     args = [
         sys.executable,
         "-m",
@@ -115,9 +115,10 @@ def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable):
         ]
     if PIP_VERSION >= [10]:
         args.append("--progress-bar=off")
+    if user:
+        args += ["--user"]
     if editable:
         args += ["--editable"]
-
     return args
 
 
@@ -157,11 +158,18 @@ def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
 
 
 def install_packages(
-    packages, index_url, extra_index_url, pre, cache_dir, editable, constraints=None
+    packages,
+    index_url,
+    extra_index_url,
+    pre,
+    cache_dir,
+    editable,
+    user,
+    constraints=None,
 ):
     """Install a list of packages with pip."""
     args = (
-        _get_install_args(index_url, extra_index_url, pre, cache_dir, editable)
+        _get_install_args(index_url, extra_index_url, pre, cache_dir, user, editable)
         + packages
     )
 

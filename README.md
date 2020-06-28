@@ -103,6 +103,13 @@ Options:
                                 dependencies (WARNING), -vv will show solving
                                 decisions (INFO), -vvv for development (DEBUG).
 
+  --install-user, --user        Pass `--user` option to `pip install` (which
+                                see).  Install to the Python user install
+                                directory for your platform -- typically
+                                ~/.local/, or %APPDATA%\Python on Windows.
+                                (See the Python documentation for
+                                site.USER_BASE for full details.)
+
   -h, --help                    Show this message and exit.
 ```
 
