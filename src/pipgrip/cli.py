@@ -144,6 +144,11 @@ def render_lock(packages, include_dot=True, sort=False):
     "-e", "--editable", is_flag=True, help="Install a project in editable mode.",
 )
 @click.option(
+    "--user",
+    is_flag=True,
+    help=r"Install to the Python user install directory for your platform -- typically ~/.local/, or %APPDATA%\Python on Windows. (See the Python documentation for site.USER_BASE for full details.)",
+)
+@click.option(
     "-r",
     "--requirements-file",
     multiple=True,
@@ -223,6 +228,7 @@ def main(
     requirements_file,
     install,
     editable,
+    user,
     lock,
     pipe,
     json,
@@ -272,6 +278,9 @@ def main(
             raise click.ClickException(
                 "--editable does not accept input '{}'".format(" ".join(dependencies))
             )
+    if user:
+        if not install:
+            raise click.ClickException("--user has no effect without --install")
     for dep in dependencies:
         if os.sep in dep:
             raise click.ClickException(
@@ -341,6 +350,7 @@ def main(
                 pre=pre,
                 cache_dir=cache_dir,
                 editable=editable,
+                user=user,
             )
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))

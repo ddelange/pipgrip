@@ -69,6 +69,12 @@ Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
 Options:
   --install                     Install full dependency tree after resolving.
   -e, --editable                Install a project in editable mode.
+  --user                        Install to the Python user install directory for
+                                your platform -- typically ~/.local/, or
+                                %APPDATA%\Python on Windows. (See the Python
+                                documentation for site.USER_BASE for full
+                                details.)
+
   -r, --requirements-file FILE  Install from the given requirements file. This
                                 option can be used multiple times.
 
@@ -112,16 +118,16 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.3.0)
+pipgrip (0.4.0)
 ├── anytree (2.8.0)
-│   └── six>=1.9.0 (1.14.0)
+│   └── six>=1.9.0 (1.15.0)
 ├── click (7.1.2)
-├── packaging>=17 (20.3)
+├── packaging>=17 (20.4)
 │   ├── pyparsing>=2.0.2 (2.4.7)
-│   └── six (1.14.0)
-├── pip>=7.1.0 (20.1)
+│   └── six (1.15.0)
+├── pip>=7.1.0 (20.1.1)
 ├── pkginfo>=1.4.2 (1.5.0.1)
-├── setuptools>=38.3 (46.3.1)
+├── setuptools>=38.3 (47.3.1)
 └── wheel (0.34.2)
 ```
 
