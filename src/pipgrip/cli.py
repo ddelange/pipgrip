@@ -146,7 +146,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--user",
     is_flag=True,
-    help=r"Install to the Python user install directory for your platform -- typically ~/.local/, or %APPDATA%\Python on Windows. (See the Python documentation for site.USER_BASE for full details.)",
+    help=r"Install to the Python user install directory for your platform -- typically ~/.local/, or %APPDATA%\Python on Windows.",
 )
 @click.option(
     "-r",
@@ -171,7 +171,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--sort",
     is_flag=True,
-    help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock, --pipe, or --json.",
+    help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock or --pipe.",
 )
 @click.option(
     "--tree", is_flag=True, help="Output human readable dependency tree (top-down).",
