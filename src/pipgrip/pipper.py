@@ -251,7 +251,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                         else:
                             pkg = canonicalize_name(package)
                             for whl in all_wheels:
-                                if pkg in whl:
+                                if pkg in canonicalize_name(whl):
                                     fname = whl
                                     break
                         break
