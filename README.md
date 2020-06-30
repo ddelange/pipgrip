@@ -10,8 +10,8 @@
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
 <!--
-  give example with multiple packages
   reversed tree
+  VCS support
   two times pypi.org in `looking in indexes`?
   multicore pip?
 -->
@@ -43,13 +43,10 @@ This package can be used to:
 - **Detect** version conflicts for given constraints and give human readable feedback about it
 - **Warn** for cyclic dependencies in local projects [and install them anyway]:
   - `pipgrip -v --tree . [--install -e]`
-- **Install** complex packages without worries using:
+- **Install** complex packages without worries:
   - `pipgrip --install aiobotocore[awscli]`
-  - `pipgrip --lock aiobotocore[awscli] && pip install aiobotocore[awscli] --constraint ./pipgrip.lock`
 - **Generate** a lockfile with a complete working set of dependencies for worriless installs:
-  - `pipgrip --lock --install --tree -v aiobotocore[awscli]`
-  - `pipgrip --lock -tree aiobotocore[awscli] && pip install -U --no-deps -r ./pipgrip.lock`
-  <!-- - `pipgrip aiobotocore[awscli] | pip install -U --no-deps -r /dev/stdin` -->
+  - `pipgrip --lock aiobotocore[awscli] && pip install aiobotocore[awscli] --constraint ./pipgrip.lock`
 - **Combine** dependency trees of multiple packages into one unified set of pinned packages:
   - `pipgrip --lock --install --tree -v .[boto3] s3transfer==0.2.1`
 
@@ -71,9 +68,7 @@ Options:
   -e, --editable                Install a project in editable mode.
   --user                        Install to the Python user install directory for
                                 your platform -- typically ~/.local/, or
-                                %APPDATA%\Python on Windows. (See the Python
-                                documentation for site.USER_BASE for full
-                                details.)
+                                %APPDATA%\Python on Windows.
 
   -r, --requirements-file FILE  Install from the given requirements file. This
                                 option can be used multiple times.
@@ -86,8 +81,8 @@ Options:
                                 separated pins.
 
   --sort                        Sort pins alphabetically before writing out. Can
-                                be used bare, or in combination with --lock,
-                                --pipe, or --json.
+                                be used bare, or in combination with --lock or
+                                --pipe.
 
   --tree                        Output human readable dependency tree (top-down).
   --reversed-tree               Output human readable dependency tree (bottom-up).
@@ -118,7 +113,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.4.0)
+pipgrip (0.4.1)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
 ├── click (7.1.2)
@@ -221,7 +216,7 @@ keras==2.2.2 (2.2.2)
 
 ## Known caveats
 
-- ``pip install -U `pipgrip --pipe package` `` without `--no-deps` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip
+- ``pip install -U `pipgrip --pipe package` `` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip. Using `pipgrip --install`, or combining `pipgrip --lock` with `pip install --constraint` is recommended.
 - Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
 - [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
 - `--reversed-tree` isn't implemented yet

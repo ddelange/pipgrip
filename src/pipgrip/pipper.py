@@ -115,6 +115,8 @@ def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable, user
         ]
     if PIP_VERSION >= [10]:
         args.append("--progress-bar=off")
+    if pre:
+        args += ["--pre"]
     if editable:
         args += ["--editable"]
     if user:
@@ -248,21 +250,20 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                 if not fnames:
                     # older pip might not state filename, only directory
                     whldir = line.replace("Stored in directory:", "").strip()
-                    for dirpath, dirnames, filenames in os.walk(whldir):
-                        all_wheels = sorted(
-                            filenames,
-                            key=lambda x: os.path.getmtime(os.path.join(dirpath, x)),
-                            reverse=True,
-                        )
-                        if package.startswith("."):
-                            fname = all_wheels[0]
-                        else:
-                            pkg = canonicalize_name(package)
-                            for whl in all_wheels:
-                                if pkg in canonicalize_name(whl):
-                                    fname = whl
-                                    break
-                        break
+                    dirpath, _, filenames = next(os.walk(whldir))
+                    all_wheels = sorted(
+                        (f for f in filenames if f.endswith(".whl")),
+                        key=lambda x: os.path.getmtime(os.path.join(dirpath, x)),
+                        reverse=True,
+                    )
+                    if package.startswith("."):
+                        fname = all_wheels[0]
+                    else:
+                        pkg = canonicalize_name(package)
+                        for whl in all_wheels:
+                            if pkg in canonicalize_name(whl):
+                                fname = whl
+                                break
                 else:
                     fname = fnames[0]
             else:
