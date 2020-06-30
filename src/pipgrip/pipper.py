@@ -115,6 +115,8 @@ def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable, user
         ]
     if PIP_VERSION >= [10]:
         args.append("--progress-bar=off")
+    if pre:
+        args += ["--pre"]
     if editable:
         args += ["--editable"]
     if user:

@@ -1,13 +1,14 @@
 import os
+import subprocess
 
 import pytest
 
 import pipgrip.pipper
-from pipgrip.pipper import _download_wheel
+from pipgrip.pipper import _download_wheel, _get_available_versions
 
 
 @pytest.mark.parametrize(
-    "package, pip_output, fname",
+    "package, pip_output, expected",
     [
         (
             "six",
@@ -85,11 +86,15 @@ from pipgrip.pipper import _download_wheel
         "pip>10 built 1",
     ),
 )
-def test_download_wheel(package, pip_output, fname, monkeypatch):
+def test_download_wheel(package, pip_output, expected, monkeypatch):
     cache_dir = "~/Library/Caches/pip/wheels/pipgrip"
 
     def patch_os_walk(*args, **kwargs):
-        yield cache_dir, None, ["jupyterlab_black-0.2.1-py3-none-any.whl", "bad.whl"]
+        yield cache_dir, None, [
+            "a.whl",
+            "jupyterlab_black-0.2.1-py3-none-any.whl",
+            "x.whl",
+        ]
 
     def patch_getmtime(*args, **kwargs):
         return 0
@@ -108,5 +113,45 @@ def test_download_wheel(package, pip_output, fname, monkeypatch):
     )
 
     assert _download_wheel(
-        package, "https://pypi.org/simple", None, False, cache_dir,
-    ) == os.path.join(cache_dir, fname.lstrip(os.path.sep))
+        package, "https://pypi.org/simple", "https://pypi.org/simple", False, cache_dir,
+    ) == os.path.join(cache_dir, expected.lstrip(os.path.sep))
+
+
+@pytest.mark.parametrize(
+    "package, pre, pip_output, expected",
+    [
+        (
+            "click",
+            True,
+            """
+            Collecting click==rubbish
+              Could not find a version that satisfies the requirement click==rubbish (from versions: 6.6, 6.7.dev0, 6.7, 7.0, 7.1, 7.1.1, 7.1.2)
+            No matching distribution found for click==rubbish
+            """,
+            ["6.6", "6.7.dev0", "6.7", "7.0", "7.1", "7.1.1", "7.1.2"],
+        ),
+        (
+            "click",
+            False,
+            """
+            Collecting click==rubbish
+              Could not find a version that satisfies the requirement click==rubbish (from versions: 6.6, 6.7.dev0, 6.7, 7.0, 7.1, 7.1.1, 7.1.2)
+            No matching distribution found for click==rubbish
+            """,
+            ["6.6", "6.7", "7.0", "7.1", "7.1.1", "7.1.2"],
+        ),
+    ],
+    ids=("click pre", "click"),
+)
+def test_get_available_versions(package, pre, pip_output, expected, monkeypatch):
+    def patch_pip_output(*args, **kwargs):
+        raise subprocess.CalledProcessError(returncode=1, cmd="", output=pip_output)
+
+    monkeypatch.setattr(
+        pipgrip.pipper, "stream_bash_command", patch_pip_output,
+    )
+
+    assert (
+        _get_available_versions(package, "https://pypi.org/simple", None, pre)
+        == expected
+    )

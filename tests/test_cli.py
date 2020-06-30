@@ -201,9 +201,10 @@ def test_solutions(arguments, expected, monkeypatch):
                 "-vvv",
                 "--json",
                 "--install",
+                "--user",
+                "--pre",
                 "click",
                 "--index-url=https://pypi.org/simple",
-                "--extra-index-url=https://pypi.org/simple",
             ]
         ),
         (["--no-cache-dir", "--lock", "--pipe", "click"]),
@@ -214,6 +215,7 @@ def test_solutions(arguments, expected, monkeypatch):
                 "--max-depth=1",
                 "--pre",
                 "--cache-dir=/tmp/abc",
+                "--extra-index-url=https://pypi.org/simple",
                 "keras==2.2.2",
             ]
         ),
