@@ -103,6 +103,9 @@ def test_download_wheel(package, pip_output, fname, monkeypatch):
     monkeypatch.setattr(
         pipgrip.pipper.os.path, "getmtime", patch_getmtime,
     )
+    monkeypatch.setattr(
+        pipgrip.pipper, "stream_bash_command", patch_pip_output,
+    )
 
     assert _download_wheel(
         package, "https://pypi.org/simple", None, False, cache_dir,
