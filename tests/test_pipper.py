@@ -89,7 +89,7 @@ def test_download_wheel(package, pip_output, fname, monkeypatch):
     cache_dir = "~/Library/Caches/pip/wheels/pipgrip"
 
     def patch_os_walk(*args, **kwargs):
-        yield cache_dir, None, ["jupyterlab_black-0.2.1-py3-none-any.whl"]
+        yield cache_dir, None, ["jupyterlab_black-0.2.1-py3-none-any.whl", "bad.whl"]
 
     def patch_getmtime(*args, **kwargs):
         return 0
