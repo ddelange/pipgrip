@@ -200,6 +200,7 @@ def test_solutions(arguments, expected, monkeypatch):
             [
                 "-vvv",
                 "--json",
+                "--install",
                 "click",
                 "--index-url=https://pypi.org/simple",
                 "--extra-index-url=https://pypi.org/simple",
