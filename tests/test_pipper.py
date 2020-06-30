@@ -21,7 +21,7 @@ from pipgrip.pipper import _download_wheel, _get_available_versions
               Stored in directory: ~/Library/Caches/pip/wheels/pipgrip
             Successfully built jupyterlab-black
             """,
-            "jupyterlab_black-0.2.1-py3-none-any.whl",
+            "a.whl",
         ),
         (
             "six",
