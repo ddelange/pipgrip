@@ -223,7 +223,7 @@ def invoke_patched(func, arguments, monkeypatch):
         "requests",
         "keras (cyclic)",
         "--tree keras (cyclic)",
-        "--tree-ascii ascii (cyclic)",
+        "--tree-ascii (cyclic)",
         "--tree-json (cyclic)",
         "--tree-json-exact (cyclic)",
         "keras_preprocessing (underscore)",

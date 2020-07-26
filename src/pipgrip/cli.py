@@ -22,11 +22,6 @@ logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
 
 
-def transform_keys(tree_dict):
-    """Join package-version tuples (keys in tree_dict) on "==" recursively."""
-    return OrderedDict(("==".join(k), transform_keys(v)) for k, v in tree_dict.items())
-
-
 def flatten(tree_dict):
     """Flatten tree_dict to a shallow OrderedDict with all unique exact pins."""
     out = OrderedDict()
@@ -78,6 +73,7 @@ def _recurse_dependencies(
             # left here in case e.g. versions_available is needed in rendered tree
             metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
+            extras_name=dep.package.req.extras_name,
         )
 
         # detect cyclic depenencies
@@ -131,12 +127,17 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
     return "\n".join(output)
 
 
-def render_json_tree(tree_root, max_depth):
+def render_json_tree(tree_root, max_depth, exact):
     json_tree = OrderedDict()
     for child in tree_root.children:
         if max_depth and child.depth > max_depth:
             continue
-        json_tree[child.pip_string] = render_json_tree(child, max_depth)
+        key = (
+            "{}=={}".format(child.extras_name, child.version)
+            if exact
+            else child.pip_string
+        )
+        json_tree[key] = render_json_tree(child, max_depth, exact)
     return json_tree
 
 
@@ -290,16 +291,21 @@ def main(
         > 1
     ):
         raise click.ClickException("Illegal combination of output formats selected")
-    if tree_ascii:
+
+    if tree_ascii or reversed_tree:
         tree = True
+    elif tree_json_exact:
+        tree_json = True
+
     if max_depth == 0 or max_depth < -1:
         raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
     if max_depth == -1:
         max_depth = 0
-    elif max_depth and not (tree or tree_json or tree_json_exact or reversed_tree):
+    elif max_depth and not (tree or tree_json or reversed_tree):
         raise click.ClickException(
             "--max-depth has no effect without --tree, --tree-json, --tree-json-exact, or --reversed-tree"
         )
+
     if requirements_file:
         if dependencies:
             raise click.ClickException(
@@ -308,6 +314,7 @@ def main(
         dependencies = []
         for path in requirements_file:
             dependencies += read_requirements(path)
+
     if editable:
         if not install:
             raise click.ClickException("--editable has no effect without --install")
@@ -318,6 +325,7 @@ def main(
     if user:
         if not install:
             raise click.ClickException("--user has no effect without --install")
+
     for dep in dependencies:
         if os.sep in dep:
             raise click.ClickException(
@@ -326,8 +334,6 @@ def main(
                 )
             )
 
-    if reversed_tree:
-        tree = True
     if no_cache_dir:
         cache_dir = tempfile.mkdtemp()
 
@@ -372,9 +378,9 @@ def main(
         if tree:
             output = render_tree(tree_root, max_depth, tree_ascii)
         elif tree_json:
-            output = dumps(render_json_tree(tree_root, max_depth), sort_keys=sort)
-        elif tree_json_exact:
-            output = dumps(transform_keys(packages_tree_dict), sort_keys=sort)
+            output = dumps(
+                render_json_tree(tree_root, max_depth, tree_json_exact), sort_keys=sort
+            )
         elif pipe:
             output = " ".join(render_lock(packages_flat, include_dot=True, sort=sort))
         elif json:
