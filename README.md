@@ -81,12 +81,15 @@ Options:
                                 separated pins.
 
   --sort                        Sort pins alphabetically before writing out. Can
-                                be used bare, or in combination with --lock or
-                                --pipe.
+                                be used bare, or in combination with --lock,
+                                --pipe, --json, --tree-json, or --tree-json-exact.
 
   --tree                        Output human readable dependency tree (top-down).
+  --tree-ascii                  Output human readable dependency tree in ascii.
+  --tree-json                   Output nested json dependency tree (top-down).
+  --tree-json-exact             Output nested json tree with exact pins.
   --reversed-tree               Output human readable dependency tree (bottom-up).
-  --max-depth INTEGER           Maximum tree rendering depth (defaults to -1).
+  --max-depth INTEGER           Maximum (json) tree rendering depth (default -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
                                 pipper. Overrides --cache-dir.
@@ -113,7 +116,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.4.1)
+pipgrip (0.5.0)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
 ├── click (7.1.2)
@@ -122,9 +125,11 @@ pipgrip (0.4.1)
 │   └── six (1.15.0)
 ├── pip>=7.1.0 (20.1.1)
 ├── pkginfo>=1.4.2 (1.5.0.1)
-├── setuptools>=38.3 (47.3.1)
+├── setuptools>=38.3 (49.2.0)
 └── wheel (0.34.2)
 ```
+
+See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (nested JSON dictionaries).
 
 #### Lockfile generation
 

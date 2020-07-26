@@ -7,7 +7,7 @@ from json import dumps
 from subprocess import CalledProcessError
 
 import click
-from anytree import Node, RenderTree
+from anytree import AsciiStyle, ContStyle, Node, RenderTree
 from anytree.search import findall_by_attr
 from packaging.markers import default_environment
 
@@ -22,9 +22,15 @@ logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
 
 
-def flatten(d):
+def transform_keys(tree_dict):
+    """Join package-version tuples (keys in tree_dict) on "==" recursively."""
+    return OrderedDict(("==".join(k), transform_keys(v)) for k, v in tree_dict.items())
+
+
+def flatten(tree_dict):
+    """Flatten tree_dict to a shallow OrderedDict with all unique exact pins."""
     out = OrderedDict()
-    for key0, val0 in d.items():
+    for key0, val0 in tree_dict.items():
         out[key0[0]] = key0[1]
         if not val0:
             continue
@@ -98,17 +104,19 @@ def _recurse_dependencies(
 
 def build_tree(source, decision_packages):
     tree_root = Node("__root__")
-    exhaustive = _recurse_dependencies(
+    exhaustive_tree_dict = _recurse_dependencies(
         source, decision_packages, source._root_dependencies, tree_root, tree_root
     )
-    return flatten(exhaustive), tree_root
+    exhaustive_tree_dict_flat = flatten(exhaustive_tree_dict)
+    return tree_root, exhaustive_tree_dict, exhaustive_tree_dict_flat
 
 
-def render_tree(root_tree, max_depth):
+def render_tree(tree_root, max_depth, tree_ascii=False):
+    style = AsciiStyle() if tree_ascii else ContStyle()
     output = []
-    for child in root_tree.children:
+    for child in tree_root.children:
         lines = []
-        for fill, _, node in RenderTree(child):
+        for fill, _, node in RenderTree(child, style=style):
             if max_depth and node.depth > max_depth:
                 continue
             lines.append(
@@ -121,6 +129,15 @@ def render_tree(root_tree, max_depth):
             )
         output += lines
     return "\n".join(output)
+
+
+def render_json_tree(tree_root, max_depth):
+    json_tree = OrderedDict()
+    for child in tree_root.children:
+        if max_depth and child.depth > max_depth:
+            continue
+        json_tree[child.pip_string] = render_json_tree(child, max_depth)
+    return json_tree
 
 
 def render_lock(packages, include_dot=True, sort=False):
@@ -171,10 +188,21 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--sort",
     is_flag=True,
-    help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock or --pipe.",
+    help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock, --pipe, --json, --tree-json, or --tree-json-exact.",
 )
 @click.option(
     "--tree", is_flag=True, help="Output human readable dependency tree (top-down).",
+)
+@click.option(
+    "--tree-ascii",
+    is_flag=True,
+    help="Output human readable dependency tree in ascii.",
+)
+@click.option(
+    "--tree-json", is_flag=True, help="Output nested json dependency tree (top-down).",
+)
+@click.option(
+    "--tree-json-exact", is_flag=True, help="Output nested json tree with exact pins.",
 )
 @click.option(
     "--reversed-tree",
@@ -185,7 +213,7 @@ def render_lock(packages, include_dot=True, sort=False):
     "--max-depth",
     type=click.INT,
     default=-1,
-    help="Maximum tree rendering depth (defaults to -1).",
+    help="Maximum (json) tree rendering depth (default -1).",
 )
 @click.option(
     "--cache-dir",
@@ -234,6 +262,9 @@ def main(
     json,
     sort,
     tree,
+    tree_ascii,
+    tree_json,
+    tree_json_exact,
     reversed_tree,
     max_depth,
     cache_dir,
@@ -254,15 +285,20 @@ def main(
         logger.debug("Environment: {}".format(default_environment()))
         logger.debug("Pip version: {}".format(PIP_VERSION))
 
-    if sum((pipe, json, tree, reversed_tree)) > 1:
+    if (
+        sum((pipe, json, tree, tree_ascii, tree_json, tree_json_exact, reversed_tree))
+        > 1
+    ):
         raise click.ClickException("Illegal combination of output formats selected")
+    if tree_ascii:
+        tree = True
     if max_depth == 0 or max_depth < -1:
         raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
     if max_depth == -1:
         max_depth = 0
-    elif max_depth and not (tree or reversed_tree):
+    elif max_depth and not (tree or tree_json or tree_json_exact or reversed_tree):
         raise click.ClickException(
-            "--max-depth has no effect without --tree or --reversed-tree"
+            "--max-depth has no effect without --tree, --tree-json, --tree-json-exact, or --reversed-tree"
         )
     if requirements_file:
         if dependencies:
@@ -316,7 +352,9 @@ def main(
 
         logger.debug(decision_packages)
 
-        packages, root_tree = build_tree(source, decision_packages)
+        tree_root, packages_tree_dict, packages_flat = build_tree(
+            source, decision_packages
+        )
 
         if lock:
             with io.open(
@@ -324,28 +362,32 @@ def main(
             ) as fp:
                 # a lockfile containing `.` will break pip install -r
                 fp.write(
-                    "\n".join(render_lock(packages, include_dot=False, sort=sort))
+                    "\n".join(render_lock(packages_flat, include_dot=False, sort=sort))
                     + "\n"
                 )
 
         if reversed_tree:
             raise NotImplementedError()
-            # TODO root_tree = reverse_tree(root_tree)
+            # TODO tree_root = reverse_tree(tree_root)
         if tree:
-            output = render_tree(root_tree, max_depth)
+            output = render_tree(tree_root, max_depth, tree_ascii)
+        elif tree_json:
+            output = dumps(render_json_tree(tree_root, max_depth), sort_keys=sort)
+        elif tree_json_exact:
+            output = dumps(transform_keys(packages_tree_dict), sort_keys=sort)
         elif pipe:
-            output = " ".join(render_lock(packages, include_dot=True, sort=sort))
+            output = " ".join(render_lock(packages_flat, include_dot=True, sort=sort))
         elif json:
-            output = dumps(packages)
+            output = dumps(packages_flat, sort_keys=sort)
         else:
-            output = "\n".join(render_lock(packages, include_dot=True, sort=sort))
+            output = "\n".join(render_lock(packages_flat, include_dot=True, sort=sort))
         click.echo(output)
 
         if install:
             install_packages(
                 # sort to ensure . is added right after --editable
                 packages=sorted(dependencies),
-                constraints=render_lock(packages, include_dot=False, sort=True),
+                constraints=render_lock(packages_flat, include_dot=False, sort=True),
                 index_url=index_url,
                 extra_index_url=extra_index_url,
                 pre=pre,
