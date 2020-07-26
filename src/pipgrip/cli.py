@@ -11,7 +11,7 @@ from anytree import Node, RenderTree
 from anytree.search import findall_by_attr
 from packaging.markers import default_environment
 
-from pipgrip.compat import USER_CACHE_DIR
+from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
@@ -251,7 +251,8 @@ def main(
         logger.setLevel(logging.INFO)
     if verbose >= 3:
         logger.setLevel(logging.DEBUG)
-        logger.debug(str(default_environment()))
+        logger.debug("Environment: {}".format(default_environment()))
+        logger.debug("Pip version: {}".format(PIP_VERSION))
 
     if sum((pipe, json, tree, reversed_tree)) > 1:
         raise click.ClickException("Illegal combination of output formats selected")

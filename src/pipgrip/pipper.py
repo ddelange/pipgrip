@@ -238,9 +238,17 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         logger.error(output)
         raise
     out = out.splitlines()[::-1]
+    abs_cache_dir_lower = abs_cache_dir.lower()
+    cache_dir_lower = cache_dir.lower()
     for i, line in enumerate(out):
-        if cache_dir in line or abs_cache_dir in line or "Stored in directory" in line:
-            if "Stored in directory:" in line:
+        line = line.strip()
+        line_lower = line.lower()
+        if (
+            cache_dir_lower in line_lower
+            or abs_cache_dir_lower in line_lower
+            or "stored in directory" in line_lower
+        ):
+            if "stored in directory" in line_lower:
                 # wheel was built
                 fnames = [
                     part.replace("filename=", "")
@@ -268,12 +276,18 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                     fname = fnames[0]
             else:
                 # wheel was fetched
-                fname = (
-                    line.split(
-                        abs_cache_dir if abs_cache_dir in line else cache_dir, 1
+                # match on lowercase line for windows compatibility
+                fname_len = len(
+                    line_lower.split(
+                        abs_cache_dir_lower
+                        if abs_cache_dir_lower in line_lower
+                        else cache_dir_lower,
+                        1,
                     )[1].split(".whl", 1)[0]
                     + ".whl"
                 )
+                fname = line[-fname_len:]
+
             logger.debug(
                 str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))})
             )
