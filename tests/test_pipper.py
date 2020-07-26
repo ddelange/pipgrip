@@ -89,6 +89,15 @@ from pipgrip.pipper import _download_wheel, _get_available_versions
             """,
             "jupyterlab_black-0.2.1-py3-none-any.whl",
         ),
+        (
+            "Keras",
+            """
+            Collecting Keras
+              Using cached https://files.pythonhosted.org/packages/6b/09/756db7ae3dd2ec804963e21db8250ffe347aaba6f6d13d6c0ed833d85109/Keras-2.4.3-py2.py3-none-any.whl
+              Saved ~/library/caches/pip/wheels/pipgrip/Keras-2.4.3-py2.py3-none-any.whl
+            """,
+            "Keras-2.4.3-py2.py3-none-any.whl",
+        ),
     ],
     ids=(
         "pip10 .",
@@ -98,6 +107,7 @@ from pipgrip.pipper import _download_wheel, _get_available_versions
         "pip>10 cached 2",
         "pip>10 fetched 2",
         "pip>10 built 1",
+        "Windows lowercase cache_dir",
     ),
 )
 def test_download_wheel(package, pip_output, expected, monkeypatch):
