@@ -292,6 +292,11 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                 str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))})
             )
             return os.path.join(cache_dir, fname.lstrip(os.path.sep))
+    logger.debug(
+        "Failed to extract wheel filename from pip stdout: \n{}".format(
+            "\n".join(out[::-1])
+        )
+    )
     raise RuntimeError("Failed to download wheel for {}".format(package))
 
 
