@@ -155,12 +155,9 @@ class PackageSource(BasePackageSource):
 
         """
         extras = package.req.extras
-        version_specifier = str(constraint).replace("||", "|").replace(" ", "")
-        if version_specifier and version_specifier[0].isdigit():
-            version_specifier = "==" + version_specifier
-        req = parse_req(str(package) + version_specifier, extras)
         if package not in self._packages or extras not in self._packages[package]:
-            self.discover_and_add(req.__str__())
+            # unseen package, safe to take initially parsed req directly
+            self.discover_and_add(package.req.__str__())
         if package not in self._packages:
             return []
 
