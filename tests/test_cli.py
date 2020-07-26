@@ -21,7 +21,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "wheel": "./tests/assets/wheel-0.33.6-py2.py3-none-any.whl",
         "pyparsing>=2.0.2": "./tests/assets/pyparsing-2.4.6-py2.py3-none-any.whl",
         "requests==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
-        "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1": "./tests/assets/urllib3-1.25-py2.py3-none-any.whl",
+        "urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1": "./tests/assets/urllib3-1.25.7-py2.py3-none-any.whl",
         "urllib3==1.25.7": "./tests/assets/urllib3-1.25.7-py2.py3-none-any.whl",
         "idna<2.9,>=2.5": "./tests/assets/idna-2.8-py2.py3-none-any.whl",
         "chardet<3.1.0,>=3.0.2": "./tests/assets/chardet-3.0.4-py2.py3-none-any.whl",
@@ -68,6 +68,10 @@ def mock_get_available_versions(package, *args, **kwargs):
 # fmt: on
 
 
+def mock_stream_bash_command(*args, **kwargs):
+    return "I passed"
+
+
 def invoke_patched(func, arguments, monkeypatch):
     def default_environment():
         return {
@@ -92,6 +96,9 @@ def invoke_patched(func, arguments, monkeypatch):
     )
     monkeypatch.setattr(
         pipgrip.pipper, "default_environment", default_environment,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper, "stream_bash_command", mock_stream_bash_command,
     )
     runner = CliRunner()
     return runner.invoke(main, arguments)
@@ -221,7 +228,7 @@ def test_solutions(arguments, expected, monkeypatch):
         ),
         (["-r", "tests/test_reqs.txt"]),
         (["-r", "tests/test_reqs.txt", "-r", "tests/test_reqs.txt"]),
-        (["urllib3==1.25.7", "urllib3<1.25.0|>1.25.0,<1.25.1|>1.25.1,<1.26,>=1.21.1"]),
+        (["urllib3==1.25.7", "urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1"]),
         # (["keras-preprocessing==1.0.2", "keras==2.2.2"]),  # fix RecursionError
     ],
 )
