@@ -13,11 +13,18 @@ from pipgrip.libs.semver import Version, VersionRange, VersionUnion, parse_const
         ("x.X.x.*", VersionRange()),
         # ('!=1.0.0', Constraint('!=', '1.0.0.0')),
         (">1.0.0", VersionRange(min=Version(1, 0, 0))),
+        (">1.0.0rc1", VersionRange(min=Version(1, 0, 0, pre="rc1"))),
         ("<1.2.3", VersionRange(max=Version(1, 2, 3))),
+        ("<1.2.3rc1", VersionRange(max=Version(1, 2, 3, pre="rc1"))),
         ("<=1.2.3", VersionRange(max=Version(1, 2, 3), include_max=True)),
+        ("<=1.2.3rc1", VersionRange(max=Version(1, 2, 3, pre="rc1"), include_max=True)),
+        ("<=1.2rc1", VersionRange(max=Version(1, 2, 0, pre="rc1"), include_max=True)),
         (">=1.2.3", VersionRange(min=Version(1, 2, 3), include_min=True)),
+        (">=1.2.3rc1", VersionRange(min=Version(1, 2, 3, pre="rc1"), include_min=True)),
         ("=1.2.3", Version(1, 2, 3)),
+        ("=1.2.3rc1", Version(1, 2, 3, pre="rc1")),
         ("1.2.3", Version(1, 2, 3)),
+        ("1.2.3rc1", Version(1, 2, 3, pre="rc1")),
         ("=1.0", Version(1, 0, 0)),
         ("1.2.3b5", Version(1, 2, 3, pre="b5")),
         (">= 1.2.3", VersionRange(min=Version(1, 2, 3), include_min=True)),
@@ -66,6 +73,7 @@ def test_parse_constraint_wildcard(input, constraint):
         ("~=3.5", VersionRange(Version(3, 5, 0), Version(4, 0, 0), True)),  # PEP 440
         ("~=3.5.3", VersionRange(Version(3, 5, 3), Version(3, 6, 0), True)),  # PEP 440
         ("~=3.5.3rc1", VersionRange(Version(3, 5, 3, pre="rc1"), Version(3, 6, 0), True)),  # PEP 440
+        ("~=3.5rc1", VersionRange(Version(3, 5, pre="rc1"), Version(4, 0, 0), True)),  # PEP 440
     ],
 )
 def test_parse_constraint_tilde(input, constraint):
