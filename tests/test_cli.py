@@ -15,6 +15,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "setuptools>=38.3": "./tests/assets/setuptools-44.0.0-py2.py3-none-any.whl",
         "pkginfo>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
         "packaging>=17": "./tests/assets/packaging-20.0-py2.py3-none-any.whl",
+        "click>=7": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "anytree": "./tests/assets/anytree-2.7.3-py2.py3-none-any.whl",
         "six": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
@@ -198,6 +199,18 @@ def invoke_patched(func, arguments, monkeypatch):
             ],
         ),
         (
+            ["--tree", "--json", "--max-depth=-1", "keras==2.2.2"],
+            [
+                '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"extras_name": "keras-applications", "name": "keras-applications", "pip_string": "keras-applications==1.0.4", "version": "1.0.4", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}]}, {"extras_name": "keras-preprocessing", "name": "keras-preprocessing", "pip_string": "keras-preprocessing==1.0.2", "version": "1.0.2", "dependencies": [{"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "pyyaml", "name": "pyyaml", "pip_string": "pyyaml", "version": "5.3"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}]',
+            ],
+        ),
+        (
+            ["--tree", "--json", "--max-depth=1", "keras==2.2.2"],
+            [
+                '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2"}]',
+            ],
+        ),
+        (
             ["--tree-json", "--max-depth=-1", "keras==2.2.2"],
             [
                 '{"keras==2.2.2": {"h5py": {"numpy>=1.7": {}, "six": {}}, "keras-applications==1.0.4": {"h5py": {"numpy>=1.7": {}, "six": {}}, "keras>=2.1.6": {}, "numpy>=1.9.1": {}}, "keras-preprocessing==1.0.2": {"keras>=2.1.6": {}, "numpy>=1.9.1": {}, "scipy>=0.14": {"numpy>=1.8.2": {}}, "six>=1.9.0": {}}, "numpy>=1.9.1": {}, "pyyaml": {}, "scipy>=0.14": {"numpy>=1.8.2": {}}, "six>=1.9.0": {}}}',
@@ -224,6 +237,8 @@ def invoke_patched(func, arguments, monkeypatch):
         "keras (cyclic)",
         "--tree keras (cyclic)",
         "--tree-ascii (cyclic)",
+        "--tree --json (cyclic)",
+        "--tree --json --max-depth=1 (cyclic)",
         "--tree-json (cyclic)",
         "--tree-json-exact (cyclic)",
         "keras_preprocessing (underscore)",
@@ -235,7 +250,9 @@ def test_solutions(arguments, expected, monkeypatch):
 
     if result.exit_code:
         raise result.exception
-    assert set(result.output.strip().split("\n")) == set(expected)
+    assert set(result.output.strip().split("\n")) == set(
+        expected
+    ), "Unexpected output:\n{}".format(result.output.strip())
 
 
 @pytest.mark.parametrize(
