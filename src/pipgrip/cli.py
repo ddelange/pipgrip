@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from collections import OrderedDict
+from functools import partial
 from json import dumps
 from subprocess import CalledProcessError
 
@@ -28,7 +29,7 @@ class DepTreeDictExporter(DictExporter):
     """Export nested tree in full detail, children renamed to dependencies."""
 
     def __init__(
-        self, dictcls=OrderedDict, attriter=sorted, childiter=list, maxlevel=None
+        self, dictcls=OrderedDict, attriter=None, childiter=list, maxlevel=None
     ):
         DictExporter.__init__(
             self,
@@ -38,9 +39,17 @@ class DepTreeDictExporter(DictExporter):
             maxlevel=maxlevel,
         )
 
+    @classmethod
+    def customsort(cls, tup):
+        order = ["name", "extras_name", "version", "pip_string"]
+        k, v = tup
+        if k in order:
+            return order.index(k)
+        return tup
+
     def export(self, node):
         """Export tree starting at `node`."""
-        attriter = self.attriter or (lambda attr_values: attr_values)
+        attriter = self.attriter or partial(sorted, key=self.customsort)
         return self.__export(node, self.dictcls, attriter, self.childiter)
 
     def __export(self, node, dictcls, attriter, childiter, level=1):
@@ -176,9 +185,9 @@ def render_json_tree(tree_root, max_depth, exact):
     return json_tree
 
 
-def render_json_tree_full(tree_root, max_depth):
+def render_json_tree_full(tree_root, max_depth, sort):
     maxlevel = max_depth + 1 if max_depth else None
-    exporter = DepTreeDictExporter(maxlevel=maxlevel)
+    exporter = DepTreeDictExporter(maxlevel=maxlevel, attriter=sorted if sort else None)
     tree_dict_full = exporter.export(tree_root)["dependencies"]
     return tree_dict_full
 
@@ -436,7 +445,7 @@ def main(
             # TODO tree_root = reverse_tree(tree_root)
         if tree:
             if json:
-                output = dumps(render_json_tree_full(tree_root, max_depth))
+                output = dumps(render_json_tree_full(tree_root, max_depth, sort))
             else:
                 output = render_tree(tree_root, max_depth, tree_ascii)
         elif tree_json:

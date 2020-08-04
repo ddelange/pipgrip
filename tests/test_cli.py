@@ -199,15 +199,21 @@ def invoke_patched(func, arguments, monkeypatch):
             ],
         ),
         (
-            ["--tree", "--json", "--max-depth=-1", "keras==2.2.2"],
+            ["--tree", "--json", "--max-depth=-1", "--sort", "keras==2.2.2"],
             [
                 '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"extras_name": "keras-applications", "name": "keras-applications", "pip_string": "keras-applications==1.0.4", "version": "1.0.4", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}]}, {"extras_name": "keras-preprocessing", "name": "keras-preprocessing", "pip_string": "keras-preprocessing==1.0.2", "version": "1.0.2", "dependencies": [{"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "pyyaml", "name": "pyyaml", "pip_string": "pyyaml", "version": "5.3"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}]',
             ],
         ),
         (
-            ["--tree", "--json", "--max-depth=1", "keras==2.2.2"],
+            ["--tree", "--json", "--max-depth=1", "--sort", "keras==2.2.2"],
             [
                 '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2"}]',
+            ],
+        ),
+        (
+            ["--tree", "--json", "--max-depth=1", "keras==2.2.2"],
+            [
+                '[{"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras==2.2.2"}]',
             ],
         ),
         (
@@ -237,7 +243,8 @@ def invoke_patched(func, arguments, monkeypatch):
         "keras (cyclic)",
         "--tree keras (cyclic)",
         "--tree-ascii (cyclic)",
-        "--tree --json (cyclic)",
+        "--tree --json --sort (cyclic)",
+        "--tree --json --sort --max-depth=1 (cyclic)",
         "--tree --json --max-depth=1 (cyclic)",
         "--tree-json (cyclic)",
         "--tree-json-exact (cyclic)",
