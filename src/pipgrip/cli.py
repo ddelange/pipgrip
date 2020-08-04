@@ -1,13 +1,16 @@
 import io
 import logging
 import os
+import shutil
 import tempfile
 from collections import OrderedDict
+from functools import partial
 from json import dumps
 from subprocess import CalledProcessError
 
 import click
 from anytree import AsciiStyle, ContStyle, Node, RenderTree
+from anytree.exporter import DictExporter
 from anytree.search import findall_by_attr
 from packaging.markers import default_environment
 
@@ -20,6 +23,47 @@ from pipgrip.pipper import install_packages, read_requirements
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
+
+
+class DepTreeDictExporter(DictExporter):
+    """Export nested tree in full detail, children renamed to dependencies."""
+
+    def __init__(
+        self, dictcls=OrderedDict, attriter=None, childiter=list, maxlevel=None
+    ):
+        DictExporter.__init__(
+            self,
+            dictcls=dictcls,
+            attriter=attriter,
+            childiter=childiter,
+            maxlevel=maxlevel,
+        )
+
+    @classmethod
+    def customsort(cls, tup):
+        order = ["name", "extras_name", "version", "pip_string"]
+        k, v = tup
+        if k in order:
+            return order.index(k)
+        return tup
+
+    def export(self, node):
+        """Export tree starting at `node`."""
+        attriter = self.attriter or partial(sorted, key=self.customsort)
+        return self.__export(node, self.dictcls, attriter, self.childiter)
+
+    def __export(self, node, dictcls, attriter, childiter, level=1):
+        attr_values = attriter(self._iter_attr_values(node))
+        data = dictcls(attr_values)
+        maxlevel = self.maxlevel
+        if maxlevel is None or level < maxlevel:
+            children = [
+                self.__export(child, dictcls, attriter, childiter, level=level + 1)
+                for child in childiter(node.children)
+            ]
+            if children:
+                data["dependencies"] = children
+        return data
 
 
 def flatten(tree_dict):
@@ -67,11 +111,11 @@ def _recurse_dependencies(
 
         tree_node = Node(
             name,
-            version=resolved_version,
+            version=str(resolved_version),
             parent=tree_parent,
             # pip_string in metadata might be the wrong one (populated differently beforehand, higher up in the tree)
             # left here in case e.g. versions_available is needed in rendered tree
-            metadata=source._packages_metadata[name][str(resolved_version)],
+            # metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
             extras_name=dep.package.req.extras_name,
         )
@@ -141,6 +185,13 @@ def render_json_tree(tree_root, max_depth, exact):
     return json_tree
 
 
+def render_json_tree_full(tree_root, max_depth, sort):
+    maxlevel = max_depth + 1 if max_depth else None
+    exporter = DepTreeDictExporter(maxlevel=maxlevel, attriter=sorted if sort else None)
+    tree_dict_full = exporter.export(tree_root)["dependencies"]
+    return tree_dict_full
+
+
 def render_lock(packages, include_dot=True, sort=False):
     fn = sorted if sort else list
     return fn(
@@ -184,7 +235,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--json",
     is_flag=True,
-    help="Output pins as json dict instead of newline-separated pins.",
+    help="Output pins as JSON dict instead of newline-separated pins. Combine with --tree for a detailed nested JSON dependency tree.",
 )
 @click.option(
     "--sort",
@@ -192,18 +243,26 @@ def render_lock(packages, include_dot=True, sort=False):
     help="Sort pins alphabetically before writing out. Can be used bare, or in combination with --lock, --pipe, --json, --tree-json, or --tree-json-exact.",
 )
 @click.option(
-    "--tree", is_flag=True, help="Output human readable dependency tree (top-down).",
+    "--tree",
+    is_flag=True,
+    help="Output human readable dependency tree (top-down). Combine with --json for a detailed nested JSON dependency tree. Use --tree-json instead for a simplified JSON dependency tree (requirement strings as keys, dependencies as values), or --json-tree-exact for exact pins as keys.",
 )
 @click.option(
     "--tree-ascii",
     is_flag=True,
-    help="Output human readable dependency tree in ascii.",
+    help="Output human readable dependency tree with ASCII tree markers.",
 )
 @click.option(
-    "--tree-json", is_flag=True, help="Output nested json dependency tree (top-down).",
+    "--tree-json",
+    is_flag=True,
+    hidden=True,
+    help="Output nested JSON dependency tree (top-down).",
 )
 @click.option(
-    "--tree-json-exact", is_flag=True, help="Output nested json tree with exact pins.",
+    "--tree-json-exact",
+    is_flag=True,
+    hidden=True,
+    help="Output nested JSON tree with exact pins.",
 )
 @click.option(
     "--reversed-tree",
@@ -214,7 +273,7 @@ def render_lock(packages, include_dot=True, sort=False):
     "--max-depth",
     type=click.INT,
     default=-1,
-    help="Maximum (json) tree rendering depth (default -1).",
+    help="Maximum (JSON) tree rendering depth (default -1).",
 )
 @click.option(
     "--cache-dir",
@@ -244,7 +303,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--pre",
     is_flag=True,
-    help="Include pre-release and development versions. By default, pip only finds stable versions.",
+    help="Include pre-release and development versions. By default, pip implicitly excludes pre-releases (unless specified otherwise by PEP 440).",
 )
 @click.option(
     "-v",
@@ -287,7 +346,16 @@ def main(
         logger.debug("Pip version: {}".format(PIP_VERSION))
 
     if (
-        sum((pipe, json, tree, tree_ascii, tree_json, tree_json_exact, reversed_tree))
+        sum(
+            (
+                pipe,
+                (json or tree),
+                tree_ascii,
+                tree_json,
+                tree_json_exact,
+                reversed_tree,
+            )
+        )
         > 1
     ):
         raise click.ClickException("Illegal combination of output formats selected")
@@ -376,7 +444,10 @@ def main(
             raise NotImplementedError()
             # TODO tree_root = reverse_tree(tree_root)
         if tree:
-            output = render_tree(tree_root, max_depth, tree_ascii)
+            if json:
+                output = dumps(render_json_tree_full(tree_root, max_depth, sort))
+            else:
+                output = render_tree(tree_root, max_depth, tree_ascii)
         elif tree_json:
             output = dumps(
                 render_json_tree(tree_root, max_depth, tree_json_exact), sort_keys=sort
@@ -403,6 +474,6 @@ def main(
             )
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))
-    # except Exception as exc:
-    #     logger.error(exc, exc_info=exc)
-    #     raise click.ClickException(str(exc))
+    finally:
+        if no_cache_dir:
+            shutil.rmtree(cache_dir)

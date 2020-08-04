@@ -22,7 +22,7 @@
 
 #### pipgrip vs. pipdeptree
 
-For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since packages don't need to be installed and all versions available to pip are considered.
+For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since **packages don't need to be installed and all versions available to pip are considered**.
 
 
 ## Installation
@@ -77,19 +77,26 @@ Options:
   --pipe                        Output space-separated pins instead of newline-
                                 separated pins.
 
-  --json                        Output pins as json dict instead of newline-
-                                separated pins.
+  --json                        Output pins as JSON dict instead of newline-
+                                separated pins. Combine with --tree for a detailed
+                                nested JSON dependency tree.
 
   --sort                        Sort pins alphabetically before writing out. Can
                                 be used bare, or in combination with --lock,
                                 --pipe, --json, --tree-json, or --tree-json-exact.
 
   --tree                        Output human readable dependency tree (top-down).
-  --tree-ascii                  Output human readable dependency tree in ascii.
-  --tree-json                   Output nested json dependency tree (top-down).
-  --tree-json-exact             Output nested json tree with exact pins.
+                                Combine with --json for a detailed nested JSON
+                                dependency tree. Use --tree-json instead for a
+                                simplified JSON dependency tree (requirement
+                                strings as keys, dependencies as values), or
+                                --json-tree-exact for exact pins as keys.
+
+  --tree-ascii                  Output human readable dependency tree with ASCII
+                                tree markers.
+
   --reversed-tree               Output human readable dependency tree (bottom-up).
-  --max-depth INTEGER           Maximum (json) tree rendering depth (default -1).
+  --max-depth INTEGER           Maximum (JSON) tree rendering depth (default -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
                                 pipper. Overrides --cache-dir.
@@ -101,7 +108,8 @@ Options:
                                 to --index-url.
 
   --pre                         Include pre-release and development versions. By
-                                default, pip only finds stable versions.
+                                default, pip implicitly excludes pre-releases
+                                (unless specified otherwise by PEP 440).
 
   -v, --verbose                 Control verbosity: -v will print cyclic
                                 dependencies (WARNING), -vv will show solving
@@ -116,20 +124,20 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.5.0)
+pipgrip (0.6.0)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
-├── click (7.1.2)
+├── click>=7 (7.1.2)
 ├── packaging>=17 (20.4)
 │   ├── pyparsing>=2.0.2 (2.4.7)
 │   └── six (1.15.0)
-├── pip>=7.1.0 (20.1.1)
+├── pip>=7.1.0 (20.2)
 ├── pkginfo>=1.4.2 (1.5.0.1)
 ├── setuptools>=38.3 (49.2.0)
 └── wheel (0.34.2)
 ```
 
-See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (nested JSON dictionaries).
+For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
 
 #### Lockfile generation
 
