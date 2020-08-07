@@ -44,7 +44,7 @@ class DepTreeDictExporter(DictExporter):
         order = ["name", "extras_name", "version", "pip_string"]
         k, v = tup
         if k in order:
-            return order.index(k)
+            return (str(order.index(k)), 0)
         return tup
 
     def export(self, node):
