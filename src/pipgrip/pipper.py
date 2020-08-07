@@ -268,7 +268,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                         fname = all_wheels[0]
                     else:
                         fname = None
-                        pkg = canonicalize_name(parse_req(package).key)
+                        pkg = parse_req(package).key
                         for whl in all_wheels:
                             if pkg in canonicalize_name(whl):
                                 fname = whl
