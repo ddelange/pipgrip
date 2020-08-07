@@ -267,11 +267,23 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                     if package.startswith("."):
                         fname = all_wheels[0]
                     else:
+                        fname = None
                         pkg = canonicalize_name(package)
                         for whl in all_wheels:
                             if pkg in canonicalize_name(whl):
                                 fname = whl
                                 break
+                        if not fname:
+                            logger.error(
+                                "Failed to extract wheel filename from pip stdout: \n{}".format(
+                                    "\n".join(out[::-1])
+                                )
+                            )
+                            raise RuntimeError(
+                                "Failed to find wheel for {} in {}. Wheels found: {}".format(
+                                    package, whldir, all_wheels
+                                )
+                            )
                 else:
                     fname = fnames[0]
             else:
