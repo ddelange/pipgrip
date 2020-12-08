@@ -194,7 +194,14 @@ def install_packages(
             os.remove(constraints_file)
 
 
+_available_versions_cache = {}
+
+
 def _get_available_versions(package, index_url, extra_index_url, pre):
+    cache_key = (package, pre)
+    if cache_key in _available_versions_cache:
+        return _available_versions_cache[cache_key]
+
     logger.debug("Finding possible versions for {}".format(package))
     args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
 
@@ -222,7 +229,11 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
                     }
                 )
             )
-            return [v for v in all_versions if not re.findall(r"[a-zA-Z]", v)]
+            available_versions = [
+                v for v in all_versions if not re.findall(r"[a-zA-Z]", v)
+            ]
+            _available_versions_cache[cache_key] = available_versions
+            return available_versions
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
 
