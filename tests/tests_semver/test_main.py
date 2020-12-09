@@ -4,7 +4,7 @@ from pipgrip.libs.semver import Version, VersionRange, VersionUnion, parse_const
 
 
 @pytest.mark.parametrize(
-    "input,constraint",
+    "input_,constraint",
     [
         ("*", VersionRange()),
         ("*.*", VersionRange()),
@@ -31,12 +31,12 @@ from pipgrip.libs.semver import Version, VersionRange, VersionUnion, parse_const
         (">dev", VersionRange(min=Version(0, 0, pre="dev"))),  # Issue 206
     ],
 )
-def test_parse_constraint(input, constraint):
-    assert parse_constraint(input) == constraint
+def test_parse_constraint(input_, constraint):
+    assert parse_constraint(input_) == constraint
 
 
 @pytest.mark.parametrize(
-    "input,constraint",
+    "input_,constraint",
     [
         ("v2.*", VersionRange(Version(2, 0, 0), Version(3, 0, 0), True)),
         ("2.*.*", VersionRange(Version(2, 0, 0), Version(3, 0, 0), True)),
@@ -51,12 +51,12 @@ def test_parse_constraint(input, constraint):
         ("0.x", VersionRange(max=Version(1, 0, 0))),
     ],
 )
-def test_parse_constraint_wildcard(input, constraint):
-    assert parse_constraint(input) == constraint
+def test_parse_constraint_wildcard(input_, constraint):
+    assert parse_constraint(input_) == constraint
 
 
 @pytest.mark.parametrize(
-    "input,constraint",
+    "input_,constraint",
     [
         ("~v1", VersionRange(Version(1, 0, 0), Version(2, 0, 0), True)),
         ("~1.0", VersionRange(Version(1, 0, 0), Version(1, 1, 0), True)),
@@ -72,16 +72,22 @@ def test_parse_constraint_wildcard(input, constraint):
         ("~3.5", VersionRange(Version(3, 5, 0), Version(3, 6, 0), True)),
         ("~=3.5", VersionRange(Version(3, 5, 0), Version(4, 0, 0), True)),  # PEP 440
         ("~=3.5.3", VersionRange(Version(3, 5, 3), Version(3, 6, 0), True)),  # PEP 440
-        ("~=3.5.3rc1", VersionRange(Version(3, 5, 3, pre="rc1"), Version(3, 6, 0), True)),  # PEP 440
-        ("~=3.5rc1", VersionRange(Version(3, 5, pre="rc1"), Version(4, 0, 0), True)),  # PEP 440
+        (
+            "~=3.5.3rc1",
+            VersionRange(Version(3, 5, 3, pre="rc1"), Version(3, 6, 0), True),
+        ),  # PEP 440
+        (
+            "~=3.5rc1",
+            VersionRange(Version(3, 5, pre="rc1"), Version(4, 0, 0), True),
+        ),  # PEP 440
     ],
 )
-def test_parse_constraint_tilde(input, constraint):
-    assert parse_constraint(input) == constraint
+def test_parse_constraint_tilde(input_, constraint):
+    assert parse_constraint(input_) == constraint
 
 
 @pytest.mark.parametrize(
-    "input,constraint",
+    "input_,constraint",
     [
         ("^v1", VersionRange(Version(1, 0, 0), Version(2, 0, 0), True)),
         ("^0", VersionRange(Version(0, 0, 0), Version(1, 0, 0), True)),
@@ -98,12 +104,12 @@ def test_parse_constraint_tilde(input, constraint):
         ("^0.0.3", VersionRange(Version(0, 0, 3), Version(0, 0, 4), True)),
     ],
 )
-def test_parse_constraint_caret(input, constraint):
-    assert parse_constraint(input) == constraint
+def test_parse_constraint_caret(input_, constraint):
+    assert parse_constraint(input_) == constraint
 
 
 @pytest.mark.parametrize(
-    "input",
+    "input_",
     [
         ">2.0,<=3.0",
         ">2.0 <=3.0",
@@ -117,25 +123,25 @@ def test_parse_constraint_caret(input, constraint):
         "  > 2.0  ,  <=  3.0 ",
     ],
 )
-def test_parse_constraint_multi(input):
-    assert parse_constraint(input) == VersionRange(
+def test_parse_constraint_multi(input_):
+    assert parse_constraint(input_) == VersionRange(
         Version(2, 0, 0), Version(3, 0, 0), include_min=False, include_max=True
     )
 
 
 @pytest.mark.parametrize(
-    "input",
+    "input_",
     [">=2.7,!=3.0.*,!=3.1.*", ">=2.7, !=3.0.*, !=3.1.*", ">= 2.7, != 3.0.*, != 3.1.*"],
 )
-def test_parse_constraint_multi_wilcard(input):
-    assert parse_constraint(input) == VersionUnion(
+def test_parse_constraint_multi_wilcard(input_):
+    assert parse_constraint(input_) == VersionUnion(
         VersionRange(Version(2, 7, 0), Version(3, 0, 0), True, False),
         VersionRange(Version(3, 2, 0), None, True, False),
     )
 
 
 @pytest.mark.parametrize(
-    "input,constraint",
+    "input_,constraint",
     [
         (
             "!=v2.*",
@@ -159,12 +165,12 @@ def test_parse_constraint_multi_wilcard(input):
         ("!=0.*.*", VersionRange(Version.parse("1.0"), include_min=True)),
     ],
 )
-def test_parse_constraints_negative_wildcard(input, constraint):
-    assert parse_constraint(input) == constraint
+def test_parse_constraints_negative_wildcard(input_, constraint):
+    assert parse_constraint(input_) == constraint
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_, expected",
     [
         ("1", "1"),
         ("1.2", "1.2"),
@@ -180,8 +186,8 @@ def test_parse_constraints_negative_wildcard(input, constraint):
         ("~1.0.0", ">=1.0.0,<1.1.0"),
     ],
 )
-def test_constraints_keep_version_precision(input, expected):
-    assert str(parse_constraint(input)) == expected
+def test_constraints_keep_version_precision(input_, expected):
+    assert str(parse_constraint(input_)) == expected
 
 
 @pytest.mark.parametrize(

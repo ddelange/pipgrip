@@ -1,20 +1,10 @@
-clean:
-	find src -type d -name "__pycache__" -exec rm -rf {} + > /dev/null 2>&1
-	find src -type f -name "*.pyc" -exec rm -rf {} + > /dev/null 2>&1
-
-	find tests -type d -name "__pycache__" -exec rm -rf {} + > /dev/null 2>&1
-	find tests -type f -name "*.pyc" -exec rm -rf {} + > /dev/null 2>&1
-
+.PHONY: lint
+## Run linting
 lint:
-	flake8 --show-source src
-	isort --check-only -rc src --diff
+	pre-commit run --all-files
 
-	flake8 --show-source tests
-	isort --check-only -rc tests --diff
-
-	flake8 --show-source setup.py
-	isort --check-only setup.py --diff
-
+.PHONY: test
+## Run tests
 test:
 	python -m pytest tests/
 

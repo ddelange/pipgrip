@@ -127,18 +127,31 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
         return pip_output
 
     monkeypatch.setattr(
-        pipgrip.pipper.os, "walk", patch_os_walk,
+        pipgrip.pipper.os,
+        "walk",
+        patch_os_walk,
     )
     monkeypatch.setattr(
-        pipgrip.pipper.os.path, "getmtime", patch_getmtime,
+        pipgrip.pipper.os.path,
+        "getmtime",
+        patch_getmtime,
     )
     monkeypatch.setattr(
-        pipgrip.pipper, "stream_bash_command", patch_pip_output,
+        pipgrip.pipper,
+        "stream_bash_command",
+        patch_pip_output,
     )
 
-    assert _download_wheel(
-        package, "https://pypi.org/simple", "https://pypi.org/simple", False, cache_dir,
-    ) == os.path.join(cache_dir, expected.lstrip(os.path.sep))
+    assert (
+        _download_wheel(
+            package,
+            "https://pypi.org/simple",
+            "https://pypi.org/simple",
+            False,
+            cache_dir,
+        )
+        == os.path.join(cache_dir, expected.lstrip(os.path.sep))
+    )
 
 
 @pytest.mark.parametrize(
@@ -172,7 +185,9 @@ def test_get_available_versions(package, pre, pip_output, expected, monkeypatch)
         raise subprocess.CalledProcessError(returncode=1, cmd="", output=pip_output)
 
     monkeypatch.setattr(
-        pipgrip.pipper, "stream_bash_command", patch_pip_output,
+        pipgrip.pipper,
+        "stream_bash_command",
+        patch_pip_output,
     )
 
     assert (

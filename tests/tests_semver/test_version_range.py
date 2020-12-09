@@ -1,3 +1,4 @@
+# flake8: noqa:A001
 import pytest
 
 from pipgrip.libs.semver import EmptyConstraint, Version, VersionRange

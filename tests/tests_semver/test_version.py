@@ -5,7 +5,7 @@ from pipgrip.libs.semver.exceptions import ParseVersionError
 
 
 @pytest.mark.parametrize(
-    "input,version",
+    "input_,version",
     [
         ("1.0.0", Version(1, 0, 0)),
         ("1", Version(1, 0, 0)),
@@ -24,17 +24,17 @@ from pipgrip.libs.semver.exceptions import ParseVersionError
         ("0.6pre", Version(0, 6, 0, pre="rc0")),
     ],
 )
-def test_parse_valid(input, version):
-    parsed = Version.parse(input)
+def test_parse_valid(input_, version):
+    parsed = Version.parse(input_)
 
     assert parsed == version
-    assert parsed.text == input
+    assert parsed.text == input_
 
 
-@pytest.mark.parametrize("input", [(None, "example")])
-def test_parse_invalid(input):
+@pytest.mark.parametrize("input_", [(None, "example")])
+def test_parse_invalid(input_):
     with pytest.raises(ParseVersionError):
-        Version.parse(input)
+        Version.parse(input_)
 
 
 def test_comparison():
@@ -135,8 +135,8 @@ def test_union():
     assert result.allows(Version.parse("0.8.0"))
     assert not result.allows(Version.parse("1.1.4"))
 
-    range = VersionRange(Version.parse("1.1.4"), Version.parse("1.2.4"))
-    assert v.union(range) == range
+    range_ = VersionRange(Version.parse("1.1.4"), Version.parse("1.2.4"))
+    assert v.union(range_) == range_
 
     union = Version.parse("1.1.4").union(
         VersionRange(Version.parse("1.1.4"), Version.parse("1.2.4"))

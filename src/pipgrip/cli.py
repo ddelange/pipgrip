@@ -207,10 +207,15 @@ def render_lock(packages, include_dot=True, sort=False):
 )
 @click.argument("dependencies", nargs=-1)
 @click.option(
-    "--install", is_flag=True, help="Install full dependency tree after resolving.",
+    "--install",
+    is_flag=True,
+    help="Install full dependency tree after resolving.",
 )
 @click.option(
-    "-e", "--editable", is_flag=True, help="Install a project in editable mode.",
+    "-e",
+    "--editable",
+    is_flag=True,
+    help="Install a project in editable mode.",
 )
 @click.option(
     "--user",
@@ -225,7 +230,9 @@ def render_lock(packages, include_dot=True, sort=False):
     help="Install from the given requirements file. This option can be used multiple times.",
 )
 @click.option(
-    "--lock", is_flag=True, help="Write out pins to './pipgrip.lock'.",
+    "--lock",
+    is_flag=True,
+    help="Write out pins to './pipgrip.lock'.",
 )
 @click.option(
     "--pipe",
