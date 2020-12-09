@@ -371,15 +371,15 @@ class VersionSolver:
             # We'll continue adding its dependencies, then go back to
             # unit propagation which will guide us to choose a better version.
             conflict = conflict or all(
-                [
-                    iterm.package == term.package or self._solution.satisfies(iterm)
-                    for iterm in incompatibility.terms
-                ]
+                iterm.package == term.package or self._solution.satisfies(iterm)
+                for iterm in incompatibility.terms
             )
 
         if not conflict:
             self._solution.decide(term.package, version)
-            logger.info("selecting {} ({})".format(term.package.req.extras_name, str(version)))
+            logger.info(
+                "selecting {} ({})".format(term.package.req.extras_name, str(version))
+            )
 
         return term.package
 

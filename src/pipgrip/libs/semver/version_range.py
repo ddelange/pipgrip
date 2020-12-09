@@ -1,3 +1,4 @@
+# flake8: noqa:A002,A003
 from typing import List
 
 import pipgrip.libs.semver
@@ -88,7 +89,7 @@ class VersionRange(VersionConstraint):
             return self.allows(other)
 
         if isinstance(other, VersionUnion):
-            return all([self.allows_all(constraint) for constraint in other.ranges])
+            return all(self.allows_all(constraint) for constraint in other.ranges)
 
         if isinstance(other, VersionRange):
             return not other.allows_lower(self) and not other.allows_higher(self)
@@ -105,7 +106,7 @@ class VersionRange(VersionConstraint):
             return self.allows(other)
 
         if isinstance(other, VersionUnion):
-            return any([self.allows_any(constraint) for constraint in other.ranges])
+            return any(self.allows_any(constraint) for constraint in other.ranges)
 
         if isinstance(other, VersionRange):
             return not other.is_strictly_lower(self) and not other.is_strictly_higher(
@@ -283,17 +284,17 @@ class VersionRange(VersionConstraint):
             ranges = []  # type: List[VersionRange]
             current = self
 
-            for range in other.ranges:
+            for range_ in other.ranges:
                 # Skip any ranges that are strictly lower than [current].
-                if range.is_strictly_lower(current):
+                if range_.is_strictly_lower(current):
                     continue
 
                 # If we reach a range strictly higher than [current], no more ranges
                 # will be relevant so we can bail early.
-                if range.is_strictly_higher(current):
+                if range_.is_strictly_higher(current):
                     break
 
-                difference = current.difference(range)
+                difference = current.difference(range_)
                 if difference.is_empty():
                     return EmptyConstraint()
                 elif isinstance(difference, VersionUnion):

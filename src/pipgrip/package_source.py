@@ -74,7 +74,11 @@ class PackageSource(BasePackageSource):
     """
 
     def __init__(
-        self, cache_dir, index_url, extra_index_url, pre,
+        self,
+        cache_dir,
+        index_url,
+        extra_index_url,
+        pre,
     ):  # type: () -> None
         self._root_version = Version.parse("0.0.0")
         self._root_dependencies = []
@@ -128,7 +132,10 @@ class PackageSource(BasePackageSource):
         for version in to_create["available"]:
             self.add(req.key, req.extras, version)
         self.add(
-            req.key, req.extras, to_create["version"], deps=to_create["requires"],
+            req.key,
+            req.extras,
+            to_create["version"],
+            deps=to_create["requires"],
         )
 
         # currently unused

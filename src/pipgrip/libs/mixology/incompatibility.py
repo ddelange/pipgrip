@@ -23,10 +23,7 @@ class Incompatibility:
             len(terms) != 1
             and isinstance(cause, ConflictCause)
             and any(
-                [
-                    term.is_positive() and term.package != Package.root()
-                    for term in terms
-                ]
+                term.is_positive() and term.package != Package.root() for term in terms
             )
         ):
             terms = [
@@ -423,10 +420,10 @@ class Incompatibility:
     def _terse(self, term, allow_every=False):  # type: (Term, bool) -> str
         return term.to_string(allow_every=allow_every)
 
-    def _single_term_where(self, callable):  # type: (callable) -> Optional[Term]
+    def _single_term_where(self, callable_):  # type: (callable) -> Optional[Term]
         found = None
         for term in self._terms:
-            if not callable(term):
+            if not callable_(term):
                 continue
 
             if found is not None:

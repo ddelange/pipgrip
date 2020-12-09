@@ -32,7 +32,7 @@ class Union(object):
         if not flattened:
             return pipgrip.libs.mixology.range.EmptyRange()
 
-        if any([constraint.is_any() for constraint in flattened]):
+        if any(constraint.is_any() for constraint in flattened):
             return pipgrip.libs.mixology.range.Range()
 
         flattened.sort()

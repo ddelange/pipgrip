@@ -63,7 +63,9 @@ def stream_bash_command(bash_command, echo=False):
     # https://gist.github.com/bgreenlee/1402841
     logger.debug(bash_command)
     process = subprocess.Popen(
-        bash_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        bash_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     def check_io():

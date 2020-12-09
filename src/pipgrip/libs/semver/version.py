@@ -1,3 +1,4 @@
+# flake8: noqa:A003
 import re
 from typing import List, Optional, Union
 

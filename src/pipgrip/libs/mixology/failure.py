@@ -243,13 +243,13 @@ class _Writer:
         ):
             return False
 
-        complex = (
+        complex_ = (
             cause.conflict
             if isinstance(cause.conflict.cause, ConflictCause)
             else cause.other
         )
 
-        return complex not in self._line_numbers
+        return complex_ not in self._line_numbers
 
     def _is_single_line(self, cause):  # type: (ConflictCause) -> bool
         return not isinstance(cause.conflict.cause, ConflictCause) and not isinstance(

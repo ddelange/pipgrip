@@ -90,16 +90,24 @@ def invoke_patched(func, arguments, monkeypatch):
         }
 
     monkeypatch.setattr(
-        pipgrip.pipper, "_download_wheel", mock_download_wheel,
+        pipgrip.pipper,
+        "_download_wheel",
+        mock_download_wheel,
     )
     monkeypatch.setattr(
-        pipgrip.pipper, "_get_available_versions", mock_get_available_versions,
+        pipgrip.pipper,
+        "_get_available_versions",
+        mock_get_available_versions,
     )
     monkeypatch.setattr(
-        pipgrip.pipper, "default_environment", default_environment,
+        pipgrip.pipper,
+        "default_environment",
+        default_environment,
     )
     monkeypatch.setattr(
-        pipgrip.pipper, "stream_bash_command", mock_stream_bash_command,
+        pipgrip.pipper,
+        "stream_bash_command",
+        mock_stream_bash_command,
     )
     runner = CliRunner()
     return runner.invoke(main, arguments)
