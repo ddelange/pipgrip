@@ -409,4 +409,6 @@ def discover_dependencies_and_versions(
         "version": wheel_version,
         "available": available_versions,
         "requires": wheel_requirements,
+        "wheel_fname": wheel_fname,
+        "wheel_metadata": wheel_metadata,
     }

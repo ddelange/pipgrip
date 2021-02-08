@@ -141,11 +141,8 @@ class PackageSource(BasePackageSource):
         # currently unused
         if req.key not in self._packages_metadata:
             self._packages_metadata[req.key] = {}
-        self._packages_metadata[req.key][to_create["version"]] = {
-            "pip_string": req.__str__(),
-            "requires": to_create["requires"],
-            "available": to_create["available"],
-        }
+        to_create["pip_string"] = req.__str__()
+        self._packages_metadata[req.key][to_create["version"]] = to_create
 
     def root_dep(self, package):  # type: (str, str) -> None
         req = parse_req(package)
