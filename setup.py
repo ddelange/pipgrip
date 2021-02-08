@@ -43,8 +43,8 @@ setup(
     package_dir={"": "src"},
     entry_points={"console_scripts": ["pipgrip = pipgrip.cli:main"]},
     author="ddelange",
-    author_email="david@delange.dev",
-    url="https://github.com/ddelange/pipgrip/",
+    author_email="ddelange@delange.dev",
+    url="https://github.com/ddelange/pipgrip",
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
