@@ -138,7 +138,7 @@ class PackageSource(BasePackageSource):
             deps=to_create["requires"],
         )
 
-        # currently unused
+        # currently only used for licenses
         if req.key not in self._packages_metadata:
             self._packages_metadata[req.key] = {}
         to_create["pip_string"] = req.__str__()

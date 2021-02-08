@@ -18,6 +18,7 @@ from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
+from pipgrip.licenses import get_licenses
 from pipgrip.package_source import PackageSource
 from pipgrip.pipper import install_packages, read_requirements
 
@@ -313,6 +314,11 @@ def render_lock(packages, include_dot=True, sort=False):
     help="Include pre-release and development versions. By default, pip implicitly excludes pre-releases (unless specified otherwise by PEP 440).",
 )
 @click.option(
+    "--detect-licenses",
+    is_flag=True,
+    help="Detect and extract license info for each dependency. Completeness can not be guaranteed.",
+)
+@click.option(
     "-v",
     "--verbose",
     count=True,
@@ -339,6 +345,7 @@ def main(
     index_url,
     extra_index_url,
     pre,
+    detect_licenses,
     verbose,
 ):
     if verbose == 0:
@@ -436,6 +443,16 @@ def main(
         tree_root, packages_tree_dict, packages_flat = build_tree(
             source, decision_packages
         )
+
+        if detect_licenses:
+            licenses = {
+                package_key: get_licenses(
+                    **source._packages_metadata[package_key][package_version]
+                )
+                for package_key, package_version in packages_flat.items()
+            }
+            # TODO add to the various output formats
+            logger.info("Licenses:\n%s", json.dumps(licenses))
 
         if lock:
             with io.open(
