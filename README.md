@@ -242,28 +242,7 @@ keras==2.2.2 (2.2.2)
 [![gitmoji](https://img.shields.io/badge/gitmoji-%20%F0%9F%98%9C%20%F0%9F%98%8D-ffdd67)](https://github.com/carloscuesta/gitmoji-cli)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-First, create a virtual environment. Then, get ready to develop:
-
-```
-make install
-```
-
-This [make-command](Makefile) is equivalent to the following steps:
-
-Install pre-commit and other continous integration dependencies in order to make commits and run tests.
-
-```
-pip install -r requirements/ci.txt
-pre-commit install
-```
-
-With requirements installed, `make lint` and `make test` can now be run. There is also `make clean`, and `make all` which runs all three.
-
-To import the package in the python environment, install the package (`-e` for editable installation, upon import, python will read directly from the repository).
-
-```
-pip install -e .
-```
+Run `make help` for options like installing for development, linting and testing.
 
 
 ## See also
