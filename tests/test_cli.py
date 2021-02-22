@@ -36,7 +36,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "keras-preprocessing": "./tests/assets/Keras_Preprocessing-1.1.0-py2.py3-none-any.whl",
         "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
-        "pip<21,>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
+        "pip<21.1,>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
     }
     return wheelhouse[package]
 
