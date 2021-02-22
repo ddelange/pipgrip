@@ -4,6 +4,6 @@ packaging>=17
 pkginfo>=1.4.2
 setuptools>=38.3  # for pkg_resources
 wheel
-pip>=7.1.0,<21  # >=7.1.0 for --constraint, <21 for --use-deprecated legacy-resolver in pipgrip.pipper._get_available_versions
+pip>=7.1.0,<21.1  # >=7.1.0 for --constraint, <21.1 for --use-deprecated legacy-resolver in pipgrip.pipper._get_available_versions https://github.com/pypa/pip/issues/9139#issuecomment-782084087
 enum34; python_version=='2.7'
 typing; python_version=='2.7'

@@ -124,17 +124,16 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.6.0)
+pipgrip (0.6.3)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
 ├── click>=7 (7.1.2)
-├── packaging>=17 (20.4)
-│   ├── pyparsing>=2.0.2 (2.4.7)
-│   └── six (1.15.0)
-├── pip>=7.1.0 (20.2)
-├── pkginfo>=1.4.2 (1.5.0.1)
-├── setuptools>=38.3 (49.2.0)
-└── wheel (0.34.2)
+├── packaging>=17 (20.9)
+│   └── pyparsing>=2.0.2 (2.4.7)
+├── pip<21.1,>=7.1.0 (21.0.1)
+├── pkginfo>=1.4.2 (1.7.0)
+├── setuptools>=38.3 (53.0.0)
+└── wheel (0.36.2)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
@@ -229,11 +228,11 @@ keras==2.2.2 (2.2.2)
 
 ## Known caveats
 
-- ``pip install -U `pipgrip --pipe package` `` is unsafe while pip doesn't [yet](https://twitter.com/di_codes/status/1193980331004743680) have a built-in dependency resolver, and leaves room for interpretation by pip. Using `pipgrip --install`, or combining `pipgrip --lock` with `pip install --constraint` is recommended.
-- Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output
-- [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet
-- `--reversed-tree` isn't implemented yet
-- Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--install` or `--pipe` should be used when installing local projects
+- PubGrub doesn't support [version epochs](https://www.python.org/dev/peps/pep-0440/#version-epochs), the [main reason](https://github.com/pypa/pip/issues/8203#issuecomment-704931138) PyPA chose [resolvelib](https://github.com/sarugaku/resolvelib) over PubGrub for their new resolver.
+- Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output.
+- [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet.
+- `--reversed-tree` isn't implemented yet.
+- Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--install` or `--pipe` should be used when installing local projects (or using `--lock` and then passing it to pip using `--constraint`).
 - The equivalent of e.g. `pip install ../aiobotocore[boto3]` is not yet implemented. However, e.g. `pipgrip --install .[boto3]` is allowed.
 
 
@@ -248,7 +247,7 @@ Run `make help` for options like installing for development, linting and testing
 ## See also
 
 - [PubGrub spec](https://github.com/dart-lang/pub/blob/SDK-2.2.1-dev.3.0/doc/solver.md)
-- [pip needs a dependency resolver](https://github.com/pypa/pip/issues/988)
+- [pip now has a dependency resolver](https://github.com/pypa/pip/issues/988#issuecomment-735776472)
 - [pipdeptree](https://github.com/naiquevin/pipdeptree)
 - [mixology](https://github.com/sdispater/mixology)
 - [poetry-semver](https://github.com/python-poetry/semver)
