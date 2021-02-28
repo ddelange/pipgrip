@@ -205,7 +205,9 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
         return _available_versions_cache[cache_key]
 
     logger.debug("Finding possible versions for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
+    args = _get_wheel_args(index_url, extra_index_url, pre) + [
+        package + "==4.8.15!16.23.42.post1"
+    ]
 
     if [20, 3] <= PIP_VERSION < [21, 1]:
         # https://github.com/ddelange/pipgrip/issues/42
