@@ -124,7 +124,7 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.6.5)
+pipgrip (0.6.7)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
 ├── click>=7 (7.1.2)
