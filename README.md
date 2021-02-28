@@ -124,13 +124,13 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.6.3)
+pipgrip (0.6.5)
 ├── anytree (2.8.0)
 │   └── six>=1.9.0 (1.15.0)
 ├── click>=7 (7.1.2)
 ├── packaging>=17 (20.9)
 │   └── pyparsing>=2.0.2 (2.4.7)
-├── pip<21.1,>=7.1.0 (21.0.1)
+├── pip>=7.1.0 (21.0.1)
 ├── pkginfo>=1.4.2 (1.7.0)
 ├── setuptools>=38.3 (53.0.0)
 └── wheel (0.36.2)

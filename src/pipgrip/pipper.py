@@ -207,7 +207,7 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
     logger.debug("Finding possible versions for {}".format(package))
     args = _get_wheel_args(index_url, extra_index_url, pre) + [package + "==rubbish"]
 
-    if PIP_VERSION >= [20, 3]:
+    if [20, 3] <= PIP_VERSION < [21, 1]:
         # https://github.com/ddelange/pipgrip/issues/42
         args += ["--use-deprecated", "legacy-resolver"]
 
