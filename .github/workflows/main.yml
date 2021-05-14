@@ -39,7 +39,9 @@ jobs:
           ${{ runner.os }}-pre-commit-
 
     - name: Install dependencies
-      run: make install
+      run: |
+        pip install -U pip setuptools wheel
+        make install
 
     - name: Lint
       if: matrix.python-version == 3.8
