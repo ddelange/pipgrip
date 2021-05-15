@@ -298,13 +298,13 @@ def render_lock(packages, include_dot=True, sort=False):
 )
 @click.option(
     "--index-url",
-    envvar="PIP_INDEX_URL",
-    default="https://pypi.org/simple",
+    # envvar="PIP_INDEX_URL",  # let pip discover
+    # default="https://pypi.org/simple",
     help="Base URL of the Python Package Index (default https://pypi.org/simple).",
 )
 @click.option(
     "--extra-index-url",
-    envvar="PIP_EXTRA_INDEX_URL",
+    # envvar="PIP_EXTRA_INDEX_URL",  # let pip discover
     help="Extra URLs of package indexes to use in addition to --index-url.",
 )
 @click.option(
