@@ -247,8 +247,11 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
 
 def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
-    logger.debug("Downloading/building wheel for {}".format(package))
+    logger.debug(
+        "Downloading/building wheel for {} into cache_dir {}".format(package, cache_dir)
+    )
     abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
+    cwd_cache_dir = abs_cache_dir.replace(os.getcwd(), ".", 1)
     args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
     try:
         out = stream_bash_command(args)
@@ -258,71 +261,75 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         raise
     out = out.splitlines()[::-1]
     abs_cache_dir_lower = abs_cache_dir.lower()
+    cwd_cache_dir_lower = cwd_cache_dir.lower()
     cache_dir_lower = cache_dir.lower()
     for i, line in enumerate(out):
         line = line.strip()
         line_lower = line.lower()
-        if (
+        if not (
             cache_dir_lower in line_lower
             or abs_cache_dir_lower in line_lower
+            or cwd_cache_dir_lower in line_lower
             or "stored in directory" in line_lower
         ):
-            if "stored in directory" in line_lower:
-                # wheel was built
-                fnames = [
-                    part.replace("filename=", "")
-                    for part in out[i + 1].split()
-                    if part.startswith("filename=")
-                ]
-                if not fnames:
-                    # older pip might not state filename, only directory
-                    whldir = line.replace("Stored in directory:", "").strip()
-                    dirpath, _, filenames = next(os.walk(whldir))
-                    all_wheels = sorted(
-                        (f for f in filenames if f.endswith(".whl")),
-                        key=lambda x: os.path.getmtime(os.path.join(dirpath, x)),
-                        reverse=True,
-                    )
-                    if package.startswith("."):
-                        fname = all_wheels[0]
-                    else:
-                        fname = None
-                        pkg = parse_req(package).key
-                        for whl in all_wheels:
-                            if pkg in canonicalize_name(whl):
-                                fname = whl
-                                break
-                        if not fname:
-                            logger.error(
-                                "Failed to extract wheel filename from pip stdout: \n{}".format(
-                                    "\n".join(out[::-1])
-                                )
-                            )
-                            raise RuntimeError(
-                                "Failed to find wheel for {} in {}. Wheels found: {}".format(
-                                    package, whldir, all_wheels
-                                )
-                            )
-                else:
-                    fname = fnames[0]
-            else:
-                # wheel was fetched
-                # match on lowercase line for windows compatibility
-                fname_len = len(
-                    line_lower.split(
-                        abs_cache_dir_lower
-                        if abs_cache_dir_lower in line_lower
-                        else cache_dir_lower,
-                        1,
-                    )[1].split(".whl", 1)[0]
-                    + ".whl"
-                )
-                fname = line[-fname_len:]
+            continue
 
-            logger.debug(
-                str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))})
+        if "stored in directory" in line_lower:
+            # wheel was built
+            fnames = [
+                part.replace("filename=", "")
+                for part in out[i + 1].split()
+                if part.startswith("filename=")
+            ]
+            if not fnames:
+                # older pip might not state filename, only directory
+                whldir = line.replace("Stored in directory:", "").strip()
+                dirpath, _, filenames = next(os.walk(whldir))
+                all_wheels = sorted(
+                    (f for f in filenames if f.endswith(".whl")),
+                    key=lambda x: os.path.getmtime(os.path.join(dirpath, x)),
+                    reverse=True,
+                )
+                if package.startswith("."):
+                    fname = all_wheels[0]
+                else:
+                    fname = None
+                    pkg = parse_req(package).key
+                    for whl in all_wheels:
+                        if pkg in canonicalize_name(whl):
+                            fname = whl
+                            break
+                    if not fname:
+                        logger.error(
+                            "Failed to extract wheel filename from pip stdout: \n{}".format(
+                                "\n".join(out[::-1])
+                            )
+                        )
+                        raise RuntimeError(
+                            "Failed to find wheel for {} in {}. Wheels found: {}".format(
+                                package, whldir, all_wheels
+                            )
+                        )
+            else:
+                fname = fnames[0]
+        else:
+            # wheel was fetched
+            # match on lowercase line for windows compatibility
+            fname_len = len(
+                line_lower.split(
+                    abs_cache_dir_lower
+                    if abs_cache_dir_lower in line_lower
+                    else cwd_cache_dir_lower
+                    if cwd_cache_dir_lower in line_lower
+                    else cache_dir_lower,
+                    1,
+                )[1].split(".whl", 1)[0]
+                + ".whl"
             )
-            return os.path.join(cache_dir, fname.lstrip(os.path.sep))
+            fname = line[-fname_len:]
+
+        logger.debug(str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))}))
+        return os.path.join(cache_dir, fname.lstrip(os.path.sep))
     logger.error(
         "Failed to extract wheel filename from pip stdout: \n{}".format(
             "\n".join(out[::-1])

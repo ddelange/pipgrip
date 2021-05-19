@@ -98,6 +98,15 @@ from pipgrip.pipper import _download_wheel, _get_available_versions
             """,
             "Keras-2.4.3-py2.py3-none-any.whl",
         ),
+        (
+            "pkginfo>=1.4.2",
+            """
+            Collecting pkginfo>=1.4.2
+              Using cached pkginfo-1.7.0-py2.py3-none-any.whl (25 kB)
+            Saved ./Library/Caches/pip/wheels/pipgrip/pkginfo-1.7.0-py2.py3-none-any.whl
+            """,
+            "pkginfo-1.7.0-py2.py3-none-any.whl",
+        ),
     ],
     ids=(
         "pip10 .",
@@ -108,6 +117,7 @@ from pipgrip.pipper import _download_wheel, _get_available_versions
         "pip>10 fetched 2",
         "pip>10 built 1",
         "Windows lowercase cache_dir",
+        "cwd_cache_dir",
     ),
 )
 def test_download_wheel(package, pip_output, expected, monkeypatch):
@@ -126,6 +136,9 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
     def patch_pip_output(*args, **kwargs):
         return pip_output
 
+    def patch_getcwd():
+        return os.path.expanduser("~")
+
     monkeypatch.setattr(
         pipgrip.pipper.os,
         "walk",
@@ -140,6 +153,11 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
         pipgrip.pipper,
         "stream_bash_command",
         patch_pip_output,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper.os,
+        "getcwd",
+        patch_getcwd,
     )
 
     assert (
