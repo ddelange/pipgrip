@@ -14,6 +14,7 @@ from anytree.exporter import DictExporter
 from anytree.search import findall_by_attr
 from packaging.markers import default_environment
 
+from pipgrip import __version__
 from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
@@ -349,8 +350,9 @@ def main(
         logger.setLevel(logging.INFO)
     if verbose >= 3:
         logger.setLevel(logging.DEBUG)
-        logger.debug("Environment: {}".format(default_environment()))
-        logger.debug("Pip version: {}".format(PIP_VERSION))
+        logger.debug("environment: {}".format(default_environment()))
+        logger.debug("pip version: {}".format(PIP_VERSION))
+        logger.debug("pipgrip version: {}".format(__version__))
 
     if (
         sum(
