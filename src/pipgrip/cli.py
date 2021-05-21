@@ -384,11 +384,7 @@ def main(
         )
 
     if requirements_file:
-        if dependencies:
-            raise click.ClickException(
-                "-r can not be used in conjunction with directly passed requirements"
-            )
-        dependencies = []
+        dependencies = list(dependencies)
         for path in requirements_file:
             dependencies += read_requirements(path)
 
