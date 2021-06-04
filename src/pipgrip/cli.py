@@ -114,15 +114,14 @@ def _recurse_dependencies(
             version=str(resolved_version),
             parent=tree_parent,
             # pip_string in metadata might be the wrong one (populated differently beforehand, higher up in the tree)
-            # left here in case e.g. versions_available is needed in rendered tree
+            # left here in case e.g. versions_available is needed in rendered tree:
             # metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
             extras_name=dep.package.req.extras_name,
         )
 
         # detect cyclic depenencies
-        ancestors = tree_node.ancestors
-        if any(ancestor.name == name for ancestor in ancestors):
+        if any(ancestor.name == name for ancestor in tree_node.ancestors):
             logger.warning(
                 "Cyclic dependency found: %s depends on %s and vice versa.",
                 tree_node.name,
