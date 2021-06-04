@@ -303,7 +303,7 @@ def test_solutions(arguments, expected, monkeypatch):
         (["-r", "tests/test_reqs.txt", "-r", "tests/test_reqs.txt"]),
         (["urllib3==1.25.7", "urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1"]),
         (["click", "-r", "tests/test_reqs.txt"]),
-        # (["keras-preprocessing==1.0.2", "keras==2.2.2"]),  # fix RecursionError
+        (["keras-preprocessing==1.0.2", "keras==2.2.2"]),
     ],
 )
 def test_correct_options(arguments, monkeypatch):

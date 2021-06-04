@@ -11,7 +11,6 @@ from subprocess import CalledProcessError
 import click
 from anytree import AsciiStyle, ContStyle, Node, RenderTree
 from anytree.exporter import DictExporter
-from anytree.search import findall_by_attr
 from packaging.markers import default_environment
 
 from pipgrip import __version__
@@ -115,15 +114,14 @@ def _recurse_dependencies(
             version=str(resolved_version),
             parent=tree_parent,
             # pip_string in metadata might be the wrong one (populated differently beforehand, higher up in the tree)
-            # left here in case e.g. versions_available is needed in rendered tree
+            # left here in case e.g. versions_available is needed in rendered tree:
             # metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
             extras_name=dep.package.req.extras_name,
         )
 
         # detect cyclic depenencies
-        matches = findall_by_attr(tree_root, name)
-        if matches and matches[0] in tree_node.ancestors:
+        if any(ancestor.name == name for ancestor in tree_node.ancestors):
             logger.warning(
                 "Cyclic dependency found: %s depends on %s and vice versa.",
                 tree_node.name,
@@ -350,9 +348,9 @@ def main(
         logger.setLevel(logging.INFO)
     if verbose >= 3:
         logger.setLevel(logging.DEBUG)
-        logger.debug("environment: {}".format(default_environment()))
-        logger.debug("pip version: {}".format(PIP_VERSION))
-        logger.debug("pipgrip version: {}".format(__version__))
+        logger.debug("environment: %s", default_environment())
+        logger.debug("pip version: %s", PIP_VERSION)
+        logger.debug("pipgrip version: %s", __version__)
 
     if (
         sum(
@@ -463,7 +461,9 @@ def main(
             output = dumps(packages_flat, sort_keys=sort)
         else:
             output = "\n".join(render_lock(packages_flat, include_dot=True, sort=sort))
-        click.echo(output)
+
+        if output:
+            click.echo(output)
 
         if install:
             install_packages(

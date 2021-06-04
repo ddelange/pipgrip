@@ -9,13 +9,6 @@
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
-<!--
-  reversed tree
-  VCS support
-  two times pypi.org in `looking in indexes`?
-  multicore pip?
--->
-
 #### pipgrip vs. poetry
 
 [poetry](https://github.com/python-poetry/poetry) offers package management with dependency resolution, essentially replacing pip/setuptools. This means that poetry packages don't contain `setup.py`, and hence are not compatible with `pip install -e`: poetry projects would have to be converted to setuptools-based projects with e.g. [dephell](https://github.com/dephell/dephell). To avoid such hassle, pipgrip only requires the selected package(s) + dependencies to be available to pip in the ususal way.
