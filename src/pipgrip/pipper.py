@@ -399,6 +399,7 @@ def discover_dependencies_and_versions(
     req = parse_req(package)
     extras_requested = sorted(req.extras)
 
+    logger.info("discovering %s", req)
     wheel_fname = _download_wheel(
         req.__str__(), index_url, extra_index_url, pre, cache_dir
     )
