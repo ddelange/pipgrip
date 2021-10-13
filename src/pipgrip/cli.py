@@ -408,6 +408,8 @@ def main(
     if no_cache_dir:
         cache_dir = tempfile.mkdtemp()
 
+    logger.debug('----------[PackageSource]---')
+
     try:
         source = PackageSource(
             cache_dir=cache_dir,
@@ -418,8 +420,12 @@ def main(
         for root_dependency in dependencies:
             source.root_dep(root_dependency)
 
+        logger.debug('----------[VersionSolver]---')
+
         solver = VersionSolver(source)
         solution = solver.solve()
+
+        logger.debug('----------[decision_packages]---')
 
         decision_packages = OrderedDict()
         for package, version in solution.decisions.items():
@@ -428,6 +434,8 @@ def main(
             decision_packages[package] = version
 
         logger.debug(decision_packages)
+
+        logger.debug('----------[build_tree]---')
 
         tree_root, packages_tree_dict, packages_flat = build_tree(
             source, decision_packages
