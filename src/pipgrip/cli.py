@@ -441,11 +441,22 @@ def main(
         )
 
         if exc is not None:
+            # log a partial tree (failed download/build) if the RuntimeError ends with the culptit pip_string
+            partial_tree = render_tree(tree_root, max_depth, tree_ascii)
+            culprit_package = str(exc).split()[-1]
+            if culprit_package not in partial_tree:
+                # only continue handling expected RuntimeErrors
+                raise exc
+            tree_lines = partial_tree.split("\n")
+            for i, line in enumerate(tree_lines):
+                replace = "failed" if culprit_package in line else "scheduled"
+                tree_lines[i] = line.replace("?", replace)
+            partial_tree = "\n".join(tree_lines)
             logger.error(
                 "{}. Best guess PartialSolution tree after the last solving decision {}:\n{}".format(
                     exc,
                     next(reversed(solver.solution.decisions.items())),
-                    render_tree(tree_root, 0, tree_ascii),
+                    partial_tree,
                 )
             )
             raise click.ClickException(str(exc))
