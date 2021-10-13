@@ -1,5 +1,5 @@
 pre-commit~=2.9 ; python_version >= "3.6"
-pytest~=4.6  # pytest 5 requires py3
+pytest
 pytest-cov~=2.8
 pytest-env~=0.6
 pytest-sugar~=0.9
