@@ -257,8 +257,12 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
         output = getattr(err, "output") or ""
-        logger.error(output)
-        raise
+        logger.error(
+            "Downloading/building wheel for {} failed with output:\n{}".format(
+                package, output.strip()
+            )
+        )
+        raise RuntimeError("Failed to download/build wheel for {}".format(package))
     out = out.splitlines()[::-1]
     abs_cache_dir_lower = abs_cache_dir.lower()
     cwd_cache_dir_lower = cwd_cache_dir.lower()
@@ -335,7 +339,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
             "\n".join(out[::-1])
         )
     )
-    raise RuntimeError("Failed to download wheel for {}".format(package))
+    raise RuntimeError("Failed to download/build wheel for {}".format(package))
 
 
 def _extract_metadata(wheel_fname):

@@ -104,10 +104,7 @@ def _recurse_dependencies(
     packages = OrderedDict()
     for dep in dependencies:
         name = dep.name
-        extras = dep.package.req.extras
-        resolved_version = decision_packages.get(dep.package) or _find_version(
-            source, dep, extras
-        )
+        resolved_version = decision_packages.get(dep.package) or "?"
 
         tree_node = Node(
             name,
@@ -129,6 +126,10 @@ def _recurse_dependencies(
             )
             setattr(tree_node, "cyclic", True)
             packages[(name, str(resolved_version))] = {}
+            continue
+
+        # tree was only resolved partially (probably solver.solve() failed)
+        if resolved_version == "?":
             continue
 
         packages[(name, str(resolved_version))] = _recurse_dependencies(
@@ -419,7 +420,13 @@ def main(
             source.root_dep(root_dependency)
 
         solver = VersionSolver(source)
-        solution = solver.solve()
+        try:
+            solution = solver.solve()
+            exc = None
+        except RuntimeError as e:
+            # RuntimeError coming from pipgrip.pipper
+            solution = solver.solution
+            exc = e
 
         decision_packages = OrderedDict()
         for package, version in solution.decisions.items():
@@ -427,11 +434,32 @@ def main(
                 continue
             decision_packages[package] = version
 
-        logger.debug(decision_packages)
+        logger.debug("decision_packages: {}".format(decision_packages))
 
         tree_root, packages_tree_dict, packages_flat = build_tree(
             source, decision_packages
         )
+
+        if exc is not None:
+            # log a partial tree (failed download/build) if the RuntimeError ends with the culptit pip_string
+            partial_tree = render_tree(tree_root, max_depth, tree_ascii)
+            culprit_package = str(exc).split()[-1]
+            if culprit_package not in partial_tree:
+                # only continue handling expected RuntimeErrors
+                raise exc
+            tree_lines = partial_tree.split("\n")
+            for i, line in enumerate(tree_lines):
+                replace = "failed" if culprit_package in line else "scheduled"
+                tree_lines[i] = line.replace("?", replace)
+            partial_tree = "\n".join(tree_lines)
+            logger.error(
+                "{}. Best guess PartialSolution tree after the last solving decision {}:\n{}".format(
+                    exc,
+                    next(reversed(solver.solution.decisions.items())),
+                    partial_tree,
+                )
+            )
+            raise click.ClickException(str(exc))
 
         if lock:
             with io.open(
