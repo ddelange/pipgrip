@@ -13,7 +13,7 @@ def mock_download_wheel(package, *args, **kwargs):
     wheelhouse = {
         ".": self_wheel,
         "setuptools>=38.3": "./tests/assets/setuptools-44.0.0-py2.py3-none-any.whl",
-        "pkginfo>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
+        "pkginfo<1.8,>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
         "packaging>=17": "./tests/assets/packaging-20.0-py2.py3-none-any.whl",
         "click>=7": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
