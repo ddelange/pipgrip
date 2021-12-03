@@ -1,7 +1,7 @@
 anytree
 click>=7
 packaging>=17
-pkginfo>=1.4.2
+pkginfo>=1.4.2,<1.8  # ref ddelange/pipgrip#68
 setuptools>=38.3  # for pkg_resources
 wheel
 pip>=7.1.0  # >=7.1.0 for --constraint
