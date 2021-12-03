@@ -104,7 +104,7 @@ def _recurse_dependencies(
     packages = OrderedDict()
     for dep in dependencies:
         name = dep.name
-        resolved_version = decision_packages.get(dep.package) or "?"
+        resolved_version = decision_packages.get(dep.package) or "undecided"
 
         tree_node = Node(
             name,
@@ -129,7 +129,7 @@ def _recurse_dependencies(
             continue
 
         # tree was only resolved partially (probably solver.solve() failed)
-        if resolved_version == "?":
+        if resolved_version == "undecided":
             continue
 
         packages[(name, str(resolved_version))] = _recurse_dependencies(
@@ -428,6 +428,7 @@ def main(
             solution = solver.solution
             exc = e
 
+        # build tree of the (partial) solution using package metadata from source
         decision_packages = OrderedDict()
         for package, version in solution.decisions.items():
             if package == Package.root():
@@ -439,24 +440,32 @@ def main(
         tree_root, packages_tree_dict, packages_flat = build_tree(
             source, decision_packages
         )
+        rendered_tree = render_tree(tree_root, max_depth, tree_ascii)
 
-        if exc is not None:
+        if exc is None:
+            if "(undecided)" in rendered_tree:
+                raise RuntimeError(
+                    "Unexpected partial solution encountered, not all packages have decisions"
+                )
+        else:
+            # a RuntimeError occurred
             # log a partial tree (failed download/build) if the RuntimeError ends with the culptit pip_string
-            partial_tree = render_tree(tree_root, max_depth, tree_ascii)
             culprit_package = str(exc).split()[-1]
-            if culprit_package not in partial_tree:
+            if culprit_package not in rendered_tree:
                 # only continue handling expected RuntimeErrors
                 raise exc
-            tree_lines = partial_tree.split("\n")
-            for i, line in enumerate(tree_lines):
-                replace = "failed" if culprit_package in line else "scheduled"
-                tree_lines[i] = line.replace("?", replace)
-            partial_tree = "\n".join(tree_lines)
+
+            rendered_tree = rendered_tree.replace(
+                "{} (undecided)".format(culprit_package),
+                "{} (failed)".format(culprit_package),
+                1,
+            )
+
             logger.error(
                 "{}. Best guess PartialSolution tree after the last solving decision {}:\n{}".format(
                     exc,
                     next(reversed(solver.solution.decisions.items())),
-                    partial_tree,
+                    rendered_tree,
                 )
             )
             raise click.ClickException(str(exc))
@@ -478,7 +487,7 @@ def main(
             if json:
                 output = dumps(render_json_tree_full(tree_root, max_depth, sort))
             else:
-                output = render_tree(tree_root, max_depth, tree_ascii)
+                output = rendered_tree
         elif tree_json:
             output = dumps(
                 render_json_tree(tree_root, max_depth, tree_json_exact), sort_keys=sort
