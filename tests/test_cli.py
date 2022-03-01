@@ -37,6 +37,9 @@ def mock_download_wheel(package, *args, **kwargs):
         "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
         "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
+        "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "requests@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "pysocks!=1.5.7,>=1.5.6": "./tests/assets/PySocks-1.7.1-py3-none-any.whl",
     }
     return wheelhouse[package]
 
@@ -64,6 +67,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras-applications": ["1.0.0", "1.0.1", "1.0.2", "1.0.4", "1.0.5", "1.0.6", "1.0.7", "1.0.8"],
         "h5py": ["2.10.0"],
         "pip": ["20.0.2"],
+        "pysocks": ["1.7.1"]
     }
     return versions[package]
 # fmt: on
@@ -248,6 +252,27 @@ def invoke_patched(func, arguments, monkeypatch):
             ["keras_preprocessing", "requests; python_version < '3'"],
             ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
         ),
+        (
+            ["requests@git+https://github.com/psf/requests"],
+            [
+                "requests @ git+https://github.com/psf/requests",
+                "certifi==2019.11.28",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "urllib3==1.25.7",
+            ],
+        ),
+        (
+            ["requests[socks]   @  git+https://github.com/psf/requests"],
+            [
+                "requests @ git+https://github.com/psf/requests",
+                "certifi==2019.11.28",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "pysocks==1.7.1",
+                "urllib3==1.25.7",
+            ],
+        ),
     ],
     ids=(
         "pipgrip pipgrip",
@@ -263,6 +288,8 @@ def invoke_patched(func, arguments, monkeypatch):
         "keras_preprocessing (underscore)",
         "-r",
         "environment marker",
+        "vcs",
+        "vcs with extras",
     ),
 )
 def test_solutions(arguments, expected, monkeypatch):

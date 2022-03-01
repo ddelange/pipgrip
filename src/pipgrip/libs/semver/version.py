@@ -1,4 +1,5 @@
 # flake8: noqa:A003
+import hashlib
 import re
 from typing import List, Optional, Union
 
@@ -195,13 +196,21 @@ class Version(VersionRange):
 
     @classmethod
     def parse(cls, text):  # type: (str) -> Version
+        if not isinstance(text, ("".__class__, u"".__class__)):
+            raise ParseVersionError('Unable to parse "{}".'.format(text))
+
         try:
             match = COMPLETE_VERSION.match(text)
         except TypeError:
             match = None
 
         if match is None:
-            raise ParseVersionError('Unable to parse "{}".'.format(text))
+            # VCS support: use numerical hash
+            match = COMPLETE_VERSION.match(
+                str(
+                    int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10 ** 12
+                )
+            )
 
         text = text.rstrip(".")
 

@@ -18,6 +18,7 @@ from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
+from pipgrip.libs.semver import Version
 from pipgrip.package_source import PackageSource
 from pipgrip.pipper import install_packages, read_requirements
 
@@ -192,10 +193,21 @@ def render_json_tree_full(tree_root, max_depth, sort):
     return tree_dict_full
 
 
+def is_vcs_version(version):
+    return str(Version.parse(version).major) not in version
+
+
+def render_pin(package, version):
+    if package.startswith("."):
+        return package
+    sep = " @ " if is_vcs_version(version) else "=="
+    return sep.join((package, version))
+
+
 def render_lock(packages, include_dot=True, sort=False):
     fn = sorted if sort else list
     return fn(
-        "==".join(x) if not x[0].startswith(".") else x[0]
+        render_pin(x[0], x[1])
         for x in packages.items()
         if include_dot or not x[0].startswith(".")
     )
@@ -397,14 +409,6 @@ def main(
     if user:
         if not install:
             raise click.ClickException("--user has no effect without --install")
-
-    for dep in dependencies:
-        if os.sep in dep:
-            raise click.ClickException(
-                "'{}' looks like a path, and is not supported yet by pipgrip".format(
-                    dep
-                )
-            )
 
     if no_cache_dir:
         cache_dir = tempfile.mkdtemp()

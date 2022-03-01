@@ -165,4 +165,10 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
         else:
             return version
 
+    # VCS support
+    try:
+        return Version.parse(constraint)
+    except ValueError:
+        raise ValueError("Could not parse version constraint: {}".format(constraint))
+
     raise ValueError("Could not parse version constraint: {}".format(constraint))

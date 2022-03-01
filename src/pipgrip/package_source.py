@@ -122,7 +122,7 @@ class PackageSource(BasePackageSource):
         dependencies = []
         for dep in deps:
             req = parse_req(dep)
-            constraint = ",".join(["".join(tup) for tup in req.specs])
+            constraint = req.url or ",".join(["".join(tup) for tup in req.specs])
             dependencies.append(Dependency(req.key, constraint, req.__str__()))
 
         self._packages[name][extras][version] = dependencies
@@ -155,7 +155,7 @@ class PackageSource(BasePackageSource):
         if is_unneeded_dep(package):
             return
         req = parse_req(package)
-        constraint = ",".join(["".join(tup) for tup in req.specs])
+        constraint = req.url or ",".join(["".join(tup) for tup in req.specs])
         self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))
         self.discover_and_add(req.__str__())
 
