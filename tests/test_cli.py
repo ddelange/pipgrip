@@ -244,6 +244,10 @@ def invoke_patched(func, arguments, monkeypatch):
             ["-r", "tests/test_reqs.txt"],
             ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
         ),
+        (
+            ["keras_preprocessing", "requests; python_version < '3'"],
+            ["keras-preprocessing==1.1.0", "six==1.13.0", "numpy==1.16.6"],
+        ),
     ],
     ids=(
         "pipgrip pipgrip",
@@ -258,6 +262,7 @@ def invoke_patched(func, arguments, monkeypatch):
         "--tree-json-exact (cyclic)",
         "keras_preprocessing (underscore)",
         "-r",
+        "environment marker",
     ),
 )
 def test_solutions(arguments, expected, monkeypatch):

@@ -7,7 +7,11 @@ from pipgrip.libs.mixology.package_source import PackageSource as BasePackageSou
 from pipgrip.libs.mixology.range import Range
 from pipgrip.libs.mixology.union import Union
 from pipgrip.libs.semver import Version, VersionRange, parse_constraint
-from pipgrip.pipper import discover_dependencies_and_versions, parse_req
+from pipgrip.pipper import (
+    discover_dependencies_and_versions,
+    is_unneeded_dep,
+    parse_req,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +152,8 @@ class PackageSource(BasePackageSource):
         }
 
     def root_dep(self, package):  # type: (str, str) -> None
+        if is_unneeded_dep(package):
+            return
         req = parse_req(package)
         constraint = ",".join(["".join(tup) for tup in req.specs])
         self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))

@@ -381,6 +381,11 @@ def _get_wheel_requirements(metadata, extras_requested):
     return result
 
 
+def is_unneeded_dep(package):
+    """Evaluate a single package in the context of the current environment."""
+    return not _get_wheel_requirements({"requires_dist": [package]}, [])
+
+
 def discover_dependencies_and_versions(
     package, index_url, extra_index_url, cache_dir, pre
 ):
