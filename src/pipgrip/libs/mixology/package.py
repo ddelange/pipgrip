@@ -7,11 +7,7 @@ class Package(object):
     """Represent a project's package."""
 
     def __init__(self, pip_string):  # type: (str) -> None
-        if pip_string == "_root_":
-            req = parse_req(".")
-            req.key = "_root_"
-        else:
-            req = parse_req(pip_string)
+        req = parse_req(pip_string)
         self._name = req.key
         self._req = req
 

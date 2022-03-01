@@ -117,16 +117,16 @@ Exhaustive dependency trees without the need to install any packages (at most bu
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.6.7)
+pipgrip (0.7.0)
 ├── anytree (2.8.0)
-│   └── six>=1.9.0 (1.15.0)
-├── click>=7 (7.1.2)
-├── packaging>=17 (20.9)
-│   └── pyparsing>=2.0.2 (2.4.7)
-├── pip>=7.1.0 (21.0.1)
-├── pkginfo>=1.4.2 (1.7.0)
-├── setuptools>=38.3 (53.0.0)
-└── wheel (0.36.2)
+│   └── six>=1.9.0 (1.16.0)
+├── click>=7 (8.0.4)
+├── packaging>=17 (21.3)
+│   └── pyparsing!=3.0.5,>=2.0.2 (3.0.7)
+├── pip>=7.1.0 (22.0.3)
+├── pkginfo<1.8,>=1.4.2 (1.7.1)
+├── setuptools>=38.3 (60.9.3)
+└── wheel (0.37.1)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
@@ -223,10 +223,12 @@ keras==2.2.2 (2.2.2)
 
 - PubGrub doesn't support [version epochs](https://www.python.org/dev/peps/pep-0440/#version-epochs), the [main reason](https://github.com/pypa/pip/issues/8203#issuecomment-704931138) PyPA chose [resolvelib](https://github.com/sarugaku/resolvelib) over PubGrub for their new resolver.
 - Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output.
-- [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support) isn't implemented yet.
+- [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support): combining VCS requirements with `--editable`, as well as the [`@ -e svn+`](https://pip.pypa.io/en/stable/topics/vcs-support/#subversion) pattern aren't implemented yet.
+- Ommitting the `projectname @` prefix (the equivalent of e.g. `pip install git+https...`) is not supported neither for VCS requirements, nor for [PEP 440](https://www.python.org/dev/peps/pep-0440) direct references (the equivalent of e.g. `pip install https...`).
+- Parsing requirements files (`-r`) does not support: [custom file encodings](https://pip.pypa.io/en/stable/reference/requirements-file-format/#encoding), [line continuations](https://pip.pypa.io/en/stable/reference/requirements-file-format/#line-continuations), [global/per-requirement options](https://pip.pypa.io/en/stable/reference/requirements-file-format/#supported-options)
 - `--reversed-tree` isn't implemented yet.
 - Since `pip install -r` does not accept `.` as requirement, it is omitted from lockfiles, so `--install` or `--pipe` should be used when installing local projects (or using `--lock` and then passing it to pip using `--constraint`).
-- The equivalent of e.g. `pip install ../aiobotocore[boto3]` is not yet implemented. However, e.g. `pipgrip --install .[boto3]` is allowed.
+- Support for local paths, e.g. the equivalent of `pip install ../aiobotocore[boto3]` is not yet implemented. However, e.g. `pipgrip --install -e .[boto3]` is allowed.
 
 
 ## Development

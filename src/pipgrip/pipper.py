@@ -18,25 +18,22 @@ logger = logging.getLogger(__name__)
 
 
 def read_requirements(path):
+    re_comments = re.compile(r"(?:^|\s+)#")
     try:
         with io.open(path, mode="rt", encoding="utf-8") as fp:
-            return list(filter(None, (line.split("#")[0].strip() for line in fp)))
+            return list(
+                filter(None, (re_comments.split(line, 1)[0].strip() for line in fp))
+            )
     except IndexError:
         raise RuntimeError("{} is broken".format(path))
 
 
 def parse_req(requirement, extras=None):
-    from pipgrip.libs.mixology.package import Package
-
-    if isinstance(requirement, Package) and extras != requirement.req.extras:
-        raise RuntimeError(
-            "Conflict between package extras and extras kwarg. Please file an issue on GitHub."
-        )
-    if requirement.startswith("."):
-        req = pkg_resources.Requirement.parse(requirement.replace(".", "rubbish", 1))
+    if requirement == "_root_" or requirement == "." or requirement.startswith(".["):
+        req = pkg_resources.Requirement.parse("rubbish")
         if extras is not None:
             req.extras = extras
-        req.key = "."
+        req.key = "." if requirement.startswith(".[") else requirement
         full_str = req.__str__().replace(req.name, req.key)
         req.name = req.key
     else:
@@ -406,6 +403,7 @@ def discover_dependencies_and_versions(
 
     """
     req = parse_req(package)
+
     extras_requested = sorted(req.extras)
 
     logger.info("discovering %s", req)
@@ -414,10 +412,10 @@ def discover_dependencies_and_versions(
     )
     wheel_metadata = _extract_metadata(wheel_fname)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
-    wheel_version = wheel_metadata["version"]
+    wheel_version = req.url or wheel_metadata["version"]
     available_versions = (
         _get_available_versions(req.extras_name, index_url, extra_index_url, pre)
-        if req.key != "."
+        if req.key != "." and req.url is None
         else [wheel_version]
     )
     if wheel_version not in available_versions:

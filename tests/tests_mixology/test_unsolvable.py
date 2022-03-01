@@ -83,3 +83,16 @@ Thus, b is forbidden.
 So, because root depends on b (*), version solving failed."""
 
     check_solver_result(source, error=error, tries=2)
+
+
+def test_vcs_constraints(source):
+    source.root_dep("requests", "git+https://github.com/psf/requests")
+    source.root_dep("requests", "git+https://github.com/psf/requests.git")
+
+    source.add("requests", "git+https://github.com/psf/requests")
+    source.add("requests", "git+https://github.com/psf/requests.git")
+
+    error = """\
+Because root depends on both requests (git+https://github.com/psf/requests) and requests (git+https://github.com/psf/requests.git), version solving failed."""
+
+    check_solver_result(source, error=error)
