@@ -196,7 +196,7 @@ class Version(VersionRange):
 
     @classmethod
     def parse(cls, text):  # type: (str) -> Version
-        if not isinstance(text, str):
+        if not isinstance(text, ("".__class__, u"".__class__)):
             raise ParseVersionError('Unable to parse "{}".'.format(text))
 
         try:
