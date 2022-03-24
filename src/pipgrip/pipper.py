@@ -30,7 +30,11 @@ def read_requirements(path):
 
 def parse_req(requirement, extras=None):
     if requirement == "_root_" or requirement == "." or requirement.startswith(".["):
-        req = pkg_resources.Requirement.parse("rubbish")
+        req = pkg_resources.Requirement.parse(
+            requirement.replace(".", "rubbish", 1)
+            if requirement.startswith(".[")
+            else "rubbish"
+        )
         if extras is not None:
             req.extras = extras
         req.key = "." if requirement.startswith(".[") else requirement
