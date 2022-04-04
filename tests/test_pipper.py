@@ -160,16 +160,13 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
         patch_getcwd,
     )
 
-    assert (
-        _download_wheel(
-            package,
-            "https://pypi.org/simple",
-            "https://pypi.org/simple",
-            False,
-            cache_dir,
-        )
-        == os.path.join(cache_dir, expected.lstrip(os.path.sep))
-    )
+    assert _download_wheel(
+        package,
+        "https://pypi.org/simple",
+        "https://pypi.org/simple",
+        False,
+        cache_dir,
+    ) == os.path.join(cache_dir, expected.lstrip(os.path.sep))
 
 
 @pytest.mark.parametrize(
