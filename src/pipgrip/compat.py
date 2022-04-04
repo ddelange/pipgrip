@@ -7,7 +7,7 @@ except ImportError:
     # Python 2
     from urlparse import urlparse  # noqa:F401
 
-PIP_VERSION = list(parse_version(pip.__version__).release)
+PIP_VERSION = list(parse_version(pip.__version__)._version.release)
 
 if PIP_VERSION < [10]:
     from pip.locations import USER_CACHE_DIR
