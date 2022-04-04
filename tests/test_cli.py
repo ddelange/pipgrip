@@ -161,6 +161,7 @@ def invoke_patched(func, arguments, monkeypatch):
         (
             ["--tree", "keras==2.2.2"],
             [  # generated on py2.7 - ipython - %paste a - print a
+                # fmt: off
                 u"keras==2.2.2 (2.2.2)",
                 u"\u251c\u2500\u2500 h5py (2.10.0)",
                 u"\u2502   \u251c\u2500\u2500 numpy>=1.7 (1.16.6)",
@@ -182,6 +183,7 @@ def invoke_patched(func, arguments, monkeypatch):
                 u"\u251c\u2500\u2500 scipy>=0.14 (1.2.2)",
                 u"\u2502   \u2514\u2500\u2500 numpy>=1.8.2 (1.16.6)",
                 u"\u2514\u2500\u2500 six>=1.9.0 (1.13.0)",
+                # fmt: on
             ],
         ),
         (

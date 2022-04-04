@@ -1,45 +1,45 @@
 repos:
 -   repo: https://github.com/Yelp/detect-secrets
-    rev: v0.14.3
+    rev: v1.2.0
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
         exclude: .*/tests/.*
 
 -   repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.3.0
     hooks:
     -   id: black
 
 -   repo: https://github.com/timothycrosley/isort
-    rev: 5.7.0
+    rev: 5.10.1
     hooks:
     -   id: isort
 
 -   repo: https://github.com/PyCQA/flake8
-    rev: 3.8.4
+    rev: 4.0.1
     hooks:
     -   id: flake8
         additional_dependencies: [
             # 'darglint~=1.5.4',
             'flake8-absolute-import~=1.0',
-            'flake8-blind-except~=0.1.1',
+            'flake8-blind-except~=0.2.1',
             'flake8-builtins~=1.5.3',
             'flake8-cognitive-complexity==0.1.0',
-            'flake8-comprehensions~=3.2.3',
+            'flake8-comprehensions~=3.8.0',
             # 'flake8-docstrings~=1.5.0',
             'flake8-logging-format~=0.6.0',
             'flake8-mutable~=1.2.0',
-            'flake8-print~=3.1.4',
-            'flake8-printf-formatting~=1.1.0',
-            'flake8-pytest-style~=1.2.3',
-            'flake8-quotes~=3.2.0',
+            'flake8-print~=4.0.0',
+            'flake8-printf-formatting~=1.1.2',
+            'flake8-pytest-style~=1.6.0',
+            'flake8-quotes~=3.3.1',
             'flake8-tuple~=0.4.1',
-            'pep8-naming~=0.11.1'
+            'pep8-naming~=0.12.1'
         ]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
     -   id: mixed-line-ending
         args: ['--fix=lf']

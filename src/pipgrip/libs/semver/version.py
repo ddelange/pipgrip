@@ -196,8 +196,10 @@ class Version(VersionRange):
 
     @classmethod
     def parse(cls, text):  # type: (str) -> Version
+        # fmt: off
         if not isinstance(text, ("".__class__, u"".__class__)):
             raise ParseVersionError('Unable to parse "{}".'.format(text))
+        # fmt: on
 
         try:
             match = COMPLETE_VERSION.match(text)
@@ -208,7 +210,7 @@ class Version(VersionRange):
             # VCS support: use numerical hash
             match = COMPLETE_VERSION.match(
                 str(
-                    int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10 ** 12
+                    int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10**12
                 )
             )
 

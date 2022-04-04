@@ -161,12 +161,14 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
             if max_depth and node.depth > max_depth:
                 continue
             lines.append(
+                # fmt: off
                 u"{}{} ({}{})".format(
                     fill,
                     node.pip_string,
                     node.version,
                     ", cyclic" if hasattr(node, "cyclic") else "",
                 )
+                # fmt: on
             )
         output += lines
     return "\n".join(output)
