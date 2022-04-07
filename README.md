@@ -2,10 +2,10 @@
 
 [![build](https://img.shields.io/github/workflow/status/ddelange/pipgrip/GH/master?logo=github&cacheSeconds=86400)](https://github.com/ddelange/pipgrip/actions?query=branch%3Amaster)
 [![codecov](https://img.shields.io/codecov/c/github/ddelange/pipgrip/master?logo=codecov&logoColor=white)](https://codecov.io/gh/ddelange/pipgrip)
-[![pypi Version](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
+[![pypi](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
+[![homebrew](https://img.shields.io/homebrew/v/pipgrip?logo=homebrew&logoColor=white)](https://formulae.brew.sh/formula/pipgrip)
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![downloads](https://pepy.tech/badge/pipgrip)](https://pypistats.org/packages/pipgrip)
-[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
@@ -235,6 +235,7 @@ keras==2.2.2 (2.2.2)
 
 [![gitmoji](https://img.shields.io/badge/gitmoji-%20%F0%9F%98%9C%20%F0%9F%98%8D-ffdd67)](https://github.com/carloscuesta/gitmoji-cli)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 Run `make help` for options like installing for development, linting and testing.
 
