@@ -77,7 +77,7 @@ def mock_stream_bash_command(*args, **kwargs):
     return "I passed"
 
 
-def invoke_patched(func, arguments, monkeypatch):
+def invoke_patched(func, arguments, monkeypatch, **kwargs):
     def default_environment():
         return {
             "implementation_name": "cpython",
@@ -114,7 +114,7 @@ def invoke_patched(func, arguments, monkeypatch):
         mock_stream_bash_command,
     )
     runner = CliRunner()
-    return runner.invoke(main, arguments)
+    return runner.invoke(main, arguments, **kwargs)
 
 
 @pytest.mark.parametrize(
@@ -363,6 +363,95 @@ def test_incorrect_options(arguments, monkeypatch):
 
     if not result.exit_code:
         raise RuntimeError("Unexpected result:\n{}".format(result.stdout))
+
+
+@pytest.mark.parametrize(
+    "arguments, env, expected",
+    [
+        (
+            [],
+            {"PIPGRIP_ADDITIONAL_REQUIREMENTS": "requests==2.22.0"},
+            [
+                "requests==2.22.0",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "urllib3==1.25.7",
+                "certifi==2019.11.28",
+            ],
+        ),
+        (
+            [],
+            {"PIPGRIP_ADDITIONAL_REQUIREMENTS": "requests==2.22.0 \nkeras==2.2.2"},
+            [
+                "requests==2.22.0",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "urllib3==1.25.7",
+                "certifi==2019.11.28",
+                "keras==2.2.2",
+                "h5py==2.10.0",
+                "numpy==1.16.6",
+                "six==1.13.0",
+                "keras-applications==1.0.4",
+                "keras-preprocessing==1.0.2",
+                "scipy==1.2.2",
+                "pyyaml==5.3",
+            ],
+        ),
+        (
+            ["keras==2.2.2"],
+            {"PIPGRIP_ADDITIONAL_REQUIREMENTS": "requests==2.22.0"},
+            [
+                "keras==2.2.2",
+                "h5py==2.10.0",
+                "numpy==1.16.6",
+                "six==1.13.0",
+                "keras-applications==1.0.4",
+                "keras-preprocessing==1.0.2",
+                "scipy==1.2.2",
+                "pyyaml==5.3",
+                "requests==2.22.0",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "urllib3==1.25.7",
+                "certifi==2019.11.28",
+            ],
+        ),
+        (
+            ["requests==2.22.0"],
+            {"PIPGRIP_ADDITIONAL_REQUIREMENTS": "keras==2.2.2"},
+            [
+                "requests==2.22.0",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "urllib3==1.25.7",
+                "certifi==2019.11.28",
+                "keras==2.2.2",
+                "h5py==2.10.0",
+                "numpy==1.16.6",
+                "six==1.13.0",
+                "keras-applications==1.0.4",
+                "keras-preprocessing==1.0.2",
+                "scipy==1.2.2",
+                "pyyaml==5.3",
+            ],
+        ),
+    ],
+    ids=(
+        "single env",
+        "multiple env",
+        "requests injected after keras",
+        "keras injected after requests",
+    ),
+)
+def test_env(arguments, env, expected, monkeypatch):
+    result = invoke_patched(main, arguments, monkeypatch, env=env)
+
+    if result.exit_code:
+        raise result.exception
+    assert set(result.output.strip().split("\n")) == set(
+        expected
+    ), "Unexpected output:\n{}".format(result.output.strip())
 
 
 def test_flatten():
