@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import re
 import shutil
 import tempfile
 from collections import OrderedDict
@@ -464,10 +465,10 @@ def main(
             # log a partial tree (failed download/build) if the RuntimeError ends with the culptit pip_string
             culprit_package = Package(str(exc).split()[-1]).name
 
-            rendered_tree = rendered_tree.replace(
-                "{} (undecided)".format(culprit_package),
-                "{} (failed)".format(culprit_package),
-                1,
+            rendered_tree = re.sub(
+                r"({}[^-].*)\(undecided\)".format(culprit_package),
+                lambda x: x.group(1) + "(failed)",
+                rendered_tree,
             )
 
             logger.error(
