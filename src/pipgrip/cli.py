@@ -397,10 +397,13 @@ def main(
             "--max-depth has no effect without --tree, --tree-json, --tree-json-exact, or --reversed-tree"
         )
 
+    dependencies = list(dependencies)
+
     if requirements_file:
-        dependencies = list(dependencies)
         for path in requirements_file:
             dependencies += read_requirements(path)
+
+    dependencies += os.environ.get("PIPGRIP_ADDITIONAL_REQUIREMENTS", "").split()
 
     if editable:
         if not install:

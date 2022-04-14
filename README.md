@@ -45,6 +45,8 @@ This package can be used to:
 
 See also [known caveats](#known-caveats).
 
+Optionally, the environment variable `PIPGRIP_ADDITIONAL_REQUIREMENTS` can be populated with space/newline separated requirements, which will be appended to the requirements passed via CLI.
+
 ```
 $ pipgrip --help
 
