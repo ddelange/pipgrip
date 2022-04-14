@@ -431,6 +431,9 @@ def main(
             exc = None
         except RuntimeError as e:
             # RuntimeError coming from pipgrip.pipper
+            if "Failed to download/build wheel" not in str(e):
+                # only continue handling expected RuntimeErrors
+                raise
             solution = solver.solution
             exc = e
 
@@ -456,10 +459,7 @@ def main(
         else:
             # a RuntimeError occurred
             # log a partial tree (failed download/build) if the RuntimeError ends with the culptit pip_string
-            culprit_package = str(exc).split()[-1]
-            if culprit_package not in rendered_tree:
-                # only continue handling expected RuntimeErrors
-                raise exc
+            culprit_package = Package(str(exc).split()[-1]).name
 
             rendered_tree = rendered_tree.replace(
                 "{} (undecided)".format(culprit_package),
