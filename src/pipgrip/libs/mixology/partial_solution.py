@@ -159,7 +159,7 @@ class PartialSolution:
 
             self._negative[package][package] = term
 
-    def satisfier(self, term):  # type: (Term) -> Assignment
+    def satisfier(self, term):    # type: (Term) -> Assignment
         """Return Assignment that satisfies Term.
 
         Returns the first Assignment in this solution such that the sublist of
@@ -171,10 +171,7 @@ class PartialSolution:
             if assignment.package != term.package:
                 continue
 
-            if (
-                assignment.package != Package.root()
-                and not assignment.package == term.package
-            ):
+            if assignment.package not in [Package.root(), term.package]:
                 if not assignment.is_positive():
                     continue
 
@@ -191,7 +188,7 @@ class PartialSolution:
             if assigned_term.satisfies(term):
                 return assignment
 
-        raise RuntimeError("[BUG] {} is not satisfied.".format(term))
+        raise RuntimeError(f"[BUG] {term} is not satisfied.")
 
     def satisfies(self, term):  # type: (Term) -> bool
         return self.relation(term) == SetRelation.SUBSET

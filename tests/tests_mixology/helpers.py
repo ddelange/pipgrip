@@ -19,12 +19,11 @@ def check_solver_result(source, result=None, error=None, tries=None):
 
         raise
 
-    packages = {}
-    for package, version in solution.decisions.items():
-        if package == Package.root():
-            continue
-
-        packages[package] = str(version)
+    packages = {
+        package: str(version)
+        for package, version in solution.decisions.items()
+        if package != Package.root()
+    }
 
     assert result == packages
 

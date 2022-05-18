@@ -25,7 +25,7 @@ def read_requirements(path):
                 filter(None, (re_comments.split(line, 1)[0].strip() for line in fp))
             )
     except IndexError:
-        raise RuntimeError("{} is broken".format(path))
+        raise RuntimeError(f"{path} is broken")
 
 
 def parse_req(requirement, extras=None):
@@ -71,14 +71,10 @@ def stream_bash_command(bash_command, echo=False):
 
     def check_io():
         output = ""
-        while True:
-            line = process.stdout.readline().decode("utf-8")
-            if line:
-                output += line
-                if echo:
-                    _echo(line[:-1])
-            else:
-                break
+        while line := process.stdout.readline().decode("utf-8"):
+            output += line
+            if echo:
+                _echo(line[:-1])
         return output
 
     # keep checking stdout/stderr until the child exits
@@ -205,10 +201,11 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
     if cache_key in _available_versions_cache:
         return _available_versions_cache[cache_key]
 
-    logger.debug("Finding possible versions for {}".format(package))
+    logger.debug(f"Finding possible versions for {package}")
     args = _get_wheel_args(index_url, extra_index_url, pre) + [
-        package + "==42.42.post424242"
+        f"{package}==42.42.post424242"
     ]
+
 
     if [20, 3] <= PIP_VERSION < [21, 1]:
         # https://github.com/ddelange/pipgrip/issues/42
@@ -243,14 +240,15 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
             ]
             _available_versions_cache[cache_key] = available_versions
             return available_versions
-    raise RuntimeError("Failed to get available versions for {}".format(package))
+    raise RuntimeError(f"Failed to get available versions for {package}")
 
 
 def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
     logger.debug(
-        "Downloading/building wheel for {} into cache_dir {}".format(package, cache_dir)
+        f"Downloading/building wheel for {package} into cache_dir {cache_dir}"
     )
+
     abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
     cwd_cache_dir = abs_cache_dir.replace(os.getcwd(), ".", 1)
     args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
@@ -263,7 +261,7 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                 package, output.strip()
             )
         )
-        raise RuntimeError("Failed to download/build wheel for {}".format(package))
+        raise RuntimeError(f"Failed to download/build wheel for {package}")
     out = out.splitlines()[::-1]
     abs_cache_dir_lower = abs_cache_dir.lower()
     cwd_cache_dir_lower = cwd_cache_dir.lower()
@@ -280,13 +278,13 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
             continue
 
         if "stored in directory" in line_lower:
-            # wheel was built
-            fnames = [
+            if fnames := [
                 part.replace("filename=", "")
                 for part in out[i + 1].split()
                 if part.startswith("filename=")
-            ]
-            if not fnames:
+            ]:
+                fname = fnames[0]
+            else:
                 # older pip might not state filename, only directory
                 whldir = line.replace("Stored in directory:", "").strip()
                 dirpath, _, filenames = next(os.walk(whldir))
@@ -298,12 +296,16 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                 if package.startswith("."):
                     fname = all_wheels[0]
                 else:
-                    fname = None
                     pkg = parse_req(package).key
-                    for whl in all_wheels:
-                        if pkg in canonicalize_name(whl):
-                            fname = whl
-                            break
+                    fname = next(
+                        (
+                            whl
+                            for whl in all_wheels
+                            if pkg in canonicalize_name(whl)
+                        ),
+                        None,
+                    )
+
                     if not fname:
                         logger.error(
                             "Failed to extract wheel filename from pip stdout: \n{}".format(
@@ -311,12 +313,9 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
                             )
                         )
                         raise RuntimeError(
-                            "Failed to find wheel for {} in {}. Wheels found: {}".format(
-                                package, whldir, all_wheels
-                            )
+                            f"Failed to find wheel for {package} in {whldir}. Wheels found: {all_wheels}"
                         )
-            else:
-                fname = fnames[0]
+
         else:
             # wheel was fetched
             # match on lowercase line for windows compatibility
@@ -340,17 +339,17 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
             "\n".join(out[::-1])
         )
     )
-    raise RuntimeError("Failed to download/build wheel for {}".format(package))
+    raise RuntimeError(f"Failed to download/build wheel for {package}")
 
 
 def _extract_metadata(wheel_fname):
     wheel_fname = os.path.abspath(wheel_fname)
     logger.debug("Searching metadata in %s", wheel_fname)
     if not os.path.exists(wheel_fname):
-        raise RuntimeError("File not found: {}".format(wheel_fname))
+        raise RuntimeError(f"File not found: {wheel_fname}")
     info = get_metadata(wheel_fname)
     if info is None:
-        raise RuntimeError("Failed to extract metadata: {}".format(wheel_fname))
+        raise RuntimeError(f"Failed to extract metadata: {wheel_fname}")
     data = vars(info)
     data.pop("filename", None)
     return data

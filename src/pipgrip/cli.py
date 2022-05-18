@@ -59,11 +59,10 @@ class DepTreeDictExporter(DictExporter):
         data = dictcls(attr_values)
         maxlevel = self.maxlevel
         if maxlevel is None or level < maxlevel:
-            children = [
+            if children := [
                 self.__export(child, dictcls, attriter, childiter, level=level + 1)
                 for child in childiter(node.children)
-            ]
-            if children:
+            ]:
                 data["dependencies"] = children
         return data
 
@@ -157,20 +156,12 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
     style = AsciiStyle() if tree_ascii else ContStyle()
     output = []
     for child in tree_root.children:
-        lines = []
-        for fill, _, node in RenderTree(child, style=style):
-            if max_depth and node.depth > max_depth:
-                continue
-            lines.append(
-                # fmt: off
-                u"{}{} ({}{})".format(
-                    fill,
-                    node.pip_string,
-                    node.version,
-                    ", cyclic" if hasattr(node, "cyclic") else "",
-                )
-                # fmt: on
-            )
+        lines = [
+            f'{fill}{node.pip_string} ({node.version}{", cyclic" if hasattr(node, "cyclic") else ""})'
+            for fill, _, node in RenderTree(child, style=style)
+            if not max_depth or node.depth <= max_depth
+        ]
+
         output += lines
     return "\n".join(output)
 
@@ -180,11 +171,7 @@ def render_json_tree(tree_root, max_depth, exact):
     for child in tree_root.children:
         if max_depth and child.depth > max_depth:
             continue
-        key = (
-            "{}=={}".format(child.extras_name, child.version)
-            if exact
-            else child.pip_string
-        )
+        key = f"{child.extras_name}=={child.version}" if exact else child.pip_string
         json_tree[key] = render_json_tree(child, max_depth, exact)
     return json_tree
 
@@ -192,8 +179,7 @@ def render_json_tree(tree_root, max_depth, exact):
 def render_json_tree_full(tree_root, max_depth, sort):
     maxlevel = max_depth + 1 if max_depth else None
     exporter = DepTreeDictExporter(maxlevel=maxlevel, attriter=sorted if sort else None)
-    tree_dict_full = exporter.export(tree_root)["dependencies"]
-    return tree_dict_full
+    return exporter.export(tree_root)["dependencies"]
 
 
 def is_vcs_version(version):
@@ -389,10 +375,10 @@ def main(
         tree_json = True
 
     if max_depth == 0 or max_depth < -1:
-        raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
+        raise click.ClickException(f"Illegal --max_depth selected: {max_depth}")
     if max_depth == -1:
         max_depth = 0
-    elif max_depth and not (tree or tree_json or reversed_tree):
+    elif max_depth and not tree and not tree_json and not reversed_tree:
         raise click.ClickException(
             "--max-depth has no effect without --tree, --tree-json, --tree-json-exact, or --reversed-tree"
         )
@@ -410,11 +396,11 @@ def main(
             raise click.ClickException("--editable has no effect without --install")
         if not sorted(dependencies)[0].startswith("."):
             raise click.ClickException(
-                "--editable does not accept input '{}'".format(" ".join(dependencies))
+                f"""--editable does not accept input '{" ".join(dependencies)}'"""
             )
-    if user:
-        if not install:
-            raise click.ClickException("--user has no effect without --install")
+
+    if user and not install:
+        raise click.ClickException("--user has no effect without --install")
 
     if no_cache_dir:
         cache_dir = tempfile.mkdtemp()
@@ -448,7 +434,7 @@ def main(
                 continue
             decision_packages[package] = version
 
-        logger.debug("decision_packages: {}".format(decision_packages))
+        logger.debug(f"decision_packages: {decision_packages}")
 
         tree_root, packages_tree_dict, packages_flat = build_tree(
             source, decision_packages
@@ -466,10 +452,11 @@ def main(
             culprit_package = Package(str(exc).split()[-1]).name
 
             rendered_tree = re.sub(
-                r"({}[^-].*)\(undecided\)".format(culprit_package),
-                lambda x: x.group(1) + "(failed)",
+                f"({culprit_package}[^-].*)\\(undecided\\)",
+                lambda x: f"{x.group(1)}(failed)",
                 rendered_tree,
             )
+
 
             logger.error(
                 "{}. Best guess PartialSolution tree after the last solving decision {}:\n{}".format(

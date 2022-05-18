@@ -34,23 +34,20 @@ class Version(VersionRange):
 
         if minor is None:
             minor = 0
-        else:
-            if self._precision is not None:
-                self._precision += 1
+        elif self._precision is not None:
+            self._precision += 1
 
         self._minor = int(minor)
 
         if patch is None:
             patch = 0
-        else:
-            if self._precision is not None:
-                self._precision += 1
+        elif self._precision is not None:
+            self._precision += 1
 
         if rest is None:
             rest = 0
-        else:
-            if self._precision is not None:
-                self._precision += 1
+        elif self._precision is not None:
+            self._precision += 1
 
         if precision is not None:
             self._precision = precision
@@ -71,10 +68,10 @@ class Version(VersionRange):
 
             text = ".".join(parts)
             if pre:
-                text += "-{}".format(pre)
+                text += f"-{pre}"
 
             if build:
-                text += "+{}".format(build)
+                text += f"+{build}"
 
         self._text = text
 
@@ -127,10 +124,7 @@ class Version(VersionRange):
 
     @property
     def stable(self):
-        if not self.is_prerelease():
-            return self
-
-        return self.next_patch
+        return self.next_patch if self.is_prerelease() else self
 
     @property
     def next_major(self):  # type: () -> Version
@@ -170,9 +164,7 @@ class Version(VersionRange):
 
     @property
     def first_prerelease(self):  # type: () -> Version
-        return Version.parse(
-            "{}.{}.{}-alpha.0".format(self.major, self.minor, self.patch)
-        )
+        return Version.parse(f"{self.major}.{self.minor}.{self.patch}-alpha.0")
 
     @property
     def min(self):
@@ -198,7 +190,7 @@ class Version(VersionRange):
     def parse(cls, text):  # type: (str) -> Version
         # fmt: off
         if not isinstance(text, ("".__class__, u"".__class__)):
-            raise ParseVersionError('Unable to parse "{}".'.format(text))
+            raise ParseVersionError(f'Unable to parse "{text}".')
         # fmt: on
 
         try:
@@ -248,10 +240,7 @@ class Version(VersionRange):
         return other.allows(self)
 
     def intersect(self, other):  # type: (VersionConstraint) -> VersionConstraint
-        if other.allows(self):
-            return self
-
-        return EmptyConstraint()
+        return self if other.allows(self) else EmptyConstraint()
 
     def union(self, other):  # type: (VersionConstraint) -> VersionConstraint
         from pipgrip.libs.semver.version_range import VersionRange
@@ -279,10 +268,7 @@ class Version(VersionRange):
         return VersionUnion.of(self, other)
 
     def difference(self, other):  # type: (VersionConstraint) -> VersionConstraint
-        if other.allows(self):
-            return EmptyConstraint()
-
-        return self
+        return EmptyConstraint() if other.allows(self) else self
 
     def equals_without_prerelease(self, other):  # type: (Version) -> bool
         return (
@@ -310,8 +296,8 @@ class Version(VersionRange):
         if not m:
             return
 
-        modifier = m.group(1)
-        number = m.group(2)
+        modifier = m[1]
+        number = m[2]
 
         if number is None:
             number = 0
@@ -325,7 +311,7 @@ class Version(VersionRange):
         elif modifier == "dev":
             modifier = "alpha"
 
-        return "{}.{}".format(modifier, number)
+        return f"{modifier}.{number}"
 
     def _normalize_build(self, build):  # type: (str) -> str
         if not build:
@@ -429,30 +415,26 @@ class Version(VersionRange):
             if b_part is None:
                 return 1
 
-            if isinstance(a_part, int):
-                if isinstance(b_part, int):
-                    return self._cmp_parts(a_part, b_part)
-
-                return -1
-            else:
-                if isinstance(b_part, int):
-                    return 1
-
+            if not isinstance(a_part, int):
+                return 1 if isinstance(b_part, int) else self._cmp_parts(a_part, b_part)
+            if isinstance(b_part, int):
                 return self._cmp_parts(a_part, b_part)
 
+            return -1
         return 0
 
     def __eq__(self, other):  # type: (Version) -> bool
-        if not isinstance(other, Version):
-            return NotImplemented
-
         return (
-            self._major == other.major
-            and self._minor == other.minor
-            and self._patch == other.patch
-            and self._rest == other.rest
-            and self._prerelease == other.prerelease
-            and self._build == other.build
+            (
+                self._major == other.major
+                and self._minor == other.minor
+                and self._patch == other.patch
+                and self._rest == other.rest
+                and self._prerelease == other.prerelease
+                and self._build == other.build
+            )
+            if isinstance(other, Version)
+            else NotImplemented
         )
 
     def __ne__(self, other):
@@ -462,7 +444,7 @@ class Version(VersionRange):
         return self._text
 
     def __repr__(self):
-        return "<Version {}>".format(str(self))
+        return f"<Version {str(self)}>"
 
     def __hash__(self):
         return hash(

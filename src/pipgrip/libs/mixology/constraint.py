@@ -81,10 +81,11 @@ class Constraint(object):
         return self._constraint.is_empty()
 
     def __eq__(self, other):  # type: (Constraint) -> bool
-        if not isinstance(other, Constraint):
-            return NotImplemented
-
-        return other.package == self.package and other.constraint == self.constraint
+        return (
+            other.package == self.package and other.constraint == self.constraint
+            if isinstance(other, Constraint)
+            else NotImplemented
+        )
 
     def __hash__(self):
         return hash(self.package) ^ hash(self.constraint)
@@ -93,11 +94,9 @@ class Constraint(object):
         if self.package == Package.root():
             return "root"
         elif allow_every and self.is_any():
-            return "every version of {}".format(self.package)
+            return f"every version of {self.package}"
 
-        return "{} ({})".format(
-            self.package.req.extras_name, "*" if self.is_any() else str(self.constraint)
-        )
+        return f'{self.package.req.extras_name} ({"*" if self.is_any() else str(self.constraint)})'
 
     def __str__(self):
         return self.to_string()

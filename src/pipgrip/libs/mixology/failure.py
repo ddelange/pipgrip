@@ -31,25 +31,24 @@ class _Writer:
         required_python_version = None
 
         if required_python_version is not None:
-            buffer.append(
-                "The current supported Python versions are {}".format(
-                    required_python_version
+            buffer.extend(
+                (
+                    f"The current supported Python versions are {required_python_version}",
+                    "",
                 )
             )
-            buffer.append("")
 
         if isinstance(self._root.cause, ConflictCause):
             self._visit(self._root, {})
         else:
-            self._write(
-                self._root, "Because {}, version solving failed.".format(self._root)
-            )
+            self._write(self._root, f"Because {self._root}, version solving failed.")
 
         padding = (
-            0
-            if not self._line_numbers
-            else len("({}) ".format(list(self._line_numbers.values())[-1]))
+            len(f"({list(self._line_numbers.values())[-1]}) ")
+            if self._line_numbers
+            else 0
         )
+
 
         last_was_empty = False
         for line in self._lines:
@@ -65,7 +64,7 @@ class _Writer:
 
             number = line[-1]
             if number is not None:
-                message = "({})".format(number).ljust(padding) + message
+                message = f"({number})".ljust(padding) + message
             else:
                 message = " " * padding + message
 
@@ -122,11 +121,10 @@ class _Writer:
                 self._visit(without_line, details_for_cause)
                 self._write(
                     incompatibility,
-                    "{} because {} ({}), {}.".format(
-                        conjunction, str(with_line), line, incompatibility_string
-                    ),
+                    f"{conjunction} because {str(with_line)} ({line}), {incompatibility_string}.",
                     numbered=numbered,
                 )
+
             else:
                 single_line_conflict = self._is_single_line(cause.conflict.cause)
                 single_line_other = self._is_single_line(cause.other.cause)
@@ -138,9 +136,10 @@ class _Writer:
                     self._visit(second, details_for_cause)
                     self._write(
                         incompatibility,
-                        "Thus, {}.".format(incompatibility_string),
+                        f"Thus, {incompatibility_string}.",
                         numbered=numbered,
                     )
+
                 else:
                     self._visit(cause.conflict, {}, conclusion=True)
                     self._lines.append(("", None))
@@ -149,14 +148,10 @@ class _Writer:
 
                     self._write(
                         incompatibility,
-                        "{} because {} ({}), {}".format(
-                            conjunction,
-                            str(cause.conflict),
-                            self._line_numbers[cause.conflict],
-                            incompatibility_string,
-                        ),
+                        f"{conjunction} because {str(cause.conflict)} ({self._line_numbers[cause.conflict]}), {incompatibility_string}",
                         numbered=numbered,
                     )
+
         elif isinstance(cause.conflict.cause, ConflictCause) or isinstance(
             cause.other.cause, ConflictCause
         ):
@@ -187,12 +182,10 @@ class _Writer:
                 derived_cause = derived.cause  # type: ConflictCause
                 if isinstance(derived_cause.conflict.cause, ConflictCause):
                     collapsed_derived = derived_cause.conflict
+                    collapsed_ext = derived_cause.other
                 else:
                     collapsed_derived = derived_cause.other
 
-                if isinstance(derived_cause.conflict.cause, ConflictCause):
-                    collapsed_ext = derived_cause.other
-                else:
                     collapsed_ext = derived_cause.conflict
 
                 details_for_cause = {}
@@ -200,22 +193,18 @@ class _Writer:
                 self._visit(collapsed_derived, details_for_cause)
                 self._write(
                     incompatibility,
-                    "{} because {}, {}.".format(
-                        conjunction,
-                        collapsed_ext.and_to_string(ext, details_for_cause, None, None),
-                        incompatibility_string,
-                    ),
+                    f"{conjunction} because {collapsed_ext.and_to_string(ext, details_for_cause, None, None)}, {incompatibility_string}.",
                     numbered=numbered,
                 )
+
             else:
                 self._visit(derived, details_for_cause)
                 self._write(
                     incompatibility,
-                    "{} because {}, {}.".format(
-                        conjunction, str(ext), incompatibility_string
-                    ),
+                    f"{conjunction} because {str(ext)}, {incompatibility_string}.",
                     numbered=numbered,
                 )
+
         else:
             self._write(
                 incompatibility,

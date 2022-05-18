@@ -90,11 +90,7 @@ class Range(object):
             return other.intersect(self)
 
         if other.is_single_version():
-            if self.allows_all(other):
-                return other
-
-            return EmptyRange()
-
+            return other if self.allows_all(other) else EmptyRange()
         if self.allows_lower(other):
             if self.is_strictly_lower(other):
                 return EmptyRange()
@@ -296,14 +292,15 @@ class Range(object):
         )
 
     def __eq__(self, other):
-        if not isinstance(other, Range):
-            return False
-
         return (
-            self._min == other.min
-            and self._max == other.max
-            and self._include_min == other.include_min
-            and self._include_max == other.include_max
+            (
+                self._min == other.min
+                and self._max == other.max
+                and self._include_min == other.include_min
+                and self._include_max == other.include_max
+            )
+            if isinstance(other, Range)
+            else False
         )
 
     def __lt__(self, other):
@@ -320,10 +317,7 @@ class Range(object):
 
     def _cmp(self, other):  # type: (Range) -> int
         if self.min is None:
-            if other.min is None:
-                return self._compare_max(other)
-
-            return -1
+            return self._compare_max(other) if other.min is None else -1
         elif other.min is None:
             return 1
 
@@ -337,10 +331,7 @@ class Range(object):
 
     def _compare_max(self, other):  # type: (Range) -> int
         if self.max is None:
-            if other.max is None:
-                return 0
-
-            return 1
+            return 0 if other.max is None else 1
         elif other.max is None:
             return -1
 
@@ -360,7 +351,7 @@ class Range(object):
 
         if self.min is not None:
             if self.min == self.max and self.include_min and self.include_max:
-                return "{}".format(self.min)
+                return f"{self.min}"
 
             text += ">=" if self.include_min else ">"
             text += self.min.text
@@ -369,7 +360,7 @@ class Range(object):
             if self.min is not None:
                 text += ","
 
-            text += "{}{}".format("<=" if self.include_max else "<", self.max.text)
+            text += f'{"<=" if self.include_max else "<"}{self.max.text}'
 
         if self.min is None and self.max is None:
             return "*"
@@ -377,7 +368,7 @@ class Range(object):
         return text
 
     def __repr__(self):
-        return "<Range ({})>".format(str(self))
+        return f"<Range ({str(self)})>"
 
     def __hash__(self):
         if self._hash is None:

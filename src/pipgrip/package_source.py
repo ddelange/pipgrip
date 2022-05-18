@@ -28,7 +28,7 @@ class Dependency:
         return self.pretty_constraint
 
     def __repr__(self):  # type: () -> str
-        return "Dependency({}, {})".format(self.pip_string, self.pretty_constraint)
+        return f"Dependency({self.pip_string}, {self.pretty_constraint})"
 
 
 class PackageSource(BasePackageSource):
@@ -112,7 +112,7 @@ class PackageSource(BasePackageSource):
         if version in self._packages[name][extras] and not (
             deps is None or self._packages[name][extras][version] is None
         ):
-            raise ValueError("{} ({}) already exists".format(name, version))
+            raise ValueError(f"{name} ({version}) already exists")
 
         # not existing and deps undiscovered
         if deps is None:
@@ -161,7 +161,7 @@ class PackageSource(BasePackageSource):
 
     def _versions_for(
         self, package, constraint=None
-    ):  # type: (Hashable, Any) -> List[Hashable]
+    ):    # type: (Hashable, Any) -> List[Hashable]
         """Search for the specifications that match the given constraint.
 
         Called by BasePackageSource.versions_for
@@ -174,12 +174,12 @@ class PackageSource(BasePackageSource):
         if package not in self._packages:
             return []
 
-        versions = []
-        for version in self._packages[package][extras].keys():
-            if not constraint or constraint.allows_any(
-                Range(version, version, True, True)
-            ):
-                versions.append(version)
+        versions = [
+            version
+            for version in self._packages[package][extras].keys()
+            if not constraint
+            or constraint.allows_any(Range(version, version, True, True))
+        ]
 
         return sorted(versions, reverse=True)
 
@@ -193,7 +193,7 @@ class PackageSource(BasePackageSource):
             or self._packages[package][req.extras][version] is None
         ):
             # populate dependencies for version
-            self.discover_and_add(req.extras_name + "==" + str(version))
+            self.discover_and_add(f"{req.extras_name}=={str(version)}")
         return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint

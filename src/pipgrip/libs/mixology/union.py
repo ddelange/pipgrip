@@ -142,11 +142,8 @@ class Union(object):
                 return True
 
             new_ranges.append(state["current"])
-            our_current = next(our_ranges, None)
-            while our_current:
+            while our_current := next(our_ranges, None):
                 new_ranges.append(our_current)
-                our_current = next(our_ranges, None)
-
             return False
 
         def our_next_range(include_current=True):
@@ -226,16 +223,13 @@ class Union(object):
         return [constraint]
 
     def __eq__(self, other):
-        if not isinstance(other, Union):
-            return False
-
-        return self._ranges == other.ranges
+        return self._ranges == other.ranges if isinstance(other, Union) else False
 
     def __str__(self):
         if self.excludes_single_version():
-            return "!={}".format(pipgrip.libs.mixology.range.Range().difference(self))
+            return f"!={pipgrip.libs.mixology.range.Range().difference(self)}"
 
         return " || ".join([str(r) for r in self._ranges])
 
     def __repr__(self):
-        return "<Union {}>".format(str(self))
+        return f"<Union {str(self)}>"

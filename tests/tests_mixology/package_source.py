@@ -42,12 +42,9 @@ class PackageSource(BasePackageSource):
             self._packages[name] = {}
 
         if version in self._packages[name]:
-            raise ValueError("{} ({}) already exists".format(name, version))
+            raise ValueError(f"{name} ({version}) already exists")
 
-        dependencies = []
-        for dep_name, spec in deps.items():
-            dependencies.append(Dependency(dep_name, spec))
-
+        dependencies = [Dependency(dep_name, spec) for dep_name, spec in deps.items()]
         self._packages[name][version] = dependencies
 
     def root_dep(self, name, constraint):  # type: (str, str) -> None
@@ -59,12 +56,12 @@ class PackageSource(BasePackageSource):
         if package not in self._packages:
             return []
 
-        versions = []
-        for version in self._packages[package].keys():
-            if not constraint or constraint.allows_any(
-                Range(version, version, True, True)
-            ):
-                versions.append(version)
+        versions = [
+            version
+            for version in self._packages[package].keys()
+            if not constraint
+            or constraint.allows_any(Range(version, version, True, True))
+        ]
 
         return sorted(versions, reverse=True)
 

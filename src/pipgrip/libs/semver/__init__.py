@@ -34,29 +34,21 @@ def parse_constraint(constraints):  # type: (str) -> VersionConstraint
         else:
             constraint_objects.append(parse_single_constraint(and_constraints[0]))
 
-        if len(constraint_objects) == 1:
-            constraint = constraint_objects[0]
-        else:
-            constraint = constraint_objects[0]
+        constraint = constraint_objects[0]
+        if len(constraint_objects) != 1:
             for next_constraint in constraint_objects[1:]:
                 constraint = constraint.intersect(next_constraint)
 
         or_groups.append(constraint)
 
-    if len(or_groups) == 1:
-        return or_groups[0]
-    else:
-        return VersionUnion.of(*or_groups)
+    return or_groups[0] if len(or_groups) == 1 else VersionUnion.of(*or_groups)
 
 
 def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
-    m = re.match(r"(?i)^v?[xX*](\.[xX*])*$", constraint)
-    if m:
+    if m := re.match(r"(?i)^v?[xX*](\.[xX*])*$", constraint):
         return VersionRange()
 
-    # Tilde range
-    m = TILDE_CONSTRAINT.match(constraint)
-    if m:
+    if m := TILDE_CONSTRAINT.match(constraint):
         version = Version.parse(m.group(1))
 
         high = version.stable.next_minor
@@ -67,9 +59,7 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
             version, high, include_min=True, always_include_max_prerelease=True
         )
 
-    # PEP 440 Tilde range (~=)
-    m = TILDE_PEP440_CONSTRAINT.match(constraint)
-    if m:
+    if m := TILDE_PEP440_CONSTRAINT.match(constraint):
         precision = 1
         if m.group(3):
             precision += 1
@@ -79,20 +69,17 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
 
         version = Version.parse(m.group(1))
 
+        low = version
         if precision == 2:
-            low = version
             high = version.stable.next_major
         else:
-            low = version
             high = version.stable.next_minor
 
         return VersionRange(
             low, high, include_min=True, always_include_max_prerelease=True
         )
 
-    # Caret range
-    m = CARET_CONSTRAINT.match(constraint)
-    if m:
+    if m := CARET_CONSTRAINT.match(constraint):
         version = Version.parse(m.group(1))
 
         return VersionRange(
@@ -102,9 +89,7 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
             always_include_max_prerelease=True,
         )
 
-    # X Range
-    m = X_CONSTRAINT.match(constraint)
-    if m:
+    if m := X_CONSTRAINT.match(constraint):
         op = m.group(1)
         major = int(m.group(2))
         minor = m.group(3)
@@ -118,27 +103,24 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
                 include_min=True,
                 always_include_max_prerelease=True,
             )
+        elif major == 0:
+            result = VersionRange(max=Version(1, 0, 0))
         else:
-            if major == 0:
-                result = VersionRange(max=Version(1, 0, 0))
-            else:
-                version = Version(major, 0, 0)
+            version = Version(major, 0, 0)
 
-                result = VersionRange(
-                    version,
-                    version.next_major,
-                    include_min=True,
-                    always_include_max_prerelease=True,
-                )
+            result = VersionRange(
+                version,
+                version.next_major,
+                include_min=True,
+                always_include_max_prerelease=True,
+            )
 
         if op == "!=":
             result = VersionRange().difference(result)
 
         return result
 
-    # Basic comparator
-    m = BASIC_CONSTRAINT.match(constraint)
-    if m:
+    if m := BASIC_CONSTRAINT.match(constraint):
         op = m.group(1)
         version = m.group(2)
 
@@ -148,9 +130,7 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
         try:
             version = Version.parse(version)
         except ValueError:
-            raise ValueError(
-                "Could not parse version constraint: {}".format(constraint)
-            )
+            raise ValueError(f"Could not parse version constraint: {constraint}")
 
         if op == "<":
             return VersionRange(max=version)
@@ -169,6 +149,6 @@ def parse_single_constraint(constraint):  # type: (str) -> VersionConstraint
     try:
         return Version.parse(constraint)
     except ValueError:
-        raise ValueError("Could not parse version constraint: {}".format(constraint))
+        raise ValueError(f"Could not parse version constraint: {constraint}")
 
-    raise ValueError("Could not parse version constraint: {}".format(constraint))
+    raise ValueError(f"Could not parse version constraint: {constraint}")

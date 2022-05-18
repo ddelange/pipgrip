@@ -49,7 +49,7 @@ class VersionUnion(VersionConstraint):
             if isinstance(constraint, VersionRange):
                 continue
 
-            raise ValueError("Unknown VersionConstraint type {}.".format(constraint))
+            raise ValueError(f"Unknown VersionConstraint type {constraint}.")
 
         flattened.sort()
 
@@ -151,11 +151,8 @@ class VersionUnion(VersionConstraint):
                 return True
 
             new_ranges.append(state["current"])
-            our_current = next(our_ranges, None)
-            while our_current:
+            while our_current := next(our_ranges, None):
                 new_ranges.append(our_current)
-                our_current = next(our_ranges, None)
-
             return False
 
         def our_next_range(include_current=True):
@@ -229,7 +226,7 @@ class VersionUnion(VersionConstraint):
         if isinstance(constraint, VersionRange):
             return [constraint]
 
-        raise ValueError("Unknown VersionConstraint type {}".format(constraint))
+        raise ValueError(f"Unknown VersionConstraint type {constraint}")
 
     def _excludes_single_version(self):  # type: () -> bool
         from pipgrip.libs.semver.version import Version
@@ -238,18 +235,19 @@ class VersionUnion(VersionConstraint):
         return isinstance(VersionRange().difference(self), Version)
 
     def __eq__(self, other):
-        if not isinstance(other, VersionUnion):
-            return False
-
-        return self._ranges == other.ranges
+        return (
+            self._ranges == other.ranges
+            if isinstance(other, VersionUnion)
+            else False
+        )
 
     def __str__(self):
         from pipgrip.libs.semver.version_range import VersionRange
 
         if self._excludes_single_version():
-            return "!={}".format(VersionRange().difference(self))
+            return f"!={VersionRange().difference(self)}"
 
         return " || ".join([str(r) for r in self._ranges])
 
     def __repr__(self):
-        return "<VersionUnion {}>".format(str(self))
+        return f"<VersionUnion {str(self)}>"

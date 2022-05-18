@@ -47,7 +47,7 @@ class VersionSolver:
     def is_solved(self):  # type: () -> bool
         return not self._solution.unsatisfied
 
-    def solve(self):  # type: () -> SolverResult
+    def solve(self):    # type: () -> SolverResult
         """
         Finds a set of dependencies that match the root package's constraints,
         or raises an error if no such set is available.
@@ -65,14 +65,14 @@ class VersionSolver:
         max_tries = -1
         while True:
             if packages_tried == max_tries:
-                raise SolverFailure("Stopping, {} packages tried.".format(max_tries))
+                raise SolverFailure(f"Stopping, {max_tries} packages tried.")
             if not self._run():
                 break
 
             packages_tried += 1
 
         logger.info("Version solving took {:.3f} seconds.".format(time.time() - start))
-        logger.info("Tried {} solutions.".format(self._solution.attempted_solutions))
+        logger.info(f"Tried {self._solution.attempted_solutions} solutions.")
 
         return SolverResult(
             self._solution.decisions, self._solution.attempted_solutions
@@ -90,14 +90,12 @@ class VersionSolver:
 
         return True
 
-    def _propagate(self, package):  # type: (Hashable) -> None
+    def _propagate(self, package):    # type: (Hashable) -> None
         """
         Performs unit propagation on incompatibilities transitively
         related to package to derive new assignments for _solution.
         """
-        changed = set()
-        changed.add(package)
-
+        changed = {package}
         while changed:
             package = changed.pop()
 
@@ -129,7 +127,7 @@ class VersionSolver:
 
     def _propagate_incompatibility(
         self, incompatibility
-    ):  # type: (Incompatibility) -> Union[str, _conflict, None]
+    ):    # type: (Incompatibility) -> Union[str, _conflict, None]
         """
         If incompatibility is almost satisfied by _solution, adds the
         negation of the unsatisfied term to _solution.
@@ -148,17 +146,15 @@ class VersionSolver:
         for term in incompatibility.terms:
             relation = self._solution.relation(term)
 
-            if relation == SetRelation.DISJOINT:
-                # If term is already contradicted by _solution, then
-                # incompatibility is contradicted as well and there's nothing new we
-                # can deduce from it.
+            if (
+                relation != SetRelation.DISJOINT
+                and relation == SetRelation.OVERLAPPING
+                and unsatisfied is not None
+                or relation == SetRelation.DISJOINT
+            ):
                 return
-            elif relation == SetRelation.OVERLAPPING:
-                # If more than one term is inconclusive, we can't deduce anything about
-                # incompatibility.
-                if unsatisfied is not None:
-                    return
 
+            elif relation == SetRelation.OVERLAPPING:
                 # If exactly one term in incompatibility is inconclusive, then it's
                 # almost satisfied and [term] is the unsatisfied term. We can add the
                 # inverse of the term to _solution.
@@ -169,7 +165,7 @@ class VersionSolver:
         if unsatisfied is None:
             return _conflict
 
-        logger.info("derived: {}".format(unsatisfied.inverse))
+        logger.info(f"derived: {unsatisfied.inverse}")
 
         self._solution.derive(
             unsatisfied.constraint, not unsatisfied.is_positive(), incompatibility
@@ -179,7 +175,7 @@ class VersionSolver:
 
     def _resolve_conflict(
         self, incompatibility
-    ):  # type: (Incompatibility) -> Incompatibility
+    ):    # type: (Incompatibility) -> Incompatibility
         """
         Given an incompatibility that's satisfied by _solution,
         The `conflict resolution`_ constructs a new incompatibility that encapsulates the root
@@ -190,9 +186,10 @@ class VersionSolver:
 
         .. _conflict resolution: https://github.com/dart-lang/pub/tree/master/doc/solver.md#conflict-resolution
         """
-        logger.info("conflict: {}".format(incompatibility))
+        logger.info(f"conflict: {incompatibility}")
 
         new_incompatibility = False
+        bang = "!"
         while not incompatibility.is_failure():
             # The term in incompatibility.terms that was most recently satisfied by
             # _solution.
@@ -269,10 +266,9 @@ class VersionSolver:
             # true (that is, we know for sure no solution will satisfy the
             # incompatibility) while also approximating the intuitive notion of the
             # "root cause" of the conflict.
-            new_terms = []
-            for term in incompatibility.terms:
-                if term != most_recent_term:
-                    new_terms.append(term)
+            new_terms = [
+                term for term in incompatibility.terms if term != most_recent_term
+            ]
 
             for term in most_recent_satisfier.cause.terms:
                 if term.package != most_recent_satisfier.package:
@@ -299,16 +295,12 @@ class VersionSolver:
             new_incompatibility = True
 
             partially = "" if difference is None else " partially"
-            bang = "!"
             logger.info(
-                "{} {} is{} satisfied by {}".format(
-                    bang, most_recent_term, partially, most_recent_satisfier
-                )
+                f"{bang} {most_recent_term} is{partially} satisfied by {most_recent_satisfier}"
             )
-            logger.info(
-                '{} which is caused by "{}"'.format(bang, most_recent_satisfier.cause)
-            )
-            logger.info("{} thus: {}".format(bang, incompatibility))
+
+            logger.info(f'{bang} which is caused by "{most_recent_satisfier.cause}"')
+            logger.info(f"{bang} thus: {incompatibility}")
 
         raise SolverFailure(incompatibility)
 
@@ -338,7 +330,7 @@ class VersionSolver:
 
         return term
 
-    def _choose_package_version(self):  # type: () -> Union[Hashable, None]
+    def _choose_package_version(self):    # type: () -> Union[Hashable, None]
         """
         Tries to select a version of a required package.
 
@@ -377,14 +369,12 @@ class VersionSolver:
 
         if not conflict:
             self._solution.decide(term.package, version)
-            logger.info(
-                "selecting {} ({})".format(term.package.req.extras_name, str(version))
-            )
+            logger.info(f"selecting {term.package.req.extras_name} ({str(version)})")
 
         return term.package
 
     def _add_incompatibility(self, incompatibility):  # type: (Incompatibility) -> None
-        logger.info("fact: {}".format(incompatibility))
+        logger.info(f"fact: {incompatibility}")
 
         for term in incompatibility.terms:
             if term.package not in self._incompatibilities:

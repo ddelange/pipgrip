@@ -33,7 +33,7 @@ class Package(object):
         return self._name
 
     def __repr__(self):  # type: () -> str
-        return 'Package("{}")'.format(self.req.extras_name)
+        return f'Package("{self.req.extras_name}")'
 
     def __hash__(self):
         return hash(self.name)

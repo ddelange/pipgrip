@@ -54,13 +54,13 @@ class Term(object):
             and self.relation(other) == SetRelation.SUBSET
         )
 
-    def relation(self, other):  # type: (Term) -> SetRelation
+    def relation(self, other):    # type: (Term) -> SetRelation
         """
         Returns the relationship between the package versions
         allowed by this term and another.
         """
         if self.package != other.package:
-            raise ValueError("{} should refer to {}".format(other, self.package))
+            raise ValueError(f"{other} should refer to {self.package}")
 
         if other.is_positive():
             if self.is_positive():
@@ -75,7 +75,6 @@ class Term(object):
                 if not self.constraint.allows_any(other.constraint):
                     return SetRelation.DISJOINT
 
-                return SetRelation.OVERLAPPING
             else:
                 if not self.is_compatible_with(other):
                     return SetRelation.OVERLAPPING
@@ -84,43 +83,36 @@ class Term(object):
                 if self.constraint.allows_all(other.constraint):
                     return SetRelation.DISJOINT
 
-                # not foo ^1.5.0 overlaps foo ^1.0.0
-                # not foo ^2.0.0 is a superset of foo ^1.5.0
-                return SetRelation.OVERLAPPING
+        elif self.is_positive():
+            if not self.is_compatible_with(other):
+                return SetRelation.SUBSET
+
+            # foo ^2.0.0 is a subset of not foo ^1.0.0
+            if not other.constraint.allows_any(self.constraint):
+                return SetRelation.SUBSET
+
+            # foo ^1.5.0 is disjoint with not foo ^1.0.0
+            if other.constraint.allows_all(self.constraint):
+                return SetRelation.DISJOINT
+
         else:
-            if self.is_positive():
-                if not self.is_compatible_with(other):
-                    return SetRelation.SUBSET
-
-                # foo ^2.0.0 is a subset of not foo ^1.0.0
-                if not other.constraint.allows_any(self.constraint):
-                    return SetRelation.SUBSET
-
-                # foo ^1.5.0 is disjoint with not foo ^1.0.0
-                if other.constraint.allows_all(self.constraint):
-                    return SetRelation.DISJOINT
-
-                # foo ^1.0.0 overlaps not foo ^1.5.0
-                return SetRelation.OVERLAPPING
-            else:
-                if not self.is_compatible_with(other):
-                    return SetRelation.OVERLAPPING
-
-                # not foo ^1.0.0 is a subset of not foo ^1.5.0
-                if self.constraint.allows_all(other.constraint):
-                    return SetRelation.SUBSET
-
-                # not foo ^2.0.0 overlaps not foo ^1.0.0
-                # not foo ^1.5.0 is a superset of not foo ^1.0.0
+            if not self.is_compatible_with(other):
                 return SetRelation.OVERLAPPING
 
-    def intersect(self, other):  # type: (Term) -> Term
+            # not foo ^1.0.0 is a subset of not foo ^1.5.0
+            if self.constraint.allows_all(other.constraint):
+                return SetRelation.SUBSET
+
+
+        return SetRelation.OVERLAPPING
+
+    def intersect(self, other):    # type: (Term) -> Term
         """
         Returns a Term that represents the packages
         allowed by both this term and another
         """
         if self.package != other.package:
-            raise ValueError("{} should refer to {}".format(other, self.package))
+            raise ValueError(f"{other} should refer to {self.package}")
 
         if self.is_compatible_with(other):
             if self.is_positive() != other.is_positive():
@@ -188,10 +180,10 @@ class Term(object):
         if self.is_positive():
             return self.constraint.to_string(allow_every=allow_every)
 
-        return "not {}".format(self.constraint)
+        return f"not {self.constraint}"
 
     def __str__(self):
         return self.to_string()
 
     def __repr__(self):
-        return "<Term {}>".format(str(self))
+        return f"<Term {str(self)}>"
