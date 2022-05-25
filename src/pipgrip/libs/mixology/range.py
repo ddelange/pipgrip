@@ -267,7 +267,7 @@ class Range(object):
             and not other.is_any()
             and self.is_vcs_version() + other.is_vcs_version() == 1
         ):
-            # internally, vcs strings are hashed and becomes a (very high) major version
+            # internally, vcs strings are hashed and become a (very high) major version
             # so another requirement without a max would not conflict although it should
             return True
 
