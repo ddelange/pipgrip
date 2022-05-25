@@ -229,10 +229,13 @@ class Version(VersionRange):
 
         return Version(major, minor, patch, rest, pre, build, text)
 
-    def is_any(self):
+    def is_vcs(self):  # type: () -> bool
+        return str(self._major) not in self._text
+
+    def is_any(self):  # type: () -> bool
         return False
 
-    def is_empty(self):
+    def is_empty(self):  # type: () -> bool
         return False
 
     def is_prerelease(self):  # type: () -> bool
