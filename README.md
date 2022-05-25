@@ -225,7 +225,7 @@ keras==2.2.2 (2.2.2)
 
 - PubGrub doesn't support [version epochs](https://www.python.org/dev/peps/pep-0440/#version-epochs), the [main reason](https://github.com/pypa/pip/issues/8203#issuecomment-704931138) PyPA chose [resolvelib](https://github.com/sarugaku/resolvelib) over PubGrub for their new resolver.
 - Package names are canonicalised in wheel metadata, resulting in e.g. `path.py -> path-py` and `keras_preprocessing -> keras-preprocessing` in output.
-- [VCS Support](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support): combining VCS requirements with `--editable`, as well as the [`@ -e svn+`](https://pip.pypa.io/en/stable/topics/vcs-support/#subversion) pattern are not supported.
+- [VCS Support](https://pip.pypa.io/en/stable/topics/vcs-support): combining VCS requirements with `--editable`, as well as the [`@ -e svn+`](https://pip.pypa.io/en/stable/topics/vcs-support/#subversion) pattern are not supported.
 - Similar to setuptools' `install_requires`, omitting the `projectname @` prefix is not supported neither for VCS requirements (like `pip install git+https...`), nor for [PEP 440](https://www.python.org/dev/peps/pep-0440) direct references (like `pip install https...`).
 - Parsing requirements files (`-r`) does not support: [custom file encodings](https://pip.pypa.io/en/stable/reference/requirements-file-format/#encoding), [line continuations](https://pip.pypa.io/en/stable/reference/requirements-file-format/#line-continuations), [global/per-requirement options](https://pip.pypa.io/en/stable/reference/requirements-file-format/#supported-options)
 - `--reversed-tree` isn't implemented yet.
