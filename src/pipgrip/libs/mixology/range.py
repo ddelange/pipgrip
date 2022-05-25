@@ -262,6 +262,15 @@ class Range(object):
         return self.include_max and not other.include_max
 
     def is_strictly_lower(self, other):  # type: (Range) -> bool
+        if (
+            not self.is_any()
+            and not other.is_any()
+            and self.is_vcs_version() + other.is_vcs_version() == 1
+        ):
+            # internally, vcs strings are hashed and becomes a (very high) major version
+            # so another requirement without a max would not conflict although it should
+            return True
+
         if self.max is None or other.min is None:
             return False
 
@@ -294,6 +303,9 @@ class Range(object):
             and self.include_min
             and self.include_max
         )
+
+    def is_vcs_version(self):  # type: () -> bool
+        return self.is_single_version() and self._min.is_vcs()
 
     def __eq__(self, other):
         if not isinstance(other, Range):

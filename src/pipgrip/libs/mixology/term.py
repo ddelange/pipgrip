@@ -152,7 +152,7 @@ class Term(object):
         elif self.is_positive() != other.is_positive():
             to_return = self if self.is_positive() else other
         else:
-            to_return = Term(Constraint(self.package, EmptyRange()))
+            to_return = Term(Constraint(self.package, EmptyRange()), self.is_positive())
 
         return to_return
 
