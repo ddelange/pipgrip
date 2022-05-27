@@ -1,4 +1,4 @@
-anytree>=4.2.1
+anytree>=2.4.1
 click>=7
 packaging>=17
 pkginfo>=1.4.2,<1.8  # ref ddelange/pipgrip#68
