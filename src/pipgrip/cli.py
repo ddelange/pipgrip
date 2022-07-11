@@ -474,7 +474,7 @@ def main(
             logger.error(
                 "{}. Best guess PartialSolution tree after the last solving decision {}:\n{}".format(
                     exc,
-                    next(reversed(solver.solution.decisions.items())),
+                    list(solver.solution.decisions.items())[-1],
                     rendered_tree,
                 )
             )
