@@ -85,7 +85,7 @@ Options:
                                 dependency tree. Use --tree-json instead for a
                                 simplified JSON dependency tree (requirement
                                 strings as keys, dependencies as values), or
-                                --json-tree-exact for exact pins as keys.
+                                --tree-json-exact for exact pins as keys.
 
   --tree-ascii                  Output human readable dependency tree with ASCII
                                 tree markers.

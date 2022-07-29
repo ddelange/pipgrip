@@ -267,7 +267,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--tree",
     is_flag=True,
-    help="Output human readable dependency tree (top-down). Combine with --json for a detailed nested JSON dependency tree. Use --tree-json instead for a simplified JSON dependency tree (requirement strings as keys, dependencies as values), or --json-tree-exact for exact pins as keys.",
+    help="Output human readable dependency tree (top-down). Combine with --json for a detailed nested JSON dependency tree. Use --tree-json instead for a simplified JSON dependency tree (requirement strings as keys, dependencies as values), or --tree-json-exact for exact pins as keys.",
 )
 @click.option(
     "--tree-ascii",
