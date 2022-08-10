@@ -119,7 +119,7 @@ def _recurse_dependencies(
             extras_name=dep.package.req.extras_name,
         )
 
-        # detect cyclic depenencies
+        # detect cyclic dependencies
         if any(ancestor.name == name for ancestor in tree_node.ancestors):
             logger.warning(
                 "Cyclic dependency found: %s depends on %s and vice versa.",

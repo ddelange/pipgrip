@@ -11,25 +11,24 @@
 
 #### pipgrip vs. poetry
 
-[poetry](https://github.com/python-poetry/poetry) offers package management with dependency resolution, essentially replacing pip/setuptools. This means that poetry packages don't contain `setup.py`, and hence are not compatible with `pip install -e`: poetry projects would have to be converted to setuptools-based projects with e.g. [dephell](https://github.com/dephell/dephell). To avoid such hassle, pipgrip only requires the selected package(s) + dependencies to be available to pip in the ususal way.
+[poetry](https://github.com/python-poetry/poetry) offers package management with dependency resolution, essentially replacing pip/setuptools. This means that poetry packages don't contain `setup.py`, and hence are not compatible with `pip install -e`: poetry projects would have to be converted to setuptools-based projects with e.g. [dephell](https://github.com/dephell/dephell). To avoid such hassle, pipgrip only requires the selected package(s) + dependencies to be available to pip in the usual way.
 
 #### pipgrip vs. pipdeptree
 
 For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can inspect the current environment and show how the currently installed packages relate to each other. This however requires the packages to be pip-installed, and (despite warnings about e.g. cyclic dependencies) offers no form of dependency resolution since it's only based on the (single) package versions installed in the environment. Such shortcomings are avoided when using pipgrip, since **packages don't need to be installed and all versions available to pip are considered**.
 
-
 ## Installation
 
 This pure-Python, OS independent package is available on [PyPI](https://pypi.org/project/pipgrip/):
 
-```
+```sh
 pip install pipgrip
 ```
-
 
 ## Usage
 
 This package can be used to:
+
 - **Render** an exhaustive dependency tree for any given pip-compatible package(s) with `--tree`
 - **Alleviate** [Python dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
 - **Avoid** bugs by running pipgrip as a stage in CI pipelines
@@ -47,7 +46,7 @@ See also [known caveats](#known-caveats).
 
 Optionally, the environment variable `PIPGRIP_ADDITIONAL_REQUIREMENTS` can be populated with space/newline separated requirements, which will be appended to the requirements passed via CLI.
 
-```
+```sh
 $ pipgrip --help
 
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
@@ -116,7 +115,8 @@ Options:
 #### Dependency trees
 
 Exhaustive dependency trees without the need to install any packages ([at most build some wheels](https://github.com/ddelange/pipgrip/issues/40)).
-```
+
+```sh
 $ pipgrip --tree pipgrip
 
 pipgrip (0.8.1)
@@ -136,7 +136,8 @@ For more details/further processing, combine `--tree` with `--json` for a detail
 #### Lockfile generation
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.
-```
+
+```sh
 $ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10,<1.10.50'
 
 botocore==1.13.48 (1.13.48)
@@ -172,13 +173,15 @@ urllib3==1.25.8
 boto3==1.10.48
 s3transfer==0.2.1
 ```
+
 NOTE:
 Since the selected botocore version is older than the one required by the recent versions of boto3, all boto3 versions will be checked for compatibility with botocore==1.13.48.
 
 #### Version conflicts
 
 If version conflicts exist for the given (ranges of) package version(s), a verbose explanation is raised.
-```
+
+```sh
 $ pipgrip auto-sklearn~=0.6 dragnet==2.0.4
 
 Error: Because dragnet (2.0.4) depends on scikit-learn (>=0.15.2,<0.21.0)
@@ -186,13 +189,15 @@ Error: Because dragnet (2.0.4) depends on scikit-learn (>=0.15.2,<0.21.0)
 And because no versions of auto-sklearn match >0.6.0,<1.0, dragnet (2.0.4) is incompatible with auto-sklearn (>=0.6.0,<1.0).
 So, because root depends on both auto-sklearn (~=0.6) and dragnet (==2.0.4), version solving failed.
 ```
+
 NOTE:
 If older versions of auto-sklearn are allowed, PubGrub will try all acceptable versions of auto-sklearn. In this case, auto-sklearn==0.5.2 requires scikit-learn (<0.20,>=0.19), making it compatible with dragnet==2.0.4.
 
 #### Cyclic dependencies
 
 If cyclic dependencies are found, it is noted in the resulting tree.
-```
+
+```sh
 $ pipgrip --tree -v keras==2.2.2
 
 WARNING: Cyclic dependency found: keras depends on keras-applications and vice versa.
@@ -220,7 +225,6 @@ keras==2.2.2 (2.2.2)
 └── six>=1.9.0 (1.14.0)
 ```
 
-
 ## Known caveats
 
 - PubGrub doesn't support [version epochs](https://www.python.org/dev/peps/pep-0440/#version-epochs), the [main reason](https://github.com/pypa/pip/issues/8203#issuecomment-704931138) PyPA chose [resolvelib](https://github.com/sarugaku/resolvelib) over PubGrub for their new resolver.
@@ -232,7 +236,6 @@ keras==2.2.2 (2.2.2)
 - Since `pip install -r` does not accept `.` as requirement, it is omitted from `--lock` output. So when installing local projects, either `--pipe` or `--install` should be used (the latter basically does `pipgrip --lock . && pip install . --constraint ./pipgrip.lock`).
 - Local paths are not supported (like `pip install -e ../aiobotocore[boto3]`), except for the current directory (like `pipgrip --install -e .[boto3]`).
 
-
 ## Development
 
 [![gitmoji](https://img.shields.io/badge/gitmoji-%20%F0%9F%98%9C%20%F0%9F%98%8D-ffdd67)](https://github.com/carloscuesta/gitmoji-cli)
@@ -240,7 +243,6 @@ keras==2.2.2 (2.2.2)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 Run `make help` for options like installing for development, linting and testing.
-
 
 ## See also
 
