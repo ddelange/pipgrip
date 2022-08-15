@@ -21,7 +21,7 @@ For offline usage, [pipdeptree](https://github.com/naiquevin/pipdeptree) can ins
 
 This pure-Python, OS independent package is available on [PyPI](https://pypi.org/project/pipgrip/):
 
-```sh
+```
 pip install pipgrip
 ```
 
@@ -29,7 +29,8 @@ pip install pipgrip
 
 This package can be used to:
 
-- **Render** an exhaustive dependency tree for any given pip-compatible package(s) with `--tree`
+- **Render** an exhaustive dependency tree for any given pip-compatible package(s):
+  - `pipgrip --tree requests`
 - **Alleviate** [Python dependency hell](https://medium.com/knerd/the-nine-circles-of-python-dependency-hell-481d53e3e025) by resolving the latest viable combination of required packages
 - **Avoid** bugs by running pipgrip as a stage in CI pipelines
 - **Detect** version conflicts for given constraints and give human readable feedback about it
@@ -46,7 +47,7 @@ See also [known caveats](#known-caveats).
 
 Optionally, the environment variable `PIPGRIP_ADDITIONAL_REQUIREMENTS` can be populated with space/newline separated requirements, which will be appended to the requirements passed via CLI.
 
-```sh
+```
 $ pipgrip --help
 
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
@@ -116,7 +117,7 @@ Options:
 
 Exhaustive dependency trees without the need to install any packages ([at most build some wheels](https://github.com/ddelange/pipgrip/issues/40)).
 
-```sh
+```
 $ pipgrip --tree pipgrip
 
 pipgrip (0.8.1)
@@ -137,7 +138,7 @@ For more details/further processing, combine `--tree` with `--json` for a detail
 
 Using the `--lock` option, resolved (pinned) dependencies are additionally written to `./pipgrip.lock`.
 
-```sh
+```
 $ pipgrip --tree --lock botocore==1.13.48 'boto3>=1.10,<1.10.50'
 
 botocore==1.13.48 (1.13.48)
@@ -181,7 +182,7 @@ Since the selected botocore version is older than the one required by the recent
 
 If version conflicts exist for the given (ranges of) package version(s), a verbose explanation is raised.
 
-```sh
+```
 $ pipgrip auto-sklearn~=0.6 dragnet==2.0.4
 
 Error: Because dragnet (2.0.4) depends on scikit-learn (>=0.15.2,<0.21.0)
@@ -197,7 +198,7 @@ If older versions of auto-sklearn are allowed, PubGrub will try all acceptable v
 
 If cyclic dependencies are found, it is noted in the resulting tree.
 
-```sh
+```
 $ pipgrip --tree -v keras==2.2.2
 
 WARNING: Cyclic dependency found: keras depends on keras-applications and vice versa.
