@@ -457,6 +457,9 @@ def main(
 
         if exc is None:
             if "(undecided)" in rendered_tree:
+                logger.error(
+                    "Unexpected partial solution encountered:\n{}".format(rendered_tree)
+                )
                 raise RuntimeError(
                     "Unexpected partial solution encountered, not all packages have decisions"
                 )
