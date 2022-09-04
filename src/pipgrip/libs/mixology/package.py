@@ -24,16 +24,16 @@ class Package(object):
         return self._req
 
     def __eq__(self, other):  # type: () -> bool
-        return str(other) == self.name
+        return str(other) == str(self)
 
     def __ne__(self, other):  # type: () -> bool
         return not self.__eq__(other)
 
     def __str__(self):  # type: () -> str
-        return self._name
+        return self.name
 
     def __repr__(self):  # type: () -> str
         return 'Package("{}")'.format(self.req.extras_name)
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(str(self))

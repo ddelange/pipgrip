@@ -314,6 +314,7 @@ class VersionSolver:
 
     def _next_term_to_try(self):  # type: () -> Optional[Term]
         unsatisfied = self._solution.unsatisfied
+        logger.debug("unsatisfied: %s", unsatisfied)
         if not unsatisfied:
             return
 
