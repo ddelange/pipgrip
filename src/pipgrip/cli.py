@@ -108,6 +108,9 @@ def _recurse_dependencies(
         name = dep.name
         resolved_version = decision_packages.get(dep.package) or "undecided"
 
+        # recreate package, to overwrite internal extras which might be a union including other deps' extras
+        dep.package = Package(dep.pip_string)
+
         tree_node = Node(
             name,
             version=str(resolved_version),
