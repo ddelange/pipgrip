@@ -33,13 +33,7 @@ class Constraint(object):
         return self.__class__(self.package, new_constraint)
 
     def allows_all(self, other):  # type: (Constraint) -> bool
-        if not self.constraint.allows_all(other.constraint):
-            return False
-        if not self.package.req.extras.union(other.package.req.extras):
-            # if both come without extras, only look at version constraints
-            return True
-        # otherwise additionally check whether some extras are unaccounted for
-        return other.package.req.extras.issuperset(self.package.req.extras)
+        return self.constraint.allows_all(other.constraint)
 
     def allows_any(self, other):  # type: (Constraint) -> bool
         return self.constraint.allows_any(other.constraint)

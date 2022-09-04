@@ -199,7 +199,14 @@ class PartialSolution:
     def relation(self, term):  # type: (Term) -> SetRelation
         positive = self._positive.get(term.package)
         if positive is not None:
-            return positive.relation(term)
+            relation = positive.relation(term)
+            if (
+                relation is not SetRelation.OVERLAPPING
+                and not term.package.req.extras.issubset(positive.package.req.extras)
+            ):
+                # force further inspection when term's extras are not in current solution
+                return SetRelation.OVERLAPPING
+            return relation
 
         by_ref = self._negative.get(term.package)
         if by_ref is None:
