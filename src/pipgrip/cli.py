@@ -134,13 +134,19 @@ def _recurse_dependencies(
         if resolved_version == "undecided":
             continue
 
-        packages[(name, str(resolved_version))] = _recurse_dependencies(
+        deeper = _recurse_dependencies(
             source,
             decision_packages,
             source.dependencies_for(dep.package, resolved_version),
             tree_root,
             tree_node,
         )
+        key = (name, str(resolved_version))
+        # mimic semantics of DefaultOrderedDict
+        if key in packages:
+            packages[key].update(deeper)
+        else:
+            packages[key] = deeper
     return packages
 
 
@@ -457,6 +463,9 @@ def main(
 
         if exc is None:
             if "(undecided)" in rendered_tree:
+                logger.error(
+                    "Unexpected partial solution encountered:\n{}".format(rendered_tree)
+                )
                 raise RuntimeError(
                     "Unexpected partial solution encountered, not all packages have decisions"
                 )

@@ -42,6 +42,8 @@ def mock_download_wheel(package, *args, **kwargs):
         "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
         "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "requests@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "requests[socks]": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "requests[socks]==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "pysocks!=1.5.7,>=1.5.6": "./tests/assets/PySocks-1.7.1-py3-none-any.whl",
     }
     return wheelhouse[package]
@@ -58,6 +60,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         "wheel": ["0.33.6"],
         "pyparsing": ["2.4.6"],
         "requests": ["2.22.0"],
+        "requests[socks]": ["2.22.0", "2.23.0"],
         "urllib3": ["1.25.7"],
         "idna": ["2.8"],
         "chardet": ["3.0.4"],
@@ -278,6 +281,28 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
                 "urllib3==1.25.7",
             ],
         ),
+        (
+            ["requests[socks]", "requests==2.22.0"],
+            [
+                "requests==2.22.0",
+                "certifi==2019.11.28",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "pysocks==1.7.1",
+                "urllib3==1.25.7",
+            ],
+        ),
+        (
+            ["requests", "requests[socks]==2.22.0"],
+            [
+                "requests==2.22.0",
+                "certifi==2019.11.28",
+                "chardet==3.0.4",
+                "idna==2.8",
+                "pysocks==1.7.1",
+                "urllib3==1.25.7",
+            ],
+        ),
     ],
     ids=(
         "pipgrip pipgrip",
@@ -295,6 +320,8 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
         "environment marker",
         "vcs with unpinned version",
         "vcs with extras",
+        "multiple occurrences different extras",
+        "multiple occurrences different extras (symmetrical)",
     ),
 )
 def test_solutions(arguments, expected, monkeypatch):

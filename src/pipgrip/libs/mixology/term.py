@@ -142,10 +142,14 @@ class Term(object):
                     self.constraint.union(other.constraint), False
                 )
             if to_return is not None:
-                to_return._constraint._package._req = parse_req(
-                    to_return.constraint.package.req.__str__(),
-                    extras=self.constraint.package.req.extras
-                    | other.constraint.package.req.extras,
+                to_return._constraint._package = Package(
+                    str(
+                        parse_req(
+                            to_return.constraint.package.req.__str__(),
+                            extras=self.constraint.package.req.extras
+                            | other.constraint.package.req.extras,
+                        )
+                    )
                 )
                 to_return._package = self.constraint.package
 

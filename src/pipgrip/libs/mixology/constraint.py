@@ -101,3 +101,6 @@ class Constraint(object):
 
     def __str__(self):
         return self.to_string()
+
+    def __repr__(self):
+        return "<Constraint {}>".format(str(self))
