@@ -61,11 +61,18 @@ class PartialSolution:
 
     @property
     def unsatisfied(self):  # type: () -> List[Term]
-        return [
+        decision_packages = {key: key for key in self._decisions.keys()}
+        unsatisfied = [
             term
             for term in self._positive.values()
             if term.package not in self._decisions
+            # if package is in _decisions, but with less extras, this term is also unsatisfied
+            # therefore we need to inspect the key in self._decisions
+            or not term.package.req.extras.issubset(
+                decision_packages[term.package].req.extras
+            )
         ]
+        return unsatisfied
 
     def decide(self, package, version):  # type: (Hashable, Any) -> None
         """Add an assignment of package as decision and increment the decision level."""
@@ -77,6 +84,9 @@ class PartialSolution:
             self._attempted_solutions += 1
 
         self._backtracking = False
+        if package in self._decisions:
+            # package might contain new extras, so need to replace the key
+            del self._decisions[package]
         self._decisions[package] = version
 
         self._assign(
@@ -137,7 +147,6 @@ class PartialSolution:
         old_positive = self._positive.get(package)
         if old_positive is not None:
             self._positive[package] = old_positive.intersect(assignment)
-
             return
 
         ref = assignment.package
