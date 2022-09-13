@@ -154,11 +154,15 @@ class VersionSolver:
                 # can deduce from it.
                 return
             elif relation == SetRelation.OVERLAPPING:
+                # If more than one term is inconclusive, we can't deduce anything about
+                # incompatibility.
+                if unsatisfied is not None:
+                    return
+
                 # If exactly one term in incompatibility is inconclusive, then it's
                 # almost satisfied and [term] is the unsatisfied term. We can add the
                 # inverse of the term to _solution.
                 unsatisfied = term
-                break
 
         # If *all* terms in incompatibility are satisfied by _solution, then
         # incompatibility is satisfied and we have a conflict.

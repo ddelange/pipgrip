@@ -19,8 +19,7 @@ from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
-from pipgrip.libs.semver import Version
-from pipgrip.package_source import PackageSource
+from pipgrip.package_source import PackageSource, render_pin
 from pipgrip.pipper import install_packages, read_requirements
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
@@ -187,9 +186,7 @@ def render_json_tree(tree_root, max_depth, exact):
         if max_depth and child.depth > max_depth:
             continue
         key = (
-            "{}=={}".format(child.extras_name, child.version)
-            if exact
-            else child.pip_string
+            render_pin(child.extras_name, child.version) if exact else child.pip_string
         )
         json_tree[key] = render_json_tree(child, max_depth, exact)
     return json_tree
@@ -200,17 +197,6 @@ def render_json_tree_full(tree_root, max_depth, sort):
     exporter = DepTreeDictExporter(maxlevel=maxlevel, attriter=sorted if sort else None)
     tree_dict_full = exporter.export(tree_root)["dependencies"]
     return tree_dict_full
-
-
-def is_vcs_version(version):
-    return str(Version.parse(version).major) not in version
-
-
-def render_pin(package, version):
-    if package.startswith("."):
-        return package
-    sep = " @ " if is_vcs_version(version) else "=="
-    return sep.join((package, version))
 
 
 def render_lock(packages, include_dot=True, sort=False):

@@ -16,6 +16,17 @@ from pipgrip.pipper import (
 logger = logging.getLogger(__name__)
 
 
+def is_vcs_version(version):  # type: (str) -> bool
+    return str(Version.parse(version).major) not in version
+
+
+def render_pin(package, version):  # type: (str, str) -> str
+    if package.startswith("."):
+        return package
+    sep = " @ " if is_vcs_version(version) else "=="
+    return sep.join((package, version))
+
+
 class Dependency:
     def __init__(self, name, constraint, pip_string):  # type: (str, str) -> None
         self.name = name
@@ -193,7 +204,7 @@ class PackageSource(BasePackageSource):
             or self._packages[package][req.extras][version] is None
         ):
             # populate dependencies for version
-            self.discover_and_add(req.extras_name + "==" + str(version))
+            self.discover_and_add(render_pin(req.extras_name, str(version)))
         return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint
