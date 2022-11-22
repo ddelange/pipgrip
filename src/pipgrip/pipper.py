@@ -53,7 +53,7 @@ def parse_req(requirement, extras=None):
 
     req.__str__ = __str__
     req.extras_name = (
-        req.name + "[" + ",".join(req.extras) + "]" if req.extras else req.name
+        req.name + "[" + ",".join(sorted(req.extras)) + "]" if req.extras else req.name
     )
     req.extras = frozenset(req.extras)
     return req
