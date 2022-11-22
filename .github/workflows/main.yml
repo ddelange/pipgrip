@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -42,11 +42,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -U pip setuptools wheel
+        pip install -U pip setuptools wheel codecov
         make install
 
     - name: Lint
-      if: matrix.python-version == 3.8
+      if: matrix.python-version == 3.11
       run: make lint
 
     - name: Test
@@ -56,7 +56,6 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
-        pip install codecov
         codecov
 
   CD:
@@ -66,21 +65,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.8
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.x
 
-    - name: PyPi Deploy preparation
+    - name: Build
       run: |
-        pip install --upgrade setuptools wheel
+        pip install -U pip setuptools wheel twine
         python setup.py sdist bdist_wheel --universal
 
-    - name: PyPi Deploy
-      uses: pypa/gh-action-pypi-publish@v1.2.1
-      with:
-        user: ${{ secrets.PYPI_USER }}
-        password: ${{ secrets.PYPI_PASSWORD }}
+    - name: Publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USER }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        twine upload dist/*
 
     - uses: apexskier/github-release-commenter@v1
       with:
