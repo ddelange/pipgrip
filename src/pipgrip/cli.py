@@ -116,14 +116,19 @@ def _recurse_dependencies(
             # metadata=source._packages_metadata[name][str(resolved_version)],
             pip_string=dep.pip_string,
             extras_name=dep.package.req.extras_name,
+            extras=dep.package.req.extras,
         )
 
         # detect cyclic dependencies
-        if any(ancestor.name == name for ancestor in tree_node.ancestors):
+        if any(
+            ancestor.name == tree_node.name
+            and ancestor.extras.issuperset(tree_node.extras)
+            for ancestor in tree_node.ancestors
+        ):
             logger.warning(
                 "Cyclic dependency found: %s depends on %s and vice versa.",
-                tree_node.name,
-                tree_parent.name,
+                tree_node.extras_name,
+                tree_parent.extras_name,
             )
             setattr(tree_node, "cyclic", True)
             packages[(name, str(resolved_version))] = {}
@@ -490,7 +495,9 @@ def main(
             # TODO tree_root = reverse_tree(tree_root)
         if tree:
             if json:
-                output = dumps(render_json_tree_full(tree_root, max_depth, sort))
+                output = dumps(
+                    render_json_tree_full(tree_root, max_depth, sort), default=sorted
+                )
             else:
                 output = rendered_tree
         elif tree_json:

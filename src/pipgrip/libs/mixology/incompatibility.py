@@ -44,6 +44,8 @@ class Incompatibility:
             # Coalesce multiple terms about the same package if possible.
             by_name = {}  # type: Dict[Hashable, Dict[Hashable, Term]]
             for term in terms:
+                new_terms = []
+
                 if term.package not in by_name:
                     by_name[term.package] = {}
 
@@ -51,7 +53,13 @@ class Incompatibility:
                 ref = term.package
 
                 if ref in by_ref:
-                    by_ref[ref] = by_ref[ref].intersect(term)
+                    intersection = by_ref[ref].intersect(term)
+                    if intersection is not None:
+                        by_ref[ref] = intersection
+                    else:
+                        # package requires itself
+                        new_terms.append(by_ref[ref])
+                        by_ref[ref] = term
 
                     # If we have two terms that refer to the same package but have a null
                     # intersection, they're mutually exclusive, making this incompatibility
@@ -62,7 +70,6 @@ class Incompatibility:
                 else:
                     by_ref[ref] = term
 
-                new_terms = []
                 for by_ref in by_name.values():
                     positive_terms = [
                         term for term in by_ref.values() if term.is_positive()

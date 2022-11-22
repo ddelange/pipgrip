@@ -147,7 +147,6 @@ class VersionSolver:
 
         for term in incompatibility.terms:
             relation = self._solution.relation(term)
-
             if relation == SetRelation.DISJOINT:
                 # If term is already contradicted by _solution, then
                 # incompatibility is contradicted as well and there's nothing new we
@@ -156,7 +155,7 @@ class VersionSolver:
             elif relation == SetRelation.OVERLAPPING:
                 # If more than one term is inconclusive, we can't deduce anything about
                 # incompatibility.
-                if unsatisfied is not None:
+                if unsatisfied is not None and unsatisfied.package != term.package:
                     return
 
                 # If exactly one term in incompatibility is inconclusive, then it's
@@ -372,7 +371,9 @@ class VersionSolver:
             # We'll continue adding its dependencies, then go back to
             # unit propagation which will guide us to choose a better version.
             conflict = conflict or all(
-                iterm.package == term.package or self._solution.satisfies(iterm)
+                iterm.package == term.package
+                and iterm.package.req.extras.issuperset(term.package.req.extras)
+                or self._solution.satisfies(iterm)
                 for iterm in incompatibility.terms
             )
 

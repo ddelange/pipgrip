@@ -45,6 +45,13 @@ def mock_download_wheel(package, *args, **kwargs):
         "requests[socks]": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "requests[socks]==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "pysocks!=1.5.7,>=1.5.6": "./tests/assets/PySocks-1.7.1-py3-none-any.whl",
+        "etils[epath]": "./tests/assets/etils-0.9.0-py3-none-any.whl",
+        "etils[epath,epy]": "./tests/assets/etils-0.9.0-py3-none-any.whl",
+        "etils[epy]==0.9.0": "./tests/assets/etils-0.9.0-py3-none-any.whl",
+        "zipp": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
+        "zipp==3.10.0": "./tests/assets/zipp-3.10.0-py3-none-any.whl",
+        "typing-extensions": "./tests/assets/typing_extensions-4.4.0-py3-none-any.whl",
+        "importlib-resources": "./tests/assets/importlib_resources-5.10.0-py3-none-any.whl",
     }
     return wheelhouse[package]
 
@@ -73,7 +80,13 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras-applications": ["1.0.0", "1.0.1", "1.0.2", "1.0.4", "1.0.5", "1.0.6", "1.0.7", "1.0.8"],
         "h5py": ["2.10.0"],
         "pip": ["20.0.2"],
-        "pysocks": ["1.7.1"]
+        "pysocks": ["1.7.1"],
+        "etils[epath]": ["0.9.0"],
+        "etils[epath,epy]": ["0.9.0"],
+        "etils[epy]": ["0.9.0"],
+        "zipp": ["3.10.0"],
+        "typing-extensions": ["4.4.0"],
+        "importlib-resources": ["5.10.0"],
     }
     return versions[package]
 # fmt: on
@@ -221,19 +234,19 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
         (
             ["--tree", "--json", "--max-depth=-1", "--sort", "keras==2.2.2"],
             [
-                '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"extras_name": "keras-applications", "name": "keras-applications", "pip_string": "keras-applications==1.0.4", "version": "1.0.4", "dependencies": [{"extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}]}, {"extras_name": "keras-preprocessing", "name": "keras-preprocessing", "pip_string": "keras-preprocessing==1.0.2", "version": "1.0.2", "dependencies": [{"cyclic": true, "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}, {"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras_name": "pyyaml", "name": "pyyaml", "pip_string": "pyyaml", "version": "5.3"}, {"extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}]',
+                '[{"extras": [], "extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2", "dependencies": [{"extras": [], "extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras": [], "extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"extras": [], "extras_name": "keras-applications", "name": "keras-applications", "pip_string": "keras-applications==1.0.4", "version": "1.0.4", "dependencies": [{"extras": [], "extras_name": "h5py", "name": "h5py", "pip_string": "h5py", "version": "2.10.0", "dependencies": [{"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.7", "version": "1.16.6"}, {"extras": [], "extras_name": "six", "name": "six", "pip_string": "six", "version": "1.13.0"}]}, {"cyclic": true, "extras": [], "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}]}, {"extras": [], "extras_name": "keras-preprocessing", "name": "keras-preprocessing", "pip_string": "keras-preprocessing==1.0.2", "version": "1.0.2", "dependencies": [{"cyclic": true, "extras": [], "extras_name": "keras", "name": "keras", "pip_string": "keras>=2.1.6", "version": "2.2.2"}, {"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras": [], "extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras": [], "extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}, {"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.9.1", "version": "1.16.6"}, {"extras": [], "extras_name": "pyyaml", "name": "pyyaml", "pip_string": "pyyaml", "version": "5.3"}, {"extras": [], "extras_name": "scipy", "name": "scipy", "pip_string": "scipy>=0.14", "version": "1.2.2", "dependencies": [{"extras": [], "extras_name": "numpy", "name": "numpy", "pip_string": "numpy>=1.8.2", "version": "1.16.6"}]}, {"extras": [], "extras_name": "six", "name": "six", "pip_string": "six>=1.9.0", "version": "1.13.0"}]}]',
             ],
         ),
         (
             ["--tree", "--json", "--max-depth=1", "--sort", "keras==2.2.2"],
             [
-                '[{"extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2"}]',
+                '[{"extras": [], "extras_name": "keras", "name": "keras", "pip_string": "keras==2.2.2", "version": "2.2.2"}]',
             ],
         ),
         (
             ["--tree", "--json", "keras==2.2.2"],
             [
-                '[{"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras==2.2.2", "dependencies": [{"name": "h5py", "extras_name": "h5py", "version": "2.10.0", "pip_string": "h5py", "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.7"}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six"}]}, {"name": "keras-applications", "extras_name": "keras-applications", "version": "1.0.4", "pip_string": "keras-applications==1.0.4", "dependencies": [{"name": "h5py", "extras_name": "h5py", "version": "2.10.0", "pip_string": "h5py", "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.7"}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six"}]}, {"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras>=2.1.6", "cyclic": true}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1"}]}, {"name": "keras-preprocessing", "extras_name": "keras-preprocessing", "version": "1.0.2", "pip_string": "keras-preprocessing==1.0.2", "dependencies": [{"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras>=2.1.6", "cyclic": true}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1"}, {"name": "scipy", "extras_name": "scipy", "version": "1.2.2", "pip_string": "scipy>=0.14", "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.8.2"}]}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six>=1.9.0"}]}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1"}, {"name": "pyyaml", "extras_name": "pyyaml", "version": "5.3", "pip_string": "pyyaml"}, {"name": "scipy", "extras_name": "scipy", "version": "1.2.2", "pip_string": "scipy>=0.14", "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.8.2"}]}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six>=1.9.0"}]}]',
+                '[{"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras==2.2.2", "extras": [], "dependencies": [{"name": "h5py", "extras_name": "h5py", "version": "2.10.0", "pip_string": "h5py", "extras": [], "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.7", "extras": []}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six", "extras": []}]}, {"name": "keras-applications", "extras_name": "keras-applications", "version": "1.0.4", "pip_string": "keras-applications==1.0.4", "extras": [], "dependencies": [{"name": "h5py", "extras_name": "h5py", "version": "2.10.0", "pip_string": "h5py", "extras": [], "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.7", "extras": []}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six", "extras": []}]}, {"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras>=2.1.6", "cyclic": true, "extras": []}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1", "extras": []}]}, {"name": "keras-preprocessing", "extras_name": "keras-preprocessing", "version": "1.0.2", "pip_string": "keras-preprocessing==1.0.2", "extras": [], "dependencies": [{"name": "keras", "extras_name": "keras", "version": "2.2.2", "pip_string": "keras>=2.1.6", "cyclic": true, "extras": []}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1", "extras": []}, {"name": "scipy", "extras_name": "scipy", "version": "1.2.2", "pip_string": "scipy>=0.14", "extras": [], "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.8.2", "extras": []}]}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six>=1.9.0", "extras": []}]}, {"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.9.1", "extras": []}, {"name": "pyyaml", "extras_name": "pyyaml", "version": "5.3", "pip_string": "pyyaml", "extras": []}, {"name": "scipy", "extras_name": "scipy", "version": "1.2.2", "pip_string": "scipy>=0.14", "extras": [], "dependencies": [{"name": "numpy", "extras_name": "numpy", "version": "1.16.6", "pip_string": "numpy>=1.8.2", "extras": []}]}, {"name": "six", "extras_name": "six", "version": "1.13.0", "pip_string": "six>=1.9.0", "extras": []}]}]',
             ],
         ),
         (
@@ -303,6 +316,15 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
                 "urllib3==1.25.7",
             ],
         ),
+        (
+            ["etils[epath]"],
+            [
+                "etils==0.9.0",
+                "typing-extensions==4.4.0",
+                "importlib-resources==5.10.0",
+                "zipp==3.10.0",
+            ],
+        ),
     ],
     ids=(
         "pipgrip pipgrip",
@@ -322,6 +344,7 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
         "vcs with extras",
         "multiple occurrences different extras",
         "multiple occurrences different extras (symmetrical)",
+        "package requiring itself",
     ),
 )
 def test_solutions(arguments, expected, monkeypatch):
