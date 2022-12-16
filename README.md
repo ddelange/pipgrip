@@ -1,6 +1,6 @@
 # pipgrip
 
-[![build](https://img.shields.io/github/workflow/status/ddelange/pipgrip/GH/master?logo=github&cacheSeconds=86400)](https://github.com/ddelange/pipgrip/actions?query=branch%3Amaster)
+[![build](https://img.shields.io/github/actions/workflow/status/ddelange/pipgrip/main.yml?branch=master&logo=github&cacheSeconds=86400)](https://github.com/ddelange/pipgrip/actions?query=branch%3Amaster)
 [![codecov](https://img.shields.io/codecov/c/github/ddelange/pipgrip/master?logo=codecov&logoColor=white)](https://codecov.io/gh/ddelange/pipgrip)
 [![pypi](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![homebrew](https://img.shields.io/homebrew/v/pipgrip?logo=homebrew&logoColor=white)](https://formulae.brew.sh/formula/pipgrip)
