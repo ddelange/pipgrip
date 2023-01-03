@@ -7,6 +7,7 @@ import tempfile
 from collections import OrderedDict
 from functools import partial
 from json import dumps
+from multiprocessing import cpu_count
 from subprocess import CalledProcessError
 
 import click
@@ -320,6 +321,13 @@ def render_lock(packages, include_dot=True, sort=False):
     help="Extra URLs of package indexes to use in addition to --index-url.",
 )
 @click.option(
+    "--threads",
+    type=click.INT,
+    envvar="PIPGRIP_THREADS",
+    default=cpu_count(),
+    help="Maximum amount of threads to use for running concurrent pip subprocesses.",
+)
+@click.option(
     "--pre",
     is_flag=True,
     help="Include pre-release and development versions. By default, pip implicitly excludes pre-releases (unless specified otherwise by PEP 440).",
@@ -350,6 +358,7 @@ def main(
     no_cache_dir,
     index_url,
     extra_index_url,
+    threads,
     pre,
     verbose,
 ):
@@ -426,7 +435,7 @@ def main(
         for root_dependency in dependencies:
             source.root_dep(root_dependency)
 
-        solver = VersionSolver(source)
+        solver = VersionSolver(source, threads=threads)
         try:
             solution = solver.solve()
             exc = None

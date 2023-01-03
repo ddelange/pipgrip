@@ -53,8 +53,8 @@ $ pipgrip --help
 Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
 
   pipgrip is a lightweight pip dependency resolver with deptree preview
-  functionality based on the PubGrub algorithm, which is also used by poetry.
-  For one or more PEP 508 dependency specifications, pipgrip recursively
+  functionality based on the PubGrub algorithm, which is also used by poetry. For
+  one or more PEP 508 dependency specifications, pipgrip recursively
   fetches/builds the Python wheels necessary for version solving, and optionally
   renders the full resulting dependency tree.
 
@@ -64,52 +64,42 @@ Options:
   --user                        Install to the Python user install directory for
                                 your platform -- typically ~/.local/, or
                                 %APPDATA%\Python on Windows.
-
   -r, --requirements-file FILE  Install from the given requirements file. This
                                 option can be used multiple times.
-
   --lock                        Write out pins to './pipgrip.lock'.
   --pipe                        Output space-separated pins instead of newline-
                                 separated pins.
-
   --json                        Output pins as JSON dict instead of newline-
                                 separated pins. Combine with --tree for a detailed
                                 nested JSON dependency tree.
-
   --sort                        Sort pins alphabetically before writing out. Can
                                 be used bare, or in combination with --lock,
                                 --pipe, --json, --tree-json, or --tree-json-exact.
-
   --tree                        Output human readable dependency tree (top-down).
                                 Combine with --json for a detailed nested JSON
                                 dependency tree. Use --tree-json instead for a
                                 simplified JSON dependency tree (requirement
                                 strings as keys, dependencies as values), or
                                 --tree-json-exact for exact pins as keys.
-
   --tree-ascii                  Output human readable dependency tree with ASCII
                                 tree markers.
-
   --reversed-tree               Output human readable dependency tree (bottom-up).
   --max-depth INTEGER           Maximum (JSON) tree rendering depth (default -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
                                 pipper. Overrides --cache-dir.
-
   --index-url TEXT              Base URL of the Python Package Index (default
                                 https://pypi.org/simple).
-
   --extra-index-url TEXT        Extra URLs of package indexes to use in addition
                                 to --index-url.
-
+  --threads INTEGER             Maximum amount of threads to use for running
+                                concurrent pip subprocesses.
   --pre                         Include pre-release and development versions. By
                                 default, pip implicitly excludes pre-releases
                                 (unless specified otherwise by PEP 440).
-
   -v, --verbose                 Control verbosity: -v will print cyclic
                                 dependencies (WARNING), -vv will show solving
                                 decisions (INFO), -vvv for development (DEBUG).
-
   -h, --help                    Show this message and exit.
 ```
 
@@ -120,16 +110,15 @@ Exhaustive dependency trees without the need to install any packages ([at most b
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.8.1)
-├── anytree (2.8.0)
+pipgrip (0.10.0)
+├── anytree>=2.4.1 (2.8.0)
 │   └── six>=1.9.0 (1.16.0)
 ├── click>=7 (8.1.3)
-├── packaging>=17 (21.3)
-│   └── pyparsing!=3.0.5,>=2.0.2 (3.0.9)
-├── pip>=7.1.0 (22.1.1)
+├── packaging>=17 (22.0)
+├── pip>=7.1.0 (22.3.1)
 ├── pkginfo<1.8,>=1.4.2 (1.7.1)
-├── setuptools>=38.3 (62.3.2)
-└── wheel (0.37.1)
+├── setuptools>=38.3 (65.6.3)
+└── wheel (0.38.4)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
