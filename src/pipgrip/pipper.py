@@ -418,7 +418,7 @@ def discover_dependencies_and_versions(
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = req.url or wheel_metadata["version"]
     available_versions = (
-        _get_available_versions(req.extras_name, index_url, extra_index_url, pre)
+        _get_available_versions(req.name, index_url, extra_index_url, pre)
         if req.key != "." and req.url is None
         else [wheel_version]
     )
