@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import time
+from multiprocessing.pool import ThreadPool
 from typing import Dict, Hashable, List, Optional, Union
 
 from pipgrip.libs.mixology.constraint import Constraint
@@ -33,12 +34,15 @@ class VersionSolver:
     """
 
     def __init__(
-        self, source  # type: PackageSource
+        self,
+        source,  # type: PackageSource
+        threads=1,  # type: int
     ):
         self._source = source
 
         self._incompatibilities = {}  # type: Dict[Hashable, List[Incompatibility]]
         self._solution = PartialSolution()
+        self._threadpool = ThreadPool(threads)
 
     @property
     def solution(self):  # type: () -> PartialSolution
@@ -334,6 +338,7 @@ class VersionSolver:
         if len(unsatisfied) == 1:
             term = unsatisfied[0]
         else:
+            self._threadpool.map(_get_min, unsatisfied)  # populate self._source
             term = min(*unsatisfied, key=_get_min)
 
         return term
