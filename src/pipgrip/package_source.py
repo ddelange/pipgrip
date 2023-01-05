@@ -168,7 +168,6 @@ class PackageSource(BasePackageSource):
         req = parse_req(package)
         constraint = req.url or ",".join(["".join(tup) for tup in req.specs])
         self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))
-        self.discover_and_add(req.__str__())
 
     def _versions_for(
         self, package, constraint=None
