@@ -324,7 +324,7 @@ def render_lock(packages, include_dot=True, sort=False):
     "--threads",
     type=click.INT,
     envvar="PIPGRIP_THREADS",
-    default=cpu_count(),
+    default=min(8, cpu_count()),
     help="Maximum amount of threads to use for running concurrent pip subprocesses.",
 )
 @click.option(
