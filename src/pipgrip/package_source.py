@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def is_vcs_version(version):  # type: (str) -> bool
-    return str(Version.parse(version).major) not in version
+    return Version.parse(version).is_vcs()
 
 
 def render_pin(package, version):  # type: (str, str) -> str
@@ -119,17 +119,19 @@ class PackageSource(BasePackageSource):
         if extras not in self._packages[name]:
             self._packages[name][extras] = {}
 
-        # if already added without deps, assume now called with discovered deps and overwrite
-        if version in self._packages[name][extras] and not (
-            deps is None or self._packages[name][extras][version] is None
-        ):
-            raise ValueError("{} ({}) already exists".format(name, version))
+        if version in self._packages[name][extras]:
+            if self._packages[name][extras][version] is not None:
+                if deps is not None:
+                    raise ValueError("{} ({}) already exists".format(name, version))
+                # already discovered, now called with deps is None from discovering a different version
+                return
 
         # not existing and deps undiscovered
         if deps is None:
             self._packages[name][extras][version] = None
             return
 
+        # not existing and deps now discovered
         dependencies = []
         for dep in deps:
             req = parse_req(dep)

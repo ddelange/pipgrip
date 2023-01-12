@@ -4,6 +4,7 @@ import time
 from multiprocessing.pool import ThreadPool
 from typing import Dict, Hashable, List, Optional, Union
 
+from pipgrip.libs.mixology._compat import OrderedDict
 from pipgrip.libs.mixology.constraint import Constraint
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.incompatibility import Incompatibility
@@ -126,7 +127,9 @@ class VersionSolver:
                     # decision level, so we clear [changed] and refill it with the
                     # newly-propagated assignment.
                     changed.clear()
-                    changed.add(str(self._propagate_incompatibility(root_cause)))
+                    prop = self._propagate_incompatibility(root_cause)
+                    if prop is not None:
+                        changed.add(str(prop))
                     break
                 elif result is not None:
                     changed.add(result)
@@ -338,8 +341,10 @@ class VersionSolver:
         if len(unsatisfied) == 1:
             term = unsatisfied[0]
         else:
-            self._threadpool.map(_get_min, unsatisfied)  # populate self._source
-            term = min(*unsatisfied, key=_get_min)
+            terms = OrderedDict(
+                zip(unsatisfied, self._threadpool.map(_get_min, unsatisfied))
+            )
+            term = min(terms, key=terms.get)
 
         return term
 

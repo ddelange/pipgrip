@@ -126,7 +126,7 @@ class PartialSolution:
         while self._assignments[-1].decision_level > decision_level:
             removed = self._assignments.pop(-1)
             packages.add(removed.package)
-            if removed.is_decision():
+            if removed.is_decision() and removed.package in self._decisions:
                 del self._decisions[removed.package]
 
         # Re-compute _positive and _negative for the packages that were removed.
@@ -195,6 +195,8 @@ class PartialSolution:
                 assigned_term = assignment
             else:
                 assigned_term = assigned_term.intersect(assignment)
+                if assigned_term is None:
+                    continue
 
             # As soon as we have enough assignments to satisfy term, return them.
             if assigned_term.satisfies(term):

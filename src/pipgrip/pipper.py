@@ -28,21 +28,28 @@ def read_requirements(path):
         raise RuntimeError("{} is broken".format(path))
 
 
+_parse_req_cache = {}
+
+
 def parse_req(requirement, extras=None):
+    extras = extras or set()
+    cache_key = (requirement, frozenset(extras))
+    if cache_key in _parse_req_cache:
+        return _parse_req_cache[cache_key]
     if requirement == "_root_" or requirement == "." or requirement.startswith(".["):
         req = pkg_resources.Requirement.parse(
             requirement.replace(".", "rubbish", 1)
             if requirement.startswith(".[")
             else "rubbish"
         )
-        if extras is not None:
+        if extras:
             req.extras = extras
         req.key = "." if requirement.startswith(".[") else requirement
         full_str = req.__str__().replace(req.name, req.key)
         req.name = req.key
     else:
         req = pkg_resources.Requirement.parse(requirement)
-        if extras is not None:
+        if extras:
             req.extras = extras
         req.key = canonicalize_name(req.key)
         req.name = req.key
@@ -56,6 +63,7 @@ def parse_req(requirement, extras=None):
         req.name + "[" + ",".join(sorted(req.extras)) + "]" if req.extras else req.name
     )
     req.extras = frozenset(req.extras)
+    _parse_req_cache[cache_key] = req
     return req
 
 
