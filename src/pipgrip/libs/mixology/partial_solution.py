@@ -212,7 +212,7 @@ class PartialSolution:
         if positive is not None:
             relation = positive.relation(term)
             if (
-                relation is not SetRelation.OVERLAPPING
+                relation is SetRelation.DISJOINT
                 and not term.package.req.extras.issubset(positive.package.req.extras)
             ):
                 # force further inspection when term's extras are not in current solution
