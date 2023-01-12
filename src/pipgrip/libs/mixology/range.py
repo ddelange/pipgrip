@@ -305,7 +305,7 @@ class Range(object):
         )
 
     def is_vcs_version(self):  # type: () -> bool
-        return self.is_single_version() and self._min.is_vcs()
+        return bool(self.min) and self.min.is_vcs()
 
     def __eq__(self, other):
         if not isinstance(other, Range):

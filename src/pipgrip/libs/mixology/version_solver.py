@@ -126,7 +126,9 @@ class VersionSolver:
                     # decision level, so we clear [changed] and refill it with the
                     # newly-propagated assignment.
                     changed.clear()
-                    changed.add(str(self._propagate_incompatibility(root_cause)))
+                    prop = self._propagate_incompatibility(root_cause)
+                    if prop is not None:
+                        changed.add(str(prop))
                     break
                 elif result is not None:
                     changed.add(result)
@@ -338,8 +340,8 @@ class VersionSolver:
         if len(unsatisfied) == 1:
             term = unsatisfied[0]
         else:
-            self._threadpool.map(_get_min, unsatisfied)  # populate self._source
-            term = min(*unsatisfied, key=_get_min)
+            terms = dict(zip(unsatisfied, self._threadpool.map(_get_min, unsatisfied)))
+            term = min(terms, key=terms.get)
 
         return term
 
