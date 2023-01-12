@@ -4,6 +4,7 @@ import time
 from multiprocessing.pool import ThreadPool
 from typing import Dict, Hashable, List, Optional, Union
 
+from pipgrip.libs.mixology._compat import OrderedDict
 from pipgrip.libs.mixology.constraint import Constraint
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.incompatibility import Incompatibility
@@ -340,7 +341,9 @@ class VersionSolver:
         if len(unsatisfied) == 1:
             term = unsatisfied[0]
         else:
-            terms = dict(zip(unsatisfied, self._threadpool.map(_get_min, unsatisfied)))
+            terms = OrderedDict(
+                zip(unsatisfied, self._threadpool.map(_get_min, unsatisfied))
+            )
             term = min(terms, key=terms.get)
 
         return term
