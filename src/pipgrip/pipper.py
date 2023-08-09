@@ -1,4 +1,5 @@
 import io
+import json
 import logging
 import os
 import re
@@ -254,6 +255,59 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
 
+def _get_package_report(package, index_url, extra_index_url, pre, cache_dir):
+    """Get metadata (install report) using pip's --dry-run --report functionality."""
+    logger.debug(
+        "Getting report for {} (with fallback cache_dir {})".format(package, cache_dir)
+    )
+    args = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-qq",
+        "--no-deps",
+        "--ignore-installed",
+        "--disable-pip-version-check",
+        "--dry-run",
+        "--no-deps",
+    ]
+    if pre:
+        args += ["--pre"]
+    if cache_dir is not None:
+        args += [
+            "--cache-dir",
+            cache_dir,
+        ]
+    if index_url is not None:
+        args += [
+            "--index-url",
+            index_url,
+            "--trusted-host",
+            urlparse(index_url).hostname,
+        ]
+    if extra_index_url is not None:
+        args += [
+            "--extra-index-url",
+            extra_index_url,
+            "--trusted-host",
+            urlparse(extra_index_url).hostname,
+        ]
+    args += ["--report", "-", package]
+    try:
+        out = stream_bash_command(args)
+    except subprocess.CalledProcessError as err:
+        output = getattr(err, "output") or ""
+        logger.error(
+            "Getting report for {} failed with output:\n{}".format(
+                package, output.strip()
+            )
+        )
+        raise RuntimeError("Failed to get report for {}".format(package))
+    report = json.loads(out)
+    return report
+
+
 def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
     """Download/build wheel for package and return its filename."""
     logger.debug(
@@ -419,10 +473,16 @@ def discover_dependencies_and_versions(
     extras_requested = sorted(req.extras)
 
     logger.info("discovering %s", req)
-    wheel_fname = _download_wheel(
-        req.__str__(), index_url, extra_index_url, pre, cache_dir
-    )
-    wheel_metadata = _extract_metadata(wheel_fname)
+    if PIP_VERSION >= [22, 2]:
+        report = _get_package_report(
+            req.__str__(), index_url, extra_index_url, pre, cache_dir
+        )
+        wheel_metadata = report["install"][0]["metadata"]
+    else:
+        wheel_fname = _download_wheel(
+            req.__str__(), index_url, extra_index_url, pre, cache_dir
+        )
+        wheel_metadata = _extract_metadata(wheel_fname)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = req.url or wheel_metadata["version"]
     available_versions = (
