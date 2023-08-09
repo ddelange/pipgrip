@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 import pipgrip.pipper
 from pipgrip.cli import flatten, main
-from pipgrip.pipper import PIP_VERSION, _download_wheel
+from pipgrip.pipper import PIP_VERSION, _download_wheel, _extract_metadata
 
 self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
 
@@ -56,6 +56,13 @@ def mock_download_wheel(package, *args, **kwargs):
     return wheelhouse[package]
 
 
+def mock_get_package_report(package, *args, **kwargs):
+    wheel_fname = mock_download_wheel(package)
+    wheel_metadata = _extract_metadata(wheel_fname)
+    report = {"install": [{"metadata": wheel_metadata}]}
+    return report
+
+
 def mock_get_available_versions(package, *args, **kwargs):
     versions = {
         "setuptools": ["44.0.0"],
@@ -93,7 +100,7 @@ def mock_stream_bash_command(*args, **kwargs):
     return "I passed"
 
 
-def invoke_patched(func, arguments, monkeypatch, **kwargs):
+def invoke_patched(func, arguments, monkeypatch, use_report=False, **kwargs):
     def default_environment():
         return {
             "implementation_name": "cpython",
@@ -116,9 +123,21 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
     )
     monkeypatch.setattr(
         pipgrip.pipper,
-        "PIP_VERSION",
-        [22, 0],  # to circumvent _get_package_report
+        "_get_package_report",
+        mock_get_package_report,
     )
+    if use_report:
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "PIP_VERSION",
+            [22, 2],
+        )
+    else:
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "PIP_VERSION",
+            [22, 1],  # to circumvent _get_package_report
+        )
     monkeypatch.setattr(
         pipgrip.pipper,
         "_get_available_versions",
@@ -351,6 +370,14 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
 )
 def test_solutions(arguments, expected, monkeypatch):
     result = invoke_patched(main, arguments, monkeypatch)
+
+    if result.exit_code:
+        raise result.exception
+    assert set(result.output.strip().split("\n")) == set(
+        expected
+    ), "Unexpected output:\n{}".format(result.output.strip())
+
+    result = invoke_patched(main, arguments, monkeypatch, use_report=True)
 
     if result.exit_code:
         raise result.exception

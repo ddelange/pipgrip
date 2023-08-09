@@ -285,6 +285,17 @@ def test_get_package_report(package, pip_output, expected, monkeypatch):
         == expected
     )
 
+    assert (
+        _get_package_report(
+            package,
+            None,
+            None,
+            False,
+            None,
+        )
+        == expected
+    )
+
 
 @pytest.mark.parametrize(
     "package, pre, pip_output, expected",
