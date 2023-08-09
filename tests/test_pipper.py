@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 import pipgrip.pipper
-from pipgrip.pipper import _download_wheel, _get_available_versions
+from pipgrip.pipper import _download_wheel, _get_available_versions, _get_package_report
 
 
 @pytest.mark.parametrize(
@@ -167,6 +167,123 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
         False,
         cache_dir,
     ) == os.path.join(cache_dir, expected.lstrip(os.path.sep))
+
+
+@pytest.mark.parametrize(
+    "package, pip_output, expected",
+    [
+        (
+            "pip",
+            """
+            {
+              "version": "0",
+              "pip_version": "22.2.2",
+              "install": [
+                {
+                  "download_info": {
+                    "url": "https://files.pythonhosted.org/packages/50/c2/e06851e8cc28dcad7c155f4753da8833ac06a5c704c109313b8d5a62968a/pip-23.2.1-py3-none-any.whl",
+                    "archive_info": {
+                      "hash": "sha256=7ccf472345f20d35bdc9d1841ff5f313260c2c33fe417f48c30ac46cccabf5be"
+                    }
+                  },
+                  "is_direct": false,
+                  "requested": true,
+                  "metadata": {
+                    "metadata_version": "2.1",
+                    "name": "pip",
+                    "version": "23.2.1",
+                    "summary": "The PyPA recommended tool for installing Python packages.",
+                    "home_page": "https://pip.pypa.io/",
+                    "author": "The pip developers",
+                    "author_email": "distutils-sig@python.org",
+                    "license": "MIT",
+                    "classifier": [
+                      "Development Status :: 5 - Production/Stable"
+                    ],
+                    "requires_python": ">=3.7",
+                    "project_url": [
+                      "Documentation, https://pip.pypa.io",
+                      "Source, https://github.com/pypa/pip",
+                      "Changelog, https://pip.pypa.io/en/stable/news/"
+                    ],
+                    "description": "pip - The Python Package Installer"
+                  }
+                }
+              ],
+              "environment": {}
+            }
+            """,
+            {
+                "version": "0",
+                "pip_version": "22.2.2",
+                "install": [
+                    {
+                        "download_info": {
+                            "url": "https://files.pythonhosted.org/packages/50/c2/e06851e8cc28dcad7c155f4753da8833ac06a5c704c109313b8d5a62968a/pip-23.2.1-py3-none-any.whl",
+                            "archive_info": {
+                                "hash": "sha256=7ccf472345f20d35bdc9d1841ff5f313260c2c33fe417f48c30ac46cccabf5be"
+                            },
+                        },
+                        "is_direct": False,
+                        "requested": True,
+                        "metadata": {
+                            "metadata_version": "2.1",
+                            "name": "pip",
+                            "version": "23.2.1",
+                            "summary": "The PyPA recommended tool for installing Python packages.",
+                            "home_page": "https://pip.pypa.io/",
+                            "author": "The pip developers",
+                            "author_email": "distutils-sig@python.org",
+                            "license": "MIT",
+                            "classifier": [
+                                "Development Status :: 5 - Production/Stable"
+                            ],
+                            "requires_python": ">=3.7",
+                            "project_url": [
+                                "Documentation, https://pip.pypa.io",
+                                "Source, https://github.com/pypa/pip",
+                                "Changelog, https://pip.pypa.io/en/stable/news/",
+                            ],
+                            "description": "pip - The Python Package Installer",
+                        },
+                    }
+                ],
+                "environment": {},
+            },
+        ),
+    ],
+    ids=("pip",),
+)
+def test_get_package_report(package, pip_output, expected, monkeypatch):
+    cache_dir = "~/Library/Caches/pip/wheels/pipgrip"
+
+    def patch_pip_output(*args, **kwargs):
+        return pip_output
+
+    def patch_getcwd():
+        return os.path.expanduser("~")
+
+    monkeypatch.setattr(
+        pipgrip.pipper,
+        "stream_bash_command",
+        patch_pip_output,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper.os,
+        "getcwd",
+        patch_getcwd,
+    )
+
+    assert (
+        _get_package_report(
+            package,
+            "https://pypi.org/simple",
+            "https://pypi.org/simple",
+            True,
+            cache_dir,
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 import pipgrip.pipper
 from pipgrip.cli import flatten, main
-from pipgrip.pipper import _download_wheel
+from pipgrip.pipper import PIP_VERSION, _download_wheel
 
 self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
 
@@ -113,6 +113,11 @@ def invoke_patched(func, arguments, monkeypatch, **kwargs):
         pipgrip.pipper,
         "_download_wheel",
         mock_download_wheel,
+    )
+    monkeypatch.setattr(
+        pipgrip.pipper,
+        "PIP_VERSION",
+        [22, 0],  # to circumvent _get_package_report
     )
     monkeypatch.setattr(
         pipgrip.pipper,
