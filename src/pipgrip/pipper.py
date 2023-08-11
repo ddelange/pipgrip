@@ -11,7 +11,6 @@ import pkg_resources
 from click import echo as _echo
 from packaging.markers import default_environment
 from packaging.utils import canonicalize_name
-from pkginfo import get_metadata
 
 from pipgrip.compat import PIP_VERSION, urlparse
 
@@ -406,6 +405,8 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
 
 
 def _extract_metadata(wheel_fname):
+    from pkginfo import get_metadata  # not required on python 3.7+
+
     wheel_fname = os.path.abspath(wheel_fname)
     logger.debug("Searching metadata in %s", wheel_fname)
     if not os.path.exists(wheel_fname):
@@ -478,7 +479,7 @@ def discover_dependencies_and_versions(
             req.__str__(), index_url, extra_index_url, pre, cache_dir
         )
         wheel_metadata = report["install"][0]["metadata"]
-    else:
+    else:  # old python (<3.7) fallback
         wheel_fname = _download_wheel(
             req.__str__(), index_url, extra_index_url, pre, cache_dir
         )

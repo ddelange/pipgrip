@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 import pipgrip.pipper
 from pipgrip.cli import flatten, main
-from pipgrip.pipper import PIP_VERSION, _download_wheel, _extract_metadata
+from pipgrip.pipper import _download_wheel, _extract_metadata
 
 self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
 
@@ -40,6 +40,7 @@ def mock_download_wheel(package, *args, **kwargs):
         "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
         "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
+        "pip>=22.2": "./tests/assets/pip-23.2.1-py3-none-any.whl",
         "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "requests@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "requests[socks]": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
@@ -85,7 +86,7 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras-preprocessing": ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4", "1.0.5", "1.0.6", "1.0.8", "1.0.9", "1.1.0"],
         "keras-applications": ["1.0.0", "1.0.1", "1.0.2", "1.0.4", "1.0.5", "1.0.6", "1.0.7", "1.0.8"],
         "h5py": ["2.10.0"],
-        "pip": ["20.0.2"],
+        "pip": ["20.0.2", "23.2.1"],
         "pysocks": ["1.7.1"],
         "etils": ["0.9.0"],
         "zipp": ["3.10.0"],
@@ -169,10 +170,9 @@ def invoke_patched(func, arguments, monkeypatch, use_report=False, **kwargs):
                 "click==7.0",
                 "packaging==20.0",
                 "pyparsing==2.4.6",
-                "pkginfo==1.5.0.1",
                 "setuptools==44.0.0",
                 "wheel==0.33.6",
-                "pip==20.0.2",
+                "pip==23.2.1",
             ],
         ),
         (

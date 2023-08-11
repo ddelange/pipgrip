@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 .PHONY: lint
 ## Run linting
 lint:

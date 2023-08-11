@@ -1,9 +1,10 @@
 anytree>=2.4.1
 click>=7
 packaging>=17
-pkginfo>=1.4.2,<1.8  # ref ddelange/pipgrip#68
 setuptools>=38.3  # for pkg_resources
 wheel
-pip>=7.1.0  # >=7.1.0 for --constraint
+pip>=22.2; python_version>'3.6'  # >=22.2 for --dry-run --report ref ddelange/pipgrip#114
+pip>=7.1.0; python_version<='3.6'  # >=7.1.0 for --constraint
+pkginfo>=1.4.2,<1.8; python_version<='3.6'  # ref ddelange/pipgrip#68 and ddelange/pipgrip#114
 enum34; python_version=='2.7'
 typing; python_version=='2.7'
