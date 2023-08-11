@@ -122,15 +122,14 @@ Exhaustive dependency trees without the need to install any packages ([at most b
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.10.0)
-├── anytree>=2.4.1 (2.8.0)
-│   └── six>=1.9.0 (1.16.0)
-├── click>=7 (8.1.3)
-├── packaging>=17 (22.0)
-├── pip>=7.1.0 (22.3.1)
-├── pkginfo<1.8,>=1.4.2 (1.7.1)
-├── setuptools>=38.3 (65.6.3)
-└── wheel (0.38.4)
+pipgrip (0.10.6)
+├── anytree>=2.4.1 (2.9.0)
+│   └── six (1.16.0)
+├── click>=7 (8.1.6)
+├── packaging>=17 (23.1)
+├── pip>=22.2 (23.2.1)
+├── setuptools>=38.3 (68.0.0)
+└── wheel (0.41.1)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).

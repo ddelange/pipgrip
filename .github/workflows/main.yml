@@ -27,7 +27,12 @@ jobs:
 
     - name: Set up Python 2
       if: matrix.python-version == '2.7'
-      run: sudo apt-get install python2.7-dev
+      run: |
+        sudo rm -f $(which python) $(which pip)
+        sudo apt-get install python2.7-dev
+        curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
+        python2.7 get-pip.py
+        sudo ln -sf "$(which python2.7)" "$(dirname $(which python2.7))/python"
 
     - name: Pip cache
       uses: actions/cache@v2
