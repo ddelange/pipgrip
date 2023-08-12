@@ -67,37 +67,22 @@ def parse_req(requirement, extras=None):
     return req
 
 
-def stream_bash_command(bash_command, echo=False):
-    # https://gist.github.com/jaketame/3ed43d1c52e9abccd742b1792c449079
-    # https://gist.github.com/bgreenlee/1402841
-    logger.debug(bash_command)
-    process = subprocess.Popen(
-        bash_command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+def stream_bash_command(args, echo=False):
+    """Mimic subprocess.run, while processing the command output in real time."""
+    # https://gist.github.com/ddelange/6517e3267fb74eeee804e3b1490b1c1d
+    out = []
+    process = subprocess.Popen(  # can use with-statement as of py 3.2
+        args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
-
-    def check_io():
-        output = ""
-        while True:
-            line = process.stdout.readline().decode("utf-8")
-            if line:
-                output += line
-                if echo:
-                    _echo(line[:-1])
-            else:
-                break
-        return output
-
-    # keep checking stdout/stderr until the child exits
-    out = ""
-    while process.poll() is None:
-        out += check_io()
-
-    return_code = process.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, bash_command, output=out)
-
+    for line in process.stdout:
+        out.append(line)
+        if echo:
+            _echo(line[:-1])
+    process.stdout.close()
+    out = "".join(out)
+    retcode = process.wait()
+    if retcode:
+        raise subprocess.CalledProcessError(retcode, args, output=out)
     return out
 
 
@@ -269,7 +254,6 @@ def _get_package_report(package, index_url, extra_index_url, pre, cache_dir):
         "--ignore-installed",
         "--disable-pip-version-check",
         "--dry-run",
-        "--no-deps",
     ]
     if pre:
         args += ["--pre"]

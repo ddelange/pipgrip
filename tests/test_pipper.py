@@ -337,3 +337,10 @@ def test_get_available_versions(package, pre, pip_output, expected, monkeypatch)
         _get_available_versions(package, "https://pypi.org/simple", None, pre)
         == expected
     )
+
+
+def test_stream_bash_command():
+    pipgrip.pipper.stream_bash_command("ls", echo=True)
+    pipgrip.pipper.stream_bash_command(["ls"])
+    with pytest.raises(subprocess.CalledProcessError, match=".nonexist"):
+        pipgrip.pipper.stream_bash_command(["cat", ".nonexist"])
