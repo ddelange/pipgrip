@@ -5,7 +5,7 @@
 [![pypi](https://img.shields.io/pypi/v/pipgrip.svg?logo=pypi&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![homebrew](https://img.shields.io/homebrew/v/pipgrip?logo=homebrew&logoColor=white)](https://formulae.brew.sh/formula/pipgrip)
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://pypi.org/project/pipgrip/)
-[![downloads](https://pepy.tech/badge/pipgrip)](https://pypistats.org/packages/pipgrip)
+[![downloads](https://static.pepy.tech/badge/pipgrip)](https://pypistats.org/packages/pipgrip)
 
 [pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
 
