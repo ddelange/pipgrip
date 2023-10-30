@@ -116,15 +116,15 @@ from pipgrip.pipper import _download_wheel, _get_available_versions, _get_packag
         "pip>10 cached 2",
         "pip>10 fetched 2",
         "pip>10 built 1",
-        "Windows lowercase cache_dir",
-        "cwd_cache_dir",
+        "Windows lowercase wheel_dir",
+        "cwd_wheel_dir",
     ),
 )
 def test_download_wheel(package, pip_output, expected, monkeypatch):
-    cache_dir = "~/Library/Caches/pip/wheels/pipgrip"
+    wheel_dir = "~/Library/Caches/pip/wheels/pipgrip"
 
     def patch_os_walk(*args, **kwargs):
-        yield cache_dir, None, [
+        yield wheel_dir, None, [
             "a.whl",
             "jupyterlab_black-0.2.1-py3-none-any.whl",
             "x.whl",
@@ -161,12 +161,14 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
     )
 
     assert _download_wheel(
-        package,
-        "https://pypi.org/simple",
-        "https://pypi.org/simple",
-        False,
-        cache_dir,
-    ) == os.path.join(cache_dir, expected.lstrip(os.path.sep))
+        package=package,
+        index_url="https://pypi.org/simple",
+        extra_index_url="https://pypi.org/simple",
+        pre=False,
+        cache_dir=None,
+        no_cache_dir=False,
+        wheel_dir=wheel_dir,
+    ) == os.path.join(wheel_dir, expected.lstrip(os.path.sep))
 
 
 @pytest.mark.parametrize(
@@ -255,8 +257,6 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
     ids=("pip",),
 )
 def test_get_package_report(package, pip_output, expected, monkeypatch):
-    cache_dir = "~/Library/Caches/pip/wheels/pipgrip"
-
     def patch_pip_output(*args, **kwargs):
         return pip_output
 
@@ -268,30 +268,27 @@ def test_get_package_report(package, pip_output, expected, monkeypatch):
         "stream_bash_command",
         patch_pip_output,
     )
-    monkeypatch.setattr(
-        pipgrip.pipper.os,
-        "getcwd",
-        patch_getcwd,
-    )
 
     assert (
         _get_package_report(
-            package,
-            "https://pypi.org/simple",
-            "https://pypi.org/simple",
-            True,
-            cache_dir,
+            package=package,
+            index_url="https://pypi.org/simple",
+            extra_index_url="https://pypi.org/simple",
+            pre=True,
+            cache_dir=None,
+            no_cache_dir=False,
         )
         == expected
     )
 
     assert (
         _get_package_report(
-            package,
-            None,
-            None,
-            False,
-            None,
+            package=package,
+            index_url=None,
+            extra_index_url=None,
+            pre=False,
+            cache_dir=None,
+            no_cache_dir=True,
         )
         == expected
     )
@@ -334,7 +331,12 @@ def test_get_available_versions(package, pre, pip_output, expected, monkeypatch)
     )
 
     assert (
-        _get_available_versions(package, "https://pypi.org/simple", None, pre)
+        _get_available_versions(
+            package=package,
+            index_url="https://pypi.org/simple",
+            extra_index_url=None,
+            pre=pre,
+        )
         == expected
     )
 

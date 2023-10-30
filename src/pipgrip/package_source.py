@@ -91,6 +91,7 @@ class PackageSource(BasePackageSource):
     def __init__(
         self,
         cache_dir,
+        no_cache_dir,
         index_url,
         extra_index_url,
         pre,
@@ -100,6 +101,7 @@ class PackageSource(BasePackageSource):
         self._packages = {}
         self._packages_metadata = {}
         self.cache_dir = cache_dir
+        self.no_cache_dir = no_cache_dir
         self.index_url = index_url
         self.extra_index_url = extra_index_url
         self.pre = pre
@@ -144,7 +146,12 @@ class PackageSource(BasePackageSource):
         # converting from semver constraint to pkg_resources string
         req = parse_req(package)
         to_create = discover_dependencies_and_versions(
-            package, self.index_url, self.extra_index_url, self.cache_dir, self.pre
+            package=package,
+            index_url=self.index_url,
+            extra_index_url=self.extra_index_url,
+            cache_dir=self.cache_dir,
+            no_cache_dir=self.no_cache_dir,
+            pre=self.pre,
         )
         for version in to_create["available"]:
             self.add(req.key, req.extras, version)

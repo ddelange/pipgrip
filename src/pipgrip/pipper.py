@@ -3,9 +3,10 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 
 import pkg_resources
 from click import echo as _echo
@@ -86,15 +87,22 @@ def stream_bash_command(args, echo=False):
     return out
 
 
-def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable, user):
+def _get_install_args(
+    index_url, extra_index_url, pre, cache_dir, no_cache_dir, editable, user
+):
     args = [
         sys.executable,
         "-m",
         "pip",
         "install",
-        "--cache-dir",
-        cache_dir,
     ]
+    if cache_dir is not None:
+        args += [
+            "--cache-dir",
+            cache_dir,
+        ]
+    if no_cache_dir:
+        args += ["--no-cache-dir"]
     if index_url is not None:
         args += [
             "--index-url",
@@ -120,7 +128,9 @@ def _get_install_args(index_url, extra_index_url, pre, cache_dir, editable, user
     return args
 
 
-def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
+def _get_wheel_args(
+    index_url, extra_index_url, pre, cache_dir=None, no_cache_dir=False, wheel_dir=None
+):
     args = [
         sys.executable,
         "-m",
@@ -131,11 +141,18 @@ def _get_wheel_args(index_url, extra_index_url, pre, cache_dir=None):
     ]
     if pre:
         args += ["--pre"]
-    if cache_dir is not None:
+    if wheel_dir is not None:
         args += [
             "--wheel-dir",
+            wheel_dir,
+        ]
+    if cache_dir is not None:
+        args += [
+            "--cache-dir",
             cache_dir,
         ]
+    if no_cache_dir:
+        args += ["--no-cache-dir"]
     if index_url is not None:
         args += [
             "--index-url",
@@ -164,10 +181,19 @@ def install_packages(
     editable,
     user,
     constraints=None,
+    no_cache_dir=False,
 ):
     """Install a list of packages with pip."""
     args = (
-        _get_install_args(index_url, extra_index_url, pre, cache_dir, editable, user)
+        _get_install_args(
+            index_url=index_url,
+            extra_index_url=extra_index_url,
+            pre=pre,
+            cache_dir=cache_dir,
+            no_cache_dir=no_cache_dir,
+            editable=editable,
+            user=user,
+        )
         + packages
     )
 
@@ -199,9 +225,9 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
         return _available_versions_cache[cache_key]
 
     logger.debug("Finding possible versions for {}".format(package))
-    args = _get_wheel_args(index_url, extra_index_url, pre) + [
-        package + "==42.42.post424242"
-    ]
+    args = _get_wheel_args(
+        index_url=index_url, extra_index_url=extra_index_url, pre=pre
+    ) + [package + "==42.42.post424242"]
 
     if [20, 3] <= PIP_VERSION < [21, 1]:
         # https://github.com/ddelange/pipgrip/issues/42
@@ -222,15 +248,6 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
             if pre:
                 return all_versions
             # filter out pre-releases
-            logger.debug(
-                str(
-                    {
-                        package: [
-                            v for v in all_versions if not re.findall(r"[a-zA-Z]", v)
-                        ]
-                    }
-                )
-            )
             available_versions = [
                 v for v in all_versions if not re.findall(r"[a-zA-Z]", v)
             ]
@@ -239,7 +256,14 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
     raise RuntimeError("Failed to get available versions for {}".format(package))
 
 
-def _get_package_report(package, index_url, extra_index_url, pre, cache_dir):
+def _get_package_report(
+    package,
+    index_url,
+    extra_index_url,
+    pre,
+    cache_dir,
+    no_cache_dir,
+):
     """Get metadata (install report) using pip's --dry-run --report functionality."""
     logger.debug(
         "Getting report for {} (with fallback cache_dir {})".format(package, cache_dir)
@@ -262,6 +286,8 @@ def _get_package_report(package, index_url, extra_index_url, pre, cache_dir):
             "--cache-dir",
             cache_dir,
         ]
+    if no_cache_dir:
+        args += ["--no-cache-dir"]
     if index_url is not None:
         args += [
             "--index-url",
@@ -291,14 +317,29 @@ def _get_package_report(package, index_url, extra_index_url, pre, cache_dir):
     return report
 
 
-def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
+def _download_wheel(
+    package,
+    index_url,
+    extra_index_url,
+    pre,
+    cache_dir,
+    no_cache_dir,
+    wheel_dir,
+):
     """Download/build wheel for package and return its filename."""
     logger.debug(
-        "Downloading/building wheel for {} into cache_dir {}".format(package, cache_dir)
+        "Downloading/building wheel for {} into wheel_dir {}".format(package, wheel_dir)
     )
-    abs_cache_dir = os.path.abspath(os.path.expanduser(cache_dir))
-    cwd_cache_dir = abs_cache_dir.replace(os.getcwd(), ".", 1)
-    args = _get_wheel_args(index_url, extra_index_url, pre, cache_dir) + [package]
+    abs_wheel_dir = os.path.abspath(os.path.expanduser(wheel_dir))
+    cwd_wheel_dir = abs_wheel_dir.replace(os.getcwd(), ".", 1)
+    args = _get_wheel_args(
+        index_url=index_url,
+        extra_index_url=extra_index_url,
+        pre=pre,
+        cache_dir=cache_dir,
+        no_cache_dir=no_cache_dir,
+        wheel_dir=wheel_dir,
+    ) + [package]
     try:
         out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
@@ -310,16 +351,16 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
         )
         raise RuntimeError("Failed to download/build wheel for {}".format(package))
     out = out.splitlines()[::-1]
-    abs_cache_dir_lower = abs_cache_dir.lower()
-    cwd_cache_dir_lower = cwd_cache_dir.lower()
-    cache_dir_lower = cache_dir.lower()
+    abs_wheel_dir_lower = abs_wheel_dir.lower()
+    cwd_wheel_dir_lower = cwd_wheel_dir.lower()
+    wheel_dir_lower = wheel_dir.lower()
     for i, line in enumerate(out):
         line = line.strip()
         line_lower = line.lower()
         if not (
-            cache_dir_lower in line_lower
-            or abs_cache_dir_lower in line_lower
-            or cwd_cache_dir_lower in line_lower
+            wheel_dir_lower in line_lower
+            or abs_wheel_dir_lower in line_lower
+            or cwd_wheel_dir_lower in line_lower
             or "stored in directory" in line_lower
         ):
             continue
@@ -367,19 +408,19 @@ def _download_wheel(package, index_url, extra_index_url, pre, cache_dir):
             # match on lowercase line for windows compatibility
             fname_len = len(
                 line_lower.split(
-                    abs_cache_dir_lower
-                    if abs_cache_dir_lower in line_lower
-                    else cwd_cache_dir_lower
-                    if cwd_cache_dir_lower in line_lower
-                    else cache_dir_lower,
+                    abs_wheel_dir_lower
+                    if abs_wheel_dir_lower in line_lower
+                    else cwd_wheel_dir_lower
+                    if cwd_wheel_dir_lower in line_lower
+                    else wheel_dir_lower,
                     1,
                 )[1].split(".whl", 1)[0]
                 + ".whl"
             )
             fname = line[-fname_len:]
 
-        logger.debug(str({package: os.path.join(cache_dir, fname.lstrip(os.path.sep))}))
-        return os.path.join(cache_dir, fname.lstrip(os.path.sep))
+        logger.debug(str({package: os.path.join(wheel_dir, fname.lstrip(os.path.sep))}))
+        return os.path.join(wheel_dir, fname.lstrip(os.path.sep))
     logger.error(
         "Failed to extract wheel filename from pip stdout: \n{}".format(
             "\n".join(out[::-1])
@@ -435,7 +476,12 @@ def is_unneeded_dep(package):
 
 
 def discover_dependencies_and_versions(
-    package, index_url, extra_index_url, cache_dir, pre
+    package,
+    index_url,
+    extra_index_url,
+    cache_dir,
+    pre,
+    no_cache_dir=False,  # added as last arg with default to avoid a breaking change
 ):
     """Get information for a package.
 
@@ -445,6 +491,7 @@ def discover_dependencies_and_versions(
         extra_index_url (str): secondary PyPI index url
         cache_dir (str): directory for storing wheels
         pre (bool): pip --pre flag
+        no_cache_dir (bool): pip --no-cache-dir flag
 
     Returns:
         dict: package information:
@@ -460,14 +507,29 @@ def discover_dependencies_and_versions(
     logger.info("discovering %s", req)
     if PIP_VERSION >= [22, 2]:
         report = _get_package_report(
-            req.__str__(), index_url, extra_index_url, pre, cache_dir
+            package=req.__str__(),
+            index_url=index_url,
+            extra_index_url=extra_index_url,
+            pre=pre,
+            cache_dir=cache_dir,
+            no_cache_dir=no_cache_dir,
         )
         wheel_metadata = report["install"][0]["metadata"]
-    else:  # old python (<3.7) fallback
-        wheel_fname = _download_wheel(
-            req.__str__(), index_url, extra_index_url, pre, cache_dir
-        )
-        wheel_metadata = _extract_metadata(wheel_fname)
+    else:  # old python (<=3.6) fallback
+        wheel_dir = mkdtemp()
+        try:
+            wheel_fname = _download_wheel(
+                package=req.__str__(),
+                index_url=index_url,
+                extra_index_url=extra_index_url,
+                pre=pre,
+                cache_dir=cache_dir,
+                no_cache_dir=no_cache_dir,
+                wheel_dir=wheel_dir,
+            )
+            wheel_metadata = _extract_metadata(wheel_fname)
+        finally:
+            shutil.rmtree(wheel_dir)
     wheel_requirements = _get_wheel_requirements(wheel_metadata, extras_requested)
     wheel_version = req.url or wheel_metadata["version"]
     available_versions = (
