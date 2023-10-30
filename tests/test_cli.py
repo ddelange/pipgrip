@@ -5,7 +5,15 @@ import pipgrip.pipper
 from pipgrip.cli import flatten, main
 from pipgrip.pipper import _download_wheel, _extract_metadata
 
-self_wheel = _download_wheel(".", None, None, None, "./tests/assets")
+self_wheel = _download_wheel(
+    package=".",
+    index_url=None,
+    extra_index_url=None,
+    pre=None,
+    cache_dir=None,
+    no_cache_dir=True,
+    wheel_dir="./tests/assets",
+)
 
 
 # fmt: off
@@ -397,13 +405,14 @@ def test_solutions(arguments, expected, monkeypatch):
                 "-vvv",
                 "--json",
                 "--install",
+                "--cache-dir=/tmp/abc",
                 "--user",
                 "--pre",
                 "click",
                 "--index-url=https://pypi.org/simple",
             ]
         ),
-        (["--no-cache-dir", "--lock", "--pipe", "click"]),
+        (["--no-cache-dir", "--lock", "--pipe", "--install", "click"]),
         (
             [
                 "--lock",
