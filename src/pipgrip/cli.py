@@ -2,8 +2,6 @@ import io
 import logging
 import os
 import re
-import shutil
-import tempfile
 from collections import OrderedDict
 from functools import partial
 from json import dumps
@@ -16,7 +14,7 @@ from anytree.exporter import DictExporter
 from packaging.markers import default_environment
 
 from pipgrip import __version__
-from pipgrip.compat import PIP_VERSION, USER_CACHE_DIR
+from pipgrip.compat import PIP_VERSION
 from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
@@ -297,9 +295,8 @@ def render_lock(packages, include_dot=True, sort=False):
 )
 @click.option(
     "--cache-dir",
-    envvar="PIP_CACHE_DIR",
+    # envvar="PIP_CACHE_DIR",  # let pip discover
     type=click.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
-    default=os.path.join(USER_CACHE_DIR, "wheels", "pipgrip"),
     help="Use a custom cache dir.",
 )
 @click.option(
@@ -422,12 +419,10 @@ def main(
         if not install:
             raise click.ClickException("--user has no effect without --install")
 
-    if no_cache_dir:
-        cache_dir = tempfile.mkdtemp()
-
     try:
         source = PackageSource(
             cache_dir=cache_dir,
+            no_cache_dir=no_cache_dir,
             index_url=index_url,
             extra_index_url=extra_index_url,
             pre=pre,
@@ -532,11 +527,9 @@ def main(
                 extra_index_url=extra_index_url,
                 pre=pre,
                 cache_dir=cache_dir,
+                no_cache_dir=no_cache_dir,
                 editable=editable,
                 user=user,
             )
     except (SolverFailure, click.ClickException, CalledProcessError) as exc:
         raise click.ClickException(str(exc))
-    finally:
-        if no_cache_dir:
-            shutil.rmtree(cache_dir)
