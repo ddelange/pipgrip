@@ -7,19 +7,19 @@ repos:
         exclude: .*/tests/.*
         additional_dependencies: ['gibberish-detector']
 
--   repo: https://github.com/psf/black
+-   repo: https://github.com/psf/black-pre-commit-mirror
     # when updating this version, also update blacken-docs hook below
     rev: 23.10.0
     hooks:
     -   id: black
 
--   repo: https://github.com/asottile/blacken-docs
+-   repo: https://github.com/adamchainz/blacken-docs
     rev: v1.12.1
     hooks:
     -   id: blacken-docs
         additional_dependencies: ['black==23.10.0']
 
--   repo: https://github.com/timothycrosley/isort
+-   repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
     -   id: isort
