@@ -59,3 +59,9 @@ repos:
     -   id: check-xml
     -   id: check-yaml
     -   id: debug-statements
+
+-   repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.27.1
+    hooks:
+    -   id: check-dependabot
+    -   id: check-github-workflows
