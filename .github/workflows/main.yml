@@ -3,7 +3,7 @@ name: GH
 on:
   pull_request:
   push:
-    branches: master
+    branches: [master]
   release:
     types: [released, prereleased]
   workflow_dispatch:  # allows running workflow manually from the Actions tab
