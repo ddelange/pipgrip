@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import platform
 import re
 from collections import OrderedDict
 from functools import partial
@@ -390,6 +391,10 @@ def main(
         tree = True
     elif tree_json_exact:
         tree_json = True
+
+    # Unicode tree markers are unsupported on Windows even by click.echo
+    if tree and platform.system() == "Windows":
+        tree_ascii = True
 
     if max_depth == 0 or max_depth < -1:
         raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
