@@ -164,8 +164,13 @@ def build_tree(source, decision_packages):
 
 
 def render_tree(tree_root, max_depth, tree_ascii=False):
-    if sys.getfilesystemencoding() == "cp1252":
-        # Windows' cp1252 encoding does not supports anytree's unicode markers
+    # Windows' cp1252 encoding does not supports anytree's unicode markers.
+    # Even in Github Actions where the windows runner has PYTHONUTF8 mode enabled,
+    # `if sys.getfilesystemencoding() == "cp1252":` check is insufficient and the 
+    # error is still raised in CI.
+    # Hence disabling unicode trees altogether for Windows.
+    # ref https://github.com/pallets/click/issues/2121#issuecomment-1312773882
+    if click.utils.WIN:  # pragma: no cover
         tree_ascii = True
     style = AsciiStyle() if tree_ascii else ContStyle()
     output = []
