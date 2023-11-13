@@ -1,8 +1,8 @@
 import io
 import logging
 import os
-import platform
 import re
+import sys
 from collections import OrderedDict
 from functools import partial
 from json import dumps
@@ -164,6 +164,9 @@ def build_tree(source, decision_packages):
 
 
 def render_tree(tree_root, max_depth, tree_ascii=False):
+    if sys.getfilesystemencoding() == 'cp1252':
+        # Windows' cp1252 encoding does not supports anytree's unicode markers
+        tree_ascii = True
     style = AsciiStyle() if tree_ascii else ContStyle()
     output = []
     for child in tree_root.children:
@@ -391,10 +394,6 @@ def main(
         tree = True
     elif tree_json_exact:
         tree_json = True
-
-    # Unicode tree markers are unsupported on Windows even by click.echo
-    if tree and platform.system() == "Windows":  # pragma: no cover
-        tree_ascii = True
 
     if max_depth == 0 or max_depth < -1:
         raise click.ClickException("Illegal --max_depth selected: {}".format(max_depth))
