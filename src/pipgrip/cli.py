@@ -2,7 +2,6 @@ import io
 import logging
 import os
 import re
-import sys
 from collections import OrderedDict
 from functools import partial
 from json import dumps
