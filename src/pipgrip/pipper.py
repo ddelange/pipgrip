@@ -72,13 +72,20 @@ def stream_bash_command(args, echo=False):
     """Mimic subprocess.run, while processing the command output in real time."""
     # https://gist.github.com/ddelange/6517e3267fb74eeee804e3b1490b1c1d
     out = []
+    env = os.environ.copy()
+    # Enable Python's UTF-8 mode.
+    env["PYTHONUTF8"] = "1"
     process = subprocess.Popen(  # can use with-statement as of py 3.2
-        args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
     )
     for line in process.stdout:
-        out.append(line)
+        decoded_line = line.decode("utf-8", errors="replace")
+        out.append(decoded_line)
         if echo:
-            _echo(line[:-1])
+            _echo(decoded_line.rstrip())
     process.stdout.close()
     out = "".join(out)
     retcode = process.wait()
