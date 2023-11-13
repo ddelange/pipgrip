@@ -86,7 +86,7 @@ jobs:
         pip install .
 
     - name: Test
-      run: pipgrip --tree pipgrip
+      run: pipgrip -vvv --tree pipgrip
 
   CD:
     needs: [CI, windows-smoketest]
