@@ -393,7 +393,7 @@ def main(
         tree_json = True
 
     # Unicode tree markers are unsupported on Windows even by click.echo
-    if tree and platform.system() == "Windows":
+    if tree and platform.system() == "Windows":  # pragma: no cover
         tree_ascii = True
 
     if max_depth == 0 or max_depth < -1:
