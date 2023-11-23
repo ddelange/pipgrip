@@ -168,7 +168,11 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
     # ref https://github.com/pallets/click/issues/2121#issuecomment-1809693939
     # so check for UTF-8 mode https://docs.python.org/3/library/os.html#utf8-mode
     # PEP 686: Python 3.15 will make Python UTF-8 Mode default
-    if not sys.stdout.encoding.lower().startswith("utf"):  # pragma: no cover
+    if (  # pragma: no cover
+        not tree_ascii
+        and hasattr(sys.stdout, "encoding")
+        and not sys.stdout.encoding.lower().startswith("utf")
+    ):
         tree_ascii = True
     style = AsciiStyle() if tree_ascii else ContStyle()
     output = []
