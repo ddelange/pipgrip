@@ -92,6 +92,9 @@ jobs:
     needs: [CI, windows-smoketest]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # softprops/action-gh-release
+      id-token: write  # pypa/gh-action-pypi-publish
     steps:
     - uses: actions/checkout@v4
 
@@ -102,15 +105,16 @@ jobs:
 
     - name: Build
       run: |
-        pip install -U pip setuptools wheel twine
+        pip install -U pip setuptools wheel
         python setup.py sdist bdist_wheel --universal
 
-    - name: Publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USER }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        twine upload dist/*
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v0.1.15
+      with:
+        files: dist/*
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.8.10
 
     - uses: apexskier/github-release-commenter@v1
       with:
