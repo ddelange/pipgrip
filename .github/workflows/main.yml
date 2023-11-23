@@ -85,7 +85,12 @@ jobs:
         pip install -U pip setuptools wheel
         pip install .
 
-    - name: Test
+    - name: Test (ascii)
+      run: pipgrip -vvv --tree pipgrip
+
+    - name: Test (unicode)
+      env:
+        PYTHONUTF8: '1'
       run: pipgrip -vvv --tree pipgrip
 
   CD:
