@@ -98,8 +98,11 @@ jobs:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # softprops/action-gh-release
-      id-token: write  # pypa/gh-action-pypi-publish
+      contents: write # softprops/action-gh-release
+      id-token: write # pypa/gh-action-pypi-publish
+      issues: write # apexskier/github-release-commenter
+      pull-requests: write # apexskier/github-release-commenter
+
     steps:
     - uses: actions/checkout@v4
 
