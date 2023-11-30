@@ -309,19 +309,20 @@ def _get_package_report(
             "--trusted-host",
             urlparse(extra_index_url).hostname,
         ]
-    args += ["--report", "-", package]
-    try:
-        out = stream_bash_command(args)
-    except subprocess.CalledProcessError as err:
-        output = getattr(err, "output") or ""
-        logger.error(
-            "Getting report for {} failed with output:\n{}".format(
-                package, output.strip()
+
+    with NamedTemporaryFile() as fp:
+        args += ["--report", fp.name, package]
+        try:
+            stream_bash_command(args)
+        except subprocess.CalledProcessError as err:
+            output = getattr(err, "output") or ""
+            logger.error(
+                "Getting report for {} failed with output:\n{}".format(
+                    package, output.strip()
+                )
             )
-        )
-        raise RuntimeError("Failed to get report for {}".format(package))
-    report = json.loads(out)
-    return report
+            raise RuntimeError("Failed to get report for {}".format(package))
+        return json.load(fp)
 
 
 def _download_wheel(
