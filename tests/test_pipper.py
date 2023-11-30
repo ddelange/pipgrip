@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -258,7 +259,9 @@ def test_download_wheel(package, pip_output, expected, monkeypatch):
 )
 def test_get_package_report(package, pip_output, expected, monkeypatch):
     def patch_pip_output(*args, **kwargs):
-        return pip_output
+        file_path = args[0][-2]
+        with open(file_path, "w") as fp:
+            json.dump(json.loads(pip_output), fp)
 
     def patch_getcwd():
         return os.path.expanduser("~")

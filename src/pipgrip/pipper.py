@@ -310,19 +310,27 @@ def _get_package_report(
             urlparse(extra_index_url).hostname,
         ]
 
-    with NamedTemporaryFile() as fp:
-        args += ["--report", fp.name, package]
-        try:
-            stream_bash_command(args)
-        except subprocess.CalledProcessError as err:
-            output = getattr(err, "output") or ""
-            logger.error(
-                "Getting report for {} failed with output:\n{}".format(
-                    package, output.strip()
-                )
+    # Windows disallows opening fp a second time (within the pip subprocess)
+    # So close it here, and delete it manually
+    with NamedTemporaryFile(delete=False, mode="w+") as fp:
+        report_file = fp.name
+
+    args += ["--report", report_file, package]
+    try:
+        stream_bash_command(args)
+    except subprocess.CalledProcessError as err:
+        output = getattr(err, "output") or ""
+        logger.error(
+            "Getting report for {} failed with output:\n{}".format(
+                package, output.strip()
             )
-            raise RuntimeError("Failed to get report for {}".format(package))
-        return json.load(fp)
+        )
+        raise RuntimeError("Failed to get report for {}".format(package))
+    else:
+        with io.open(report_file, "r", encoding="utf-8") as fp:
+            return json.load(fp)
+    finally:
+        os.remove(report_file)
 
 
 def _download_wheel(
