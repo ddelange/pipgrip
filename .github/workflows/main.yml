@@ -122,7 +122,7 @@ jobs:
         files: dist/*
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.8.10
+      uses: pypa/gh-action-pypi-publish@v1.8.11
 
     - uses: apexskier/github-release-commenter@v1
       with:
