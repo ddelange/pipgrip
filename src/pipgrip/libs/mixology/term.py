@@ -155,7 +155,7 @@ class Term(object):
 
         if self.is_compatible_with(other):
             if self.is_positive() != other.is_positive():
-                # foo ^1.0.0 ∩ not foo ^1.5.0 → foo >=1.0.0 <1.5.0
+                # foo ^1.0.0 ∩ not foo ^1.5.0 -> foo >=1.0.0 <1.5.0
                 positive = self if self.is_positive() else other
                 negative = other if self.is_positive() else self
 
