@@ -155,7 +155,7 @@ class Term(object):
 
         if self.is_compatible_with(other):
             if self.is_positive() != other.is_positive():
-                # foo ^1.0.0 ∩ not foo ^1.5.0 -> foo >=1.0.0 <1.5.0
+                # foo ^1.0.0 n not foo ^1.5.0 -> foo >=1.0.0 <1.5.0
                 positive = self if self.is_positive() else other
                 negative = other if self.is_positive() else self
 
@@ -163,12 +163,12 @@ class Term(object):
                     positive.constraint.difference(negative.constraint), True
                 )
             elif self.is_positive():
-                # foo ^1.0.0 ∩ foo >=1.5.0 <3.0.0 → foo ^1.5.0
+                # foo ^1.0.0 n foo >=1.5.0 <3.0.0 -> foo ^1.5.0
                 to_return = self._non_empty_term(
                     self.constraint.intersect(other.constraint), True
                 )
             else:
-                # not foo ^1.0.0 ∩ not foo >=1.5.0 <3.0.0 → not foo >=1.0.0 <3.0.0
+                # not foo ^1.0.0 n not foo >=1.5.0 <3.0.0 -> not foo >=1.0.0 <3.0.0
                 to_return = self._non_empty_term(
                     self.constraint.union(other.constraint), False
                 )
