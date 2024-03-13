@@ -95,3 +95,30 @@ def test_circular_dependency(source):
     source.add("bar", "1.0.0", deps={"foo": "1.0.0"})
 
     check_solver_result(source, {"foo": "1.0.0", "bar": "1.0.0"})
+
+
+def test_prerelease_lte(source):
+    source.root_dep("foo", "<=5")
+
+    source.add("foo", "4.1.1")
+    source.add("foo", "5.0rc1")
+
+    check_solver_result(source, {"foo": "5.0rc1"})
+
+
+def test_prerelease_lt(source):
+    source.root_dep("foo", "<5")
+
+    source.add("foo", "4.1.1")
+    source.add("foo", "5.0rc1")
+
+    check_solver_result(source, {"foo": "4.1.1"})
+
+
+def test_prerelease_gte(source):
+    source.root_dep("foo", ">=5.0.0a0")
+
+    source.add("foo", "4.1.1")
+    source.add("foo", "5.0rc1")
+
+    check_solver_result(source, {"foo": "5.0rc1"})

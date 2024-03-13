@@ -31,6 +31,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 # flake8: noqa:A002,A003
+from copy import deepcopy
 from typing import Any, NoReturn, Optional
 from typing import Union as _Union
 
@@ -315,6 +316,21 @@ class Range(object):
         return not self.include_max or not other.include_min
 
     def is_strictly_higher(self, other):  # type: (Range) -> bool
+        if (
+            self.is_single_version()
+            and self.max is not None
+            and other.max is not None
+            and self.max.is_prerelease()
+            and not other.max.is_prerelease()
+            and not other.include_max
+            and self.max.equals_without_prerelease(other.max)
+        ):
+            # in pip, `<5`, `<5.0`, `<5.0.0` are shorthand for `<5.0.0-alpha.0`.
+            # e.g. `pip install --pre django<5.0` will not install django==5.0rc1
+            # although technically 5.0rc1 < 5.0 according to semver.
+            # mimic this behaviour here (check 5.0rc1 against <5.0.0-alpha.0)
+            other = deepcopy(other)
+            other._max = other.max.first_prerelease
         return other.is_strictly_lower(self)
 
     def is_adjacent_to(self, other):  # type: (Range) -> bool
