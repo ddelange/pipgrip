@@ -48,6 +48,21 @@ def test_no_version_matching_constraint(source):
     )
 
 
+def test_prerelease(source):
+    source.root_dep("foo", "<5")
+
+    source.add("foo", "5.0rc1")
+    source.add("foo", "5.0")
+
+    check_solver_result(
+        source,
+        error=(
+            "Because root depends on foo (<5) "
+            "which doesn't match any versions, version solving failed."
+        ),
+    )
+
+
 def test_no_version_that_matches_combined_constraints(source):
     source.root_dep("foo", "1.0.0")
     source.root_dep("bar", "1.0.0")
