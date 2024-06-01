@@ -119,7 +119,7 @@ jobs:
         python setup.py sdist bdist_wheel --universal
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v2.0.4
+      uses: softprops/action-gh-release@v2.0.5
       with:
         files: dist/*
 
