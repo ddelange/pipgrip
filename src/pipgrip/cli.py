@@ -479,7 +479,10 @@ def main(
             exc = None
         except RuntimeError as e:
             # RuntimeError coming from pipgrip.pipper
-            if "Failed to download/build wheel" not in str(e):
+            if (
+                "Failed to download/build wheel for" not in str(e)
+                and "Failed to get report for" not in str(e)
+            ):
                 # only continue handling expected RuntimeErrors
                 raise
             solution = solver.solution
