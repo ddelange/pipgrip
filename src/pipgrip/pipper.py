@@ -49,6 +49,10 @@ from pipgrip.compat import PIP_VERSION, urlparse
 
 logger = logging.getLogger(__name__)
 
+REPORT_FAILURE_STR = "Failed to get report for"
+BUILD_FAILURE_STR = "Failed to download/build wheel for"
+VERSIONS_FAILURE_STR = "Failed to get available versions for"
+
 
 def read_requirements(path):
     re_comments = re.compile(r"(?:^|\s+)#")
@@ -292,7 +296,7 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
             ]
             _available_versions_cache[cache_key] = available_versions
             return available_versions
-    raise RuntimeError("Failed to get available versions for {}".format(package))
+    raise RuntimeError("{} {}".format(VERSIONS_FAILURE_STR, package))
 
 
 def _get_package_report(
@@ -357,7 +361,7 @@ def _get_package_report(
                 package, output.strip()
             )
         )
-        raise RuntimeError("Failed to get report for {}".format(package))
+        raise RuntimeError("{} {}".format(REPORT_FAILURE_STR, package))
     else:
         with io.open(report_file, "r", encoding="utf-8") as fp:
             return json.load(fp)
@@ -397,7 +401,7 @@ def _download_wheel(
                 package, output.strip()
             )
         )
-        raise RuntimeError("Failed to download/build wheel for {}".format(package))
+        raise RuntimeError("{} {}".format(BUILD_FAILURE_STR, package))
     out = out.splitlines()[::-1]
     abs_wheel_dir_lower = abs_wheel_dir.lower()
     cwd_wheel_dir_lower = cwd_wheel_dir.lower()
@@ -474,7 +478,7 @@ def _download_wheel(
             "\n".join(out[::-1])
         )
     )
-    raise RuntimeError("Failed to download/build wheel for {}".format(package))
+    raise RuntimeError("{} {}".format(BUILD_FAILURE_STR, package))
 
 
 def _extract_metadata(wheel_fname):

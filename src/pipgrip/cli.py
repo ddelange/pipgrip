@@ -52,7 +52,12 @@ from pipgrip.libs.mixology.failure import SolverFailure
 from pipgrip.libs.mixology.package import Package
 from pipgrip.libs.mixology.version_solver import VersionSolver
 from pipgrip.package_source import PackageSource, render_pin
-from pipgrip.pipper import install_packages, read_requirements
+from pipgrip.pipper import (
+    BUILD_FAILURE_STR,
+    REPORT_FAILURE_STR,
+    install_packages,
+    read_requirements,
+)
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger()
@@ -479,7 +484,7 @@ def main(
             exc = None
         except RuntimeError as e:
             # RuntimeError coming from pipgrip.pipper
-            if "Failed to download/build wheel" not in str(e):
+            if REPORT_FAILURE_STR not in str(e) and BUILD_FAILURE_STR not in str(e):
                 # only continue handling expected RuntimeErrors
                 raise
             solution = solver.solution

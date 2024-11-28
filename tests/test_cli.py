@@ -30,6 +30,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+import logging
+import subprocess
+
 import pytest
 from click.testing import CliRunner
 
@@ -141,7 +144,13 @@ def mock_stream_bash_command(*args, **kwargs):
     return "I passed"
 
 
-def invoke_patched(func, arguments, monkeypatch, use_report=False, **kwargs):
+def mock_stream_bash_command_failure(*args, **kwargs):
+    raise subprocess.CalledProcessError(1, args[0])
+
+
+def invoke_patched(
+    func, arguments, monkeypatch, use_report=False, mock_failure=False, **kwargs
+):
     def default_environment():
         return {
             "implementation_name": "cpython",
@@ -157,16 +166,28 @@ def invoke_patched(func, arguments, monkeypatch, use_report=False, **kwargs):
             "sys_platform": "linux",
         }
 
-    monkeypatch.setattr(
-        pipgrip.pipper,
-        "_download_wheel",
-        mock_download_wheel,
-    )
-    monkeypatch.setattr(
-        pipgrip.pipper,
-        "_get_package_report",
-        mock_get_package_report,
-    )
+    if mock_failure:
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "stream_bash_command",
+            mock_stream_bash_command_failure,
+        )
+    else:
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "stream_bash_command",
+            mock_stream_bash_command,
+        )
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "_download_wheel",
+            mock_download_wheel,
+        )
+        monkeypatch.setattr(
+            pipgrip.pipper,
+            "_get_package_report",
+            mock_get_package_report,
+        )
     if use_report:
         monkeypatch.setattr(
             pipgrip.pipper,
@@ -188,11 +209,6 @@ def invoke_patched(func, arguments, monkeypatch, use_report=False, **kwargs):
         pipgrip.pipper,
         "default_environment",
         default_environment,
-    )
-    monkeypatch.setattr(
-        pipgrip.pipper,
-        "stream_bash_command",
-        mock_stream_bash_command,
     )
     runner = CliRunner()
     return runner.invoke(main, arguments, **kwargs)
@@ -424,6 +440,24 @@ def test_solutions(arguments, expected, monkeypatch):
     assert set(result.output.strip().split("\n")) == set(
         expected
     ), "Unexpected output:\n{}".format(result.output.strip())
+
+
+def test_failue_build(monkeypatch, caplog):
+    caplog.set_level(logging.DEBUG)
+    arguments = ["requests[socks]"]
+    result = invoke_patched(main, arguments, monkeypatch, mock_failure=True)
+    assert result.exit_code
+    assert "Best guess" in caplog.text
+
+
+def test_failue_report(monkeypatch, caplog):
+    caplog.set_level(logging.DEBUG)
+    arguments = ["requests[socks]"]
+    result = invoke_patched(
+        main, arguments, monkeypatch, use_report=True, mock_failure=True
+    )
+    assert result.exit_code
+    assert "Best guess" in caplog.text
 
 
 @pytest.mark.parametrize(
