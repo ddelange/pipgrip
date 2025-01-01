@@ -120,12 +120,12 @@ jobs:
         python setup.py sdist bdist_wheel --universal
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v2.1.0
+      uses: softprops/action-gh-release@v2.2.0
       with:
         files: dist/*
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.12.2
+      uses: pypa/gh-action-pypi-publish@v1.12.3
 
     - uses: apexskier/github-release-commenter@v1
       with:
