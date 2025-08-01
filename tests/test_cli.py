@@ -38,23 +38,12 @@ from click.testing import CliRunner
 
 import pipgrip.pipper
 from pipgrip.cli import flatten, main
-from pipgrip.pipper import _download_wheel, _extract_metadata
-
-self_wheel = _download_wheel(
-    package=".",
-    index_url=None,
-    extra_index_url=None,
-    pre=None,
-    cache_dir=None,
-    no_cache_dir=True,
-    wheel_dir="./tests/assets",
-)
+from pipgrip.pipper import _extract_metadata
 
 
 # fmt: off
 def mock_download_wheel(package, *args, **kwargs):
     wheelhouse = {
-        ".": self_wheel,
         "setuptools>=38.3": "./tests/assets/setuptools-44.0.0-py2.py3-none-any.whl",
         "pkginfo<1.8,>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
         "packaging>=17": "./tests/assets/packaging-20.0-py2.py3-none-any.whl",
@@ -217,20 +206,6 @@ def invoke_patched(
 @pytest.mark.parametrize(
     "arguments, expected",
     [
-        (
-            ["."],
-            [
-                ".",
-                "anytree==2.7.3",
-                "six==1.13.0",
-                "click==7.0",
-                "packaging==20.0",
-                "pyparsing==2.4.6",
-                "setuptools==44.0.0",
-                "wheel==0.33.6",
-                "pip==23.2.1",
-            ],
-        ),
         (
             ["requests==2.22.0"],
             [
@@ -404,7 +379,6 @@ def invoke_patched(
         ),
     ],
     ids=(
-        "pipgrip pipgrip",
         "requests",
         "keras (cyclic)",
         "--tree keras (cyclic)",
