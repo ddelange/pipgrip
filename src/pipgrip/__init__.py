@@ -31,4 +31,12 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 # version based on .git/refs/tags - make a tag/release locally, or on GitHub (and pull)
+import warnings
+
 from pipgrip._repo_version import version as __version__  # noqa:F401
+
+warnings.filterwarnings(
+    action="ignore",
+    message=".*pkg_resources",
+    category=UserWarning,
+)

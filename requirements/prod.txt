@@ -1,7 +1,7 @@
 anytree>=2.4.1
 click>=7
 packaging>=17
-setuptools>=38.3  # for pkg_resources
+setuptools>=38.3,<81  # for pkg_resources ref https://github.com/pypa/setuptools/commit/9c28cdffd423f83e43dbfd39fc793c251da48585
 wheel
 pip>=22.2; python_version>'3.6'  # >=22.2 for --dry-run --report ref ddelange/pipgrip#114
 pip>=7.1.0; python_version<='3.6'  # >=7.1.0 for --constraint

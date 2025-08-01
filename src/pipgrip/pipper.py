@@ -460,11 +460,15 @@ def _download_wheel(
             # match on lowercase line for windows compatibility
             fname_len = len(
                 line_lower.split(
-                    abs_wheel_dir_lower
-                    if abs_wheel_dir_lower in line_lower
-                    else cwd_wheel_dir_lower
-                    if cwd_wheel_dir_lower in line_lower
-                    else wheel_dir_lower,
+                    (
+                        abs_wheel_dir_lower
+                        if abs_wheel_dir_lower in line_lower
+                        else (
+                            cwd_wheel_dir_lower
+                            if cwd_wheel_dir_lower in line_lower
+                            else wheel_dir_lower
+                        )
+                    ),
                     1,
                 )[1].split(".whl", 1)[0]
                 + ".whl"

@@ -241,9 +241,7 @@ class Version(VersionRange):
         if match is None:
             # VCS support: use numerical hash
             match = COMPLETE_VERSION.match(
-                str(
-                    int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10**12
-                )
+                str(int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16) % 10**12)
             )
 
         text = text.rstrip(".")
