@@ -56,6 +56,7 @@ from pipgrip.pipper import (
     BUILD_FAILURE_STR,
     REPORT_FAILURE_STR,
     install_packages,
+    parse_req,
     read_requirements,
 )
 
@@ -383,6 +384,12 @@ def render_lock(packages, include_dot=True, sort=False):
     count=True,
     help="Control verbosity: -v will print cyclic dependencies (WARNING), -vv will show solving decisions (INFO), -vvv for development (DEBUG).",
 )
+@click.option(
+    "--ignore-invalid",
+    is_flag=True,
+    help="Ignore invalid requirements (e.g. internal repositories, typos) and continue processing other dependencies.",
+)
+@click.version_option(version=__version__, prog_name="pipgrip")
 def main(
     dependencies,
     requirements_file,
@@ -406,6 +413,7 @@ def main(
     threads,
     pre,
     verbose,
+    ignore_invalid,
 ):
     if verbose == 0:
         logger.setLevel(logging.ERROR)
@@ -452,9 +460,23 @@ def main(
 
     if requirements_file:
         for path in requirements_file:
-            dependencies += read_requirements(path)
+            dependencies += read_requirements(path, ignore_invalid=ignore_invalid)
 
-    dependencies += os.environ.get("PIPGRIP_ADDITIONAL_REQUIREMENTS", "").split()
+    additional_reqs = os.environ.get("PIPGRIP_ADDITIONAL_REQUIREMENTS", "").split()
+    if ignore_invalid:
+        valid_additional_reqs = []
+        for req in additional_reqs:
+            try:
+                parse_req(req)
+                valid_additional_reqs.append(req)
+            except Exception as e:
+                logger.warning(
+                    "Ignoring invalid requirement '%s' from PIPGRIP_ADDITIONAL_REQUIREMENTS: %s",
+                    req, str(e)
+                )
+        dependencies += valid_additional_reqs
+    else:
+        dependencies += additional_reqs
 
     if editable:
         if not install:
@@ -474,6 +496,7 @@ def main(
             index_url=index_url,
             extra_index_url=extra_index_url,
             pre=pre,
+            ignore_invalid=ignore_invalid,
         )
         for root_dependency in dependencies:
             source.root_dep(root_dependency)

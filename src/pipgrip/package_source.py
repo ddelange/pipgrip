@@ -127,6 +127,7 @@ class PackageSource(BasePackageSource):
         index_url,
         extra_index_url,
         pre,
+        ignore_invalid=False,
     ):  # type: () -> None
         self._root_version = Version.parse("0.0.0")
         self._root_dependencies = []
@@ -137,6 +138,7 @@ class PackageSource(BasePackageSource):
         self.index_url = index_url
         self.extra_index_url = extra_index_url
         self.pre = pre
+        self.ignore_invalid = ignore_invalid
 
         super(PackageSource, self).__init__()
 
@@ -174,41 +176,63 @@ class PackageSource(BasePackageSource):
 
         self._packages[name][extras][version] = dependencies
 
-    def discover_and_add(self, package):  # type: (str, str) -> None
-        # converting from semver constraint to pkg_resources string
-        req = parse_req(package)
-        to_create = discover_dependencies_and_versions(
-            package=package,
-            index_url=self.index_url,
-            extra_index_url=self.extra_index_url,
-            cache_dir=self.cache_dir,
-            no_cache_dir=self.no_cache_dir,
-            pre=self.pre,
-        )
-        for version in to_create["available"]:
-            self.add(req.key, req.extras, version)
-        self.add(
-            req.key,
-            req.extras,
-            to_create["version"],
-            deps=to_create["requires"],
-        )
+    def discover_and_add(self, package, ignore_invalid=False):  # type: (str, str, bool) -> None
+        try:
+            # converting from semver constraint to pkg_resources string
+            req = parse_req(package)
+            to_create = discover_dependencies_and_versions(
+                package=package,
+                index_url=self.index_url,
+                extra_index_url=self.extra_index_url,
+                cache_dir=self.cache_dir,
+                no_cache_dir=self.no_cache_dir,
+                pre=self.pre,
+            )
+            for version in to_create["available"]:
+                self.add(req.key, req.extras, version)
+            self.add(
+                req.key,
+                req.extras,
+                to_create["version"],
+                deps=to_create["requires"],
+            )
 
-        # currently unused
-        if req.key not in self._packages_metadata:
-            self._packages_metadata[req.key] = {}
-        self._packages_metadata[req.key][to_create["version"]] = {
-            "pip_string": req.__str__(),
-            "requires": to_create["requires"],
-            "available": to_create["available"],
-        }
+            # currently unused
+            if req.key not in self._packages_metadata:
+                self._packages_metadata[req.key] = {}
+            self._packages_metadata[req.key][to_create["version"]] = {
+                "pip_string": req.__str__(),
+                "requires": to_create["requires"],
+                "available": to_create["available"],
+            }
+        except Exception as e:
+            if ignore_invalid:
+                logger.warning(
+                    "Ignoring invalid package '%s': %s",
+                    package, str(e)
+                )
+            else:
+                raise
 
-    def root_dep(self, package):  # type: (str, str) -> None
-        if is_unneeded_dep(package):
-            return
-        req = parse_req(package)
-        constraint = req.url or ",".join(["".join(tup) for tup in req.specs])
-        self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))
+    def root_dep(self, package, ignore_invalid=None):  # type: (str, str, bool) -> None
+        # Use instance variable if ignore_invalid is not explicitly passed
+        if ignore_invalid is None:
+            ignore_invalid = self.ignore_invalid
+            
+        try:
+            if is_unneeded_dep(package):
+                return
+            req = parse_req(package)
+            constraint = req.url or ",".join(["".join(tup) for tup in req.specs])
+            self._root_dependencies.append(Dependency(req.key, constraint, req.__str__()))
+        except Exception as e:
+            if ignore_invalid:
+                logger.warning(
+                    "Ignoring invalid requirement '%s': %s",
+                    package, str(e)
+                )
+            else:
+                raise
 
     def _versions_for(
         self, package, constraint=None
@@ -221,7 +245,7 @@ class PackageSource(BasePackageSource):
         extras = package.req.extras
         if package not in self._packages or extras not in self._packages[package]:
             # unseen package, safe to take initially parsed req directly
-            self.discover_and_add(package.req.__str__())
+            self.discover_and_add(package.req.__str__(), ignore_invalid=self.ignore_invalid)
         if package not in self._packages:
             return []
 
@@ -244,7 +268,7 @@ class PackageSource(BasePackageSource):
             or self._packages[package][req.extras][version] is None
         ):
             # populate dependencies for version
-            self.discover_and_add(render_pin(req.extras_name, str(version)))
+            self.discover_and_add(render_pin(req.extras_name, str(version)), ignore_invalid=self.ignore_invalid)
         return self._packages[package][req.extras][version]
 
     def convert_dependency(self, dependency):  # type: (Dependency) -> Constraint

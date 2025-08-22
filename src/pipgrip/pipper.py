@@ -54,13 +54,31 @@ BUILD_FAILURE_STR = "Failed to download/build wheel for"
 VERSIONS_FAILURE_STR = "Failed to get available versions for"
 
 
-def read_requirements(path):
+def read_requirements(path, ignore_invalid=False):
     re_comments = re.compile(r"(?:^|\s+)#")
     try:
         with io.open(path, mode="rt", encoding="utf-8") as fp:
-            return list(
-                filter(None, (re_comments.split(line, 1)[0].strip() for line in fp))
-            )
+            if not ignore_invalid:
+                # Use original fast path when not ignoring invalid requirements
+                return list(
+                    filter(None, (re_comments.split(line, 1)[0].strip() for line in fp))
+                )
+            
+            # Only do line-by-line validation when ignore_invalid=True
+            requirements = []
+            for line in fp:
+                stripped_line = re_comments.split(line, 1)[0].strip()
+                if stripped_line:
+                    try:
+                        # Try to parse the requirement to validate it
+                        parse_req(stripped_line)
+                        requirements.append(stripped_line)
+                    except Exception as e:
+                        logger.warning(
+                            "Ignoring invalid requirement '%s' from %s: %s",
+                            stripped_line, path, str(e)
+                        )
+            return requirements
     except IndexError:
         raise RuntimeError("{} is broken".format(path))
 
@@ -528,7 +546,11 @@ def _get_wheel_requirements(metadata, extras_requested):
 
 def is_unneeded_dep(package):
     """Evaluate a single package in the context of the current environment."""
-    return not _get_wheel_requirements({"requires_dist": [package]}, [])
+    try:
+        return not _get_wheel_requirements({"requires_dist": [package]}, [])
+    except Exception:
+        # If we can't parse the package, consider it as needed (don't skip it)
+        return False
 
 
 def discover_dependencies_and_versions(
