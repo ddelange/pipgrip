@@ -15,7 +15,7 @@ jobs:
       id-token: write  # codecov/codecov-action
     strategy:
       matrix:
-        python-version: ['2.7', '3.7', '3.x']
+        python-version: ['2.7', '3.13']  # sync with make lint below
     steps:
     - uses: actions/checkout@v4
       with:
@@ -60,7 +60,7 @@ jobs:
         make install
 
     - name: Lint
-      if: matrix.python-version == 3.12
+      if: matrix.python-version == 3.13
       run: make lint
 
     - name: Test
@@ -81,7 +81,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.x
+        python-version: 3.13
 
     - name: Install
       run: |
