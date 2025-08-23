@@ -1,4 +1,4 @@
-pre-commit~=2.9 ; python_version >= "3.6"
+pre-commit~=3.2 ; python_version >= "3.9"
 pytest
 pytest-cov~=2.8
 pytest-env~=0.6
