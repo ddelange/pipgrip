@@ -112,6 +112,10 @@ Options:
   -v, --verbose                 Control verbosity: -v will print cyclic
                                 dependencies (WARNING), -vv will show solving
                                 decisions (INFO), -vvv for development (DEBUG).
+  --skip-invalid-input          Skip invalid requirements (e.g. internal
+                                repositories, typos) and continue processing
+                                other dependencies.
+  --version                     Show the version and exit.
   -h, --help                    Show this message and exit.
 ```
 
