@@ -74,6 +74,66 @@ def test_skip_invalid_input_without_flag_fails():
     assert "invalid::syntax" in str(result.exception)
 
 
+def test_skip_invalid_input_with_requirements_file():
+    """Test --skip-invalid-input flag with requirements file."""
+    runner = CliRunner()
+    
+    # Create temporary requirements file with mixed valid/invalid entries
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        f.write("requests==2.22.0\n")
+        f.write("invalid::syntax\n")
+        f.write("# comment line\n")
+        f.write("six\n")
+        f.write("another::invalid::entry\n")
+        temp_file = f.name
+    
+    try:
+        # Test without flag - should fail on first invalid requirement
+        result = runner.invoke(main, ["-r", temp_file])
+        assert result.exit_code != 0
+        assert "invalid::syntax" in str(result.exception)
+        
+        # Test with flag - should skip invalid requirements and succeed
+        result = runner.invoke(main, ["-r", temp_file, "--skip-invalid-input", "-v"])
+        assert result.exit_code == 0
+        # Should process valid requirements
+        assert "requests" in result.output or "six" in result.output
+        
+    finally:
+        os.unlink(temp_file)
+
+
+def test_skip_invalid_input_mixed_sources(caplog):
+    """Test --skip-invalid-input with mixed direct args and requirements file."""
+    runner = CliRunner()
+    
+    # Create temporary requirements file with invalid entry
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        f.write("six>=1.0\n")  # Use a real package that exists
+        f.write("invalid::file::syntax\n")
+        temp_file = f.name
+    
+    try:
+        # Test mixed valid direct arg, invalid direct arg, and requirements file
+        result = runner.invoke(main, [
+            "requests==2.22.0",           # valid direct arg  
+            "invalid::direct::syntax",    # invalid direct arg
+            "-r", temp_file,              # requirements file with mixed entries
+            "--skip-invalid-input", 
+            "-v"
+        ])
+        
+        assert result.exit_code == 0
+        # Should log warnings for both invalid entries
+        assert "Skipping invalid requirement 'invalid::direct::syntax'" in caplog.text
+        assert "Skipping invalid requirement 'invalid::file::syntax'" in caplog.text
+        # Should process the valid requirements
+        assert "requests" in result.output or "six" in result.output
+        
+    finally:
+        os.unlink(temp_file)
+
+
 def test_skip_invalid_input_flag_with_empty_args():
     """Test --skip-invalid-input flag with no other args produces empty output.""" 
     runner = CliRunner()
