@@ -490,8 +490,7 @@ def main(
             except InvalidRequirement as e:
                 if skip_invalid_input:
                     logger.warning(
-                        "Skipping invalid requirement '%s': %s",
-                        root_dependency, str(e)
+                        "Skipping invalid requirement '%s': %s", root_dependency, str(e)
                     )
                 else:
                     raise
