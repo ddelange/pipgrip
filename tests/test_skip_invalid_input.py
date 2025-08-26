@@ -71,7 +71,7 @@ def test_skip_invalid_input_without_flag_fails():
 
     # Should fail
     assert result.exit_code != 0
-    assert "invalid::syntax" in str(result.exception)
+    assert "::syntax" in str(result.exception)
 
 
 def test_skip_invalid_input_with_requirements_file():
@@ -91,7 +91,7 @@ def test_skip_invalid_input_with_requirements_file():
         # Test without flag - should fail on first invalid requirement
         result = runner.invoke(main, ["-r", temp_file])
         assert result.exit_code != 0
-        assert "invalid::syntax" in str(result.exception)
+        assert "::syntax" in str(result.exception)
 
         # Test with flag - should skip invalid requirements and succeed
         result = runner.invoke(main, ["-r", temp_file, "--skip-invalid-input", "-v"])
@@ -159,4 +159,4 @@ def test_version_flag():
 
     # Should succeed and display version
     assert result.exit_code == 0
-    assert f"pipgrip, version {__version__}" in result.output
+    assert "pipgrip, version {}".format(__version__) in result.output

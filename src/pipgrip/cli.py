@@ -42,6 +42,7 @@ from multiprocessing import cpu_count
 from subprocess import CalledProcessError
 
 import click
+import pkg_resources
 from anytree import AsciiStyle, ContStyle, Node, RenderTree
 from anytree.exporter import DictExporter
 from packaging.markers import default_environment
@@ -487,7 +488,7 @@ def main(
         for root_dependency in dependencies:
             try:
                 source.root_dep(root_dependency)
-            except InvalidRequirement as e:
+            except (InvalidRequirement, pkg_resources.RequirementParseError) as e:
                 if skip_invalid_input:
                     logger.warning(
                         "Skipping invalid requirement '%s': %s", root_dependency, str(e)
