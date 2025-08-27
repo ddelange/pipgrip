@@ -45,6 +45,8 @@ import click
 from anytree import AsciiStyle, ContStyle, Node, RenderTree
 from anytree.exporter import DictExporter
 from packaging.markers import default_environment
+from packaging.requirements import InvalidRequirement
+from pkg_resources import RequirementParseError
 
 from pipgrip import __version__
 from pipgrip.compat import PIP_VERSION
@@ -56,6 +58,7 @@ from pipgrip.pipper import (
     BUILD_FAILURE_STR,
     REPORT_FAILURE_STR,
     install_packages,
+    parse_req,
     read_requirements,
 )
 
@@ -383,6 +386,12 @@ def render_lock(packages, include_dot=True, sort=False):
     count=True,
     help="Control verbosity: -v will print cyclic dependencies (WARNING), -vv will show solving decisions (INFO), -vvv for development (DEBUG).",
 )
+@click.option(
+    "--skip-invalid-input",
+    is_flag=True,
+    help="Skip invalid requirements (e.g. internal repositories, typos) and continue processing other dependencies.",
+)
+@click.version_option(version=__version__, prog_name="pipgrip")
 def main(
     dependencies,
     requirements_file,
@@ -406,6 +415,7 @@ def main(
     threads,
     pre,
     verbose,
+    skip_invalid_input,
 ):
     if verbose == 0:
         logger.setLevel(logging.ERROR)
@@ -476,7 +486,15 @@ def main(
             pre=pre,
         )
         for root_dependency in dependencies:
-            source.root_dep(root_dependency)
+            try:
+                source.root_dep(root_dependency)
+            except (InvalidRequirement, RequirementParseError) as e:
+                if skip_invalid_input:
+                    logger.warning(
+                        "Skipping invalid requirement '%s': %s", root_dependency, str(e)
+                    )
+                else:
+                    raise
 
         solver = VersionSolver(source, threads=threads)
         try:
