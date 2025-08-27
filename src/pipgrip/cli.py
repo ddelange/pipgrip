@@ -42,11 +42,11 @@ from multiprocessing import cpu_count
 from subprocess import CalledProcessError
 
 import click
-import pkg_resources
 from anytree import AsciiStyle, ContStyle, Node, RenderTree
 from anytree.exporter import DictExporter
 from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement
+from pkg_resources import RequirementParseError
 
 from pipgrip import __version__
 from pipgrip.compat import PIP_VERSION
@@ -488,7 +488,7 @@ def main(
         for root_dependency in dependencies:
             try:
                 source.root_dep(root_dependency)
-            except (InvalidRequirement, pkg_resources.RequirementParseError) as e:
+            except (InvalidRequirement, RequirementParseError) as e:
                 if skip_invalid_input:
                     logger.warning(
                         "Skipping invalid requirement '%s': %s", root_dependency, str(e)

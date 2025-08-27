@@ -30,11 +30,38 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-import logging
+
+"""
+Tests for --skip-invalid-input functionality and exception handling.
+
+Exception Type Behavior Across Python Versions:
+
+In Python 2.7:
+- pkg_resources.Requirement.parse() raises RequirementParseError for invalid syntax
+- RequirementParseError inherits from ValueError (not InvalidRequirement)
+- RequirementParseError and InvalidRequirement are separate, unrelated exception types
+- Test patterns like 'invalid::syntax' trigger RequirementParseError
+
+In Python 3.x:
+- pkg_resources.Requirement.parse() raises InvalidRequirement for invalid syntax
+- RequirementParseError exists but inherits from InvalidRequirement for backward compatibility
+- RequirementParseError is never actually raised in practice
+- Same test patterns like 'invalid::syntax' trigger InvalidRequirement
+
+CLI Exception Handler Coverage:
+The CLI catches both exception types: `except (InvalidRequirement, RequirementParseError)`
+- Python 2.7: Catches RequirementParseError (primary) and InvalidRequirement (fallback)
+- Python 3.x: Catches InvalidRequirement (primary) with RequirementParseError inheritance
+
+Test Coverage:
+- All test patterns in this file test the InvalidRequirement path in Python 3.x
+- The same test patterns test the RequirementParseError path in Python 2.7
+- The exception handler correctly processes both types across Python versions
+"""
+
 import os
 import tempfile
 
-import pytest
 from click.testing import CliRunner
 
 from pipgrip.cli import main
