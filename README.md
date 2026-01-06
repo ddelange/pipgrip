@@ -7,7 +7,7 @@
 [![python](https://img.shields.io/pypi/pyversions/pipgrip.svg?logo=python&logoColor=white)](https://pypi.org/project/pipgrip/)
 [![downloads](https://static.pepy.tech/badge/pipgrip)](https://pypistats.org/packages/pipgrip)
 
-[pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches/builds the Python wheels necessary for version solving, and optionally renders the full resulting dependency tree.
+[pipgrip](https://github.com/ddelange/pipgrip) is a lightweight pip dependency resolver with deptree preview functionality based on the [PubGrub algorithm](https://medium.com/@nex3/pubgrub-2fb6470504f), which is also used by [poetry](https://github.com/python-poetry/poetry). For one or more [PEP 508](https://www.python.org/dev/peps/pep-0508/) dependency specifications, pipgrip recursively fetches Python wheel metadata necessary for version solving (with fallback to building the wheel if no metadata is available), and optionally renders the full resulting dependency tree.
 
 ```
 $ pipgrip --tree fastapi~=0.94
@@ -66,9 +66,10 @@ Usage: pipgrip [OPTIONS] [DEPENDENCIES]...
 
   pipgrip is a lightweight pip dependency resolver with deptree preview
   functionality based on the PubGrub algorithm, which is also used by poetry. For
-  one or more PEP 508 dependency specifications, pipgrip recursively
-  fetches/builds the Python wheels necessary for version solving, and optionally
-  renders the full resulting dependency tree.
+  one or more PEP 508 dependency specifications, pipgrip recursively fetches
+  Python wheel metadata necessary for version solving (with fallback to building
+  the wheel if no metadata is available), and optionally renders the full
+  resulting dependency tree.
 
 Options:
   --install                     Install full dependency tree after resolving.
@@ -113,8 +114,8 @@ Options:
                                 dependencies (WARNING), -vv will show solving
                                 decisions (INFO), -vvv for development (DEBUG).
   --skip-invalid-input          Skip invalid requirements (e.g. internal
-                                repositories, typos) and continue processing
-                                other dependencies.
+                                repositories, typos) and continue processing other
+                                dependencies.
   --version                     Show the version and exit.
   -h, --help                    Show this message and exit.
 ```
@@ -126,14 +127,13 @@ Exhaustive dependency trees without the need to install any packages ([at most b
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.10.6)
-├── anytree>=2.4.1 (2.9.0)
-│   └── six (1.16.0)
-├── click>=7 (8.1.6)
-├── packaging>=17 (23.1)
-├── pip>=22.2 (23.2.1)
-├── setuptools>=38.3 (68.0.0)
-└── wheel (0.41.1)
+pipgrip (0.11.0)
+├── anytree>=2.4.1 (2.13.0)
+├── click>=7 (8.3.1)
+├── packaging>=17 (25.0)
+├── pip>=22.2 (25.3)
+├── setuptools<81,>=38.3 (80.9.0)
+└── wheel (0.45.1)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
