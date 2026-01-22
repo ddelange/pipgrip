@@ -73,7 +73,8 @@ def mock_download_wheel(package, *args, **kwargs):
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
         "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
         "pip>=22.2": "./tests/assets/pip-23.2.1-py3-none-any.whl",
-        "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
+        "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 2.7
+        "requests[socks] @ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 3.x
         "requests@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 2.7
         "requests @ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 3.x
         "requests[socks]": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
