@@ -42,7 +42,7 @@ from multiprocessing import cpu_count
 from subprocess import CalledProcessError
 
 import click
-from anytree import AsciiStyle, ContStyle, Node, RenderTree
+from anytree import AsciiStyle, ContStyle, Node, PreOrderIter, RenderTree
 from anytree.exporter import DictExporter
 from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement
@@ -104,6 +104,47 @@ class DepTreeDictExporter(DictExporter):
             ]
             if children:
                 data["dependencies"] = children
+        return data
+
+
+class ReversedDepTreeDictExporter(DictExporter):
+    """Export reversed tree in full detail, children renamed to dependents."""
+
+    def __init__(
+        self, dictcls=OrderedDict, attriter=None, childiter=list, maxlevel=None
+    ):
+        DictExporter.__init__(
+            self,
+            dictcls=dictcls,
+            attriter=attriter,
+            childiter=childiter,
+            maxlevel=maxlevel,
+        )
+
+    @classmethod
+    def customsort(cls, tup):
+        order = ["name", "extras_name", "version", "pip_string", "requires"]
+        k, v = tup
+        if k in order:
+            return (str(order.index(k)), 0)
+        return tup
+
+    def export(self, node):
+        """Export tree starting at `node`."""
+        attriter = self.attriter or partial(sorted, key=self.customsort)
+        return self.__export(node, self.dictcls, attriter, self.childiter)
+
+    def __export(self, node, dictcls, attriter, childiter, level=1):
+        attr_values = attriter(self._iter_attr_values(node))
+        data = dictcls(attr_values)
+        maxlevel = self.maxlevel
+        if maxlevel is None or level < maxlevel:
+            children = [
+                self.__export(child, dictcls, attriter, childiter, level=level + 1)
+                for child in childiter(node.children)
+            ]
+            if children:
+                data["dependents"] = children
         return data
 
 
@@ -221,16 +262,18 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
         for fill, _, node in RenderTree(child, style=style):
             if max_depth and node.depth > max_depth:
                 continue
-            lines.append(
-                # fmt: off
-                u"{}{} ({}{})".format(
-                    fill,
-                    node.pip_string,
-                    node.version,
-                    ", cyclic" if hasattr(node, "cyclic") else "",
-                )
-                # fmt: on
-            )
+            # Build the parenthetical part
+            requires = getattr(node, "requires", None)
+            # fmt: off
+            cyclic = u", cyclic" if hasattr(node, "cyclic") else u""
+            if requires:
+                # Reversed tree dependent: name (version requires spec)
+                paren = u"{} requires {}{}".format(node.version, requires, cyclic)
+            else:
+                # Normal node: name (version)
+                paren = u"{}{}".format(node.version, cyclic)
+            lines.append(u"{}{} ({})".format(fill, node.pip_string, paren))
+            # fmt: on
         output += lines
     return "\n".join(output)
 
@@ -251,6 +294,94 @@ def render_json_tree_full(tree_root, max_depth, sort):
     maxlevel = max_depth + 1 if max_depth else None
     exporter = DepTreeDictExporter(maxlevel=maxlevel, attriter=sorted if sort else None)
     tree_dict_full = exporter.export(tree_root)["dependencies"]
+    return tree_dict_full
+
+
+def reverse_tree(tree_root):
+    """Reverse the dependency tree to show dependents instead of dependencies.
+
+    Creates a new tree where:
+    - Each unique package becomes a root-level node (sorted alphabetically)
+    - Children are dependents with their requirement spec inline
+    - Format: name (version requires spec)
+    """
+    # Build reverse mapping: {extras_name: [(dependent_extras_name, dependent_node, req_spec), ...]}
+    # Use extras_name as key to distinguish packages with different extras (e.g., etils[enp] vs etils[epy])
+    reverse_map = {}
+    for node in PreOrderIter(tree_root):
+        if node.name == "__root__":
+            continue
+        for child in node.children:
+            # child is the dependency, node is the dependent
+            # child.pip_string = how node requires child (e.g., "numpy>=1.7")
+            child_key = child.extras_name
+            if child_key not in reverse_map:
+                reverse_map[child_key] = []
+            req_spec = child.pip_string
+            # Avoid duplicate entries for same dependent
+            if not any(d[0] == node.extras_name for d in reverse_map[child_key]):
+                reverse_map[child_key].append((node.extras_name, node, req_spec))
+
+    # Collect all unique packages with their resolved versions
+    all_packages = {}  # extras_name -> (version, extras_name, extras)
+    for node in PreOrderIter(tree_root):
+        if node.name != "__root__":
+            all_packages[node.extras_name] = (
+                node.version,
+                node.extras_name,
+                node.extras,
+            )
+
+    def add_dependents(parent_node, pkg_extras_name, visited):
+        """Recursively add dependents with their requirement spec."""
+        dependents = reverse_map.get(pkg_extras_name, [])
+        for dependent_extras_name, dependent_node, req_spec in sorted(
+            dependents, key=lambda x: x[0]
+        ):
+            dep_child = Node(
+                dependent_node.name,
+                parent=parent_node,
+                version=dependent_node.version,
+                extras_name=dependent_node.extras_name,
+                extras=dependent_node.extras,
+                pip_string=dependent_node.extras_name,  # Just the name
+                requires=req_spec,  # How this dependent requires the parent
+            )
+            if dependent_extras_name in visited:
+                dep_child.cyclic = True
+            else:
+                # Recursively add this dependent's dependents
+                add_dependents(
+                    dep_child, dependent_extras_name, visited | {dependent_extras_name}
+                )
+
+    # Create reversed tree
+    reversed_root = Node("__root__")
+
+    # Create root-level nodes for each package (sorted alphabetically by extras_name)
+    for pkg_extras_name in sorted(all_packages.keys()):
+        version, extras_name, extras = all_packages[pkg_extras_name]
+        pkg_node = Node(
+            pkg_extras_name.split("[")[0],  # Base name for node.name
+            parent=reversed_root,
+            version=version,
+            extras_name=extras_name,
+            extras=extras,
+            pip_string=extras_name,  # e.g., "numpy" or "etils[enp]" - version shown in parentheses
+        )
+        # Recursively add dependents
+        add_dependents(pkg_node, pkg_extras_name, {pkg_extras_name})
+
+    return reversed_root
+
+
+def render_reversed_json_tree_full(reversed_tree_root, max_depth, sort):
+    """Render reversed tree to JSON with 'dependents' instead of 'dependencies'."""
+    maxlevel = max_depth + 1 if max_depth else None
+    exporter = ReversedDepTreeDictExporter(
+        maxlevel=maxlevel, attriter=sorted if sort else None
+    )
+    tree_dict_full = exporter.export(reversed_tree_root)["dependents"]
     return tree_dict_full
 
 
@@ -304,7 +435,7 @@ def render_lock(packages, include_dot=True, sort=False):
 @click.option(
     "--json",
     is_flag=True,
-    help="Output pins as JSON dict instead of newline-separated pins. Combine with --tree for a detailed nested JSON dependency tree.",
+    help="Output pins as JSON dict instead of newline-separated pins. Combine with --tree or --reversed-tree for a detailed nested JSON dependency tree.",
 )
 @click.option(
     "--sort",
@@ -337,6 +468,11 @@ def render_lock(packages, include_dot=True, sort=False):
     "--reversed-tree",
     is_flag=True,
     help="Output human readable dependency tree (bottom-up).",
+)
+@click.option(
+    "--reversed-tree-ascii",
+    is_flag=True,
+    help="Output human readable dependency tree (bottom-up) with ASCII tree markers.",
 )
 @click.option(
     "--max-depth",
@@ -407,6 +543,7 @@ def main(
     tree_json,
     tree_json_exact,
     reversed_tree,
+    reversed_tree_ascii,
     max_depth,
     cache_dir,
     no_cache_dir,
@@ -429,23 +566,22 @@ def main(
         logger.debug("pip version: %s", PIP_VERSION)
         logger.debug("pipgrip version: %s", __version__)
 
-    if (
-        sum(
-            (
-                pipe,
-                (json or tree),
-                tree_ascii,
-                tree_json,
-                tree_json_exact,
-                reversed_tree,
-            )
+    if sum(
+        (
+            pipe,
+            (json or tree or reversed_tree),
+            tree_ascii,
+            tree_json,
+            tree_json_exact,
+            reversed_tree_ascii,
         )
-        > 1
-    ):
+    ) > 1 or (tree and (reversed_tree or reversed_tree_ascii)):
         raise click.ClickException("Illegal combination of output formats selected")
 
-    if tree_ascii or reversed_tree:
+    if tree_ascii:
         tree = True
+    if reversed_tree_ascii:
+        reversed_tree = True
     elif tree_json_exact:
         tree_json = True
 
@@ -561,9 +697,15 @@ def main(
                 )
 
         if reversed_tree:
-            raise NotImplementedError()
-            # TODO tree_root = reverse_tree(tree_root)
-        if tree:
+            reversed_tree_root = reverse_tree(tree_root)
+            if json:
+                output = dumps(
+                    render_reversed_json_tree_full(reversed_tree_root, max_depth, sort),
+                    default=sorted,
+                )
+            else:
+                output = render_tree(reversed_tree_root, max_depth, reversed_tree_ascii)
+        elif tree:
             if json:
                 output = dumps(
                     render_json_tree_full(tree_root, max_depth, sort), default=sorted
