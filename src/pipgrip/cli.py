@@ -264,14 +264,16 @@ def render_tree(tree_root, max_depth, tree_ascii=False):
                 continue
             # Build the parenthetical part
             requires = getattr(node, "requires", None)
-            cyclic = ", cyclic" if hasattr(node, "cyclic") else ""
+            # fmt: off
+            cyclic = u", cyclic" if hasattr(node, "cyclic") else u""
             if requires:
                 # Reversed tree dependent: name (version requires spec)
-                paren = "{} requires {}{}".format(node.version, requires, cyclic)
+                paren = u"{} requires {}{}".format(node.version, requires, cyclic)
             else:
                 # Normal node: name (version)
-                paren = "{}{}".format(node.version, cyclic)
-            lines.append("{}{} ({})".format(fill, node.pip_string, paren))
+                paren = u"{}{}".format(node.version, cyclic)
+            lines.append(u"{}{} ({})".format(fill, node.pip_string, paren))
+            # fmt: on
         output += lines
     return "\n".join(output)
 
