@@ -83,8 +83,8 @@ Options:
   --pipe                        Output space-separated pins instead of newline-
                                 separated pins.
   --json                        Output pins as JSON dict instead of newline-
-                                separated pins. Combine with --tree for a detailed
-                                nested JSON dependency tree.
+                                separated pins. Combine with --tree or --reversed-
+                                tree for a detailed nested JSON dependency tree.
   --sort                        Sort pins alphabetically before writing out. Can
                                 be used bare, or in combination with --lock,
                                 --pipe, --json, --tree-json, or --tree-json-exact.
@@ -97,6 +97,8 @@ Options:
   --tree-ascii                  Output human readable dependency tree with ASCII
                                 tree markers.
   --reversed-tree               Output human readable dependency tree (bottom-up).
+  --reversed-tree-ascii         Output human readable dependency tree (bottom-up)
+                                with ASCII tree markers.
   --max-depth INTEGER           Maximum (JSON) tree rendering depth (default -1).
   --cache-dir DIRECTORY         Use a custom cache dir.
   --no-cache-dir                Disable pip cache for the wheels downloaded by
@@ -127,13 +129,14 @@ Exhaustive dependency trees without the need to install any packages ([at most b
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.11.0)
+pipgrip (0.12.0)
 ├── anytree>=2.4.1 (2.13.0)
 ├── click>=7 (8.3.1)
-├── packaging>=17 (25.0)
-├── pip>=22.2 (25.3)
-├── setuptools<81,>=38.3 (80.9.0)
-└── wheel (0.45.1)
+├── packaging>=17 (26.0)
+├── pip>=22.2 (26.0)
+├── setuptools<81,>=38.3 (80.10.2)
+└── wheel (0.46.3)
+    └── packaging>=24.0 (26.0)
 ```
 
 For more details/further processing, combine `--tree` with `--json` for a detailed nested JSON dependency tree. See also `--tree-ascii` (no unicode tree markers), and `--tree-json` & `--tree-json-exact` (simplified JSON dependency trees).
