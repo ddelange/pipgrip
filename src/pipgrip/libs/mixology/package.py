@@ -30,9 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-import pkg_resources
-
-from pipgrip.pipper import parse_req
+from pipgrip.pipper import ParsedRequirement, parse_req
 
 
 class Package(object):
@@ -52,7 +50,7 @@ class Package(object):
         return self._name
 
     @property
-    def req(self):  # type: () -> pkg_resources.Requirement
+    def req(self):  # type: () -> ParsedRequirement
         return self._req
 
     def __eq__(self, other):  # type: () -> bool
