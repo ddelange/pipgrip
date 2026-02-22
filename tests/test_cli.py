@@ -44,14 +44,9 @@ from pipgrip.pipper import _extract_metadata
 # fmt: off
 def mock_download_wheel(package, *args, **kwargs):
     wheelhouse = {
-        "setuptools>=38.3": "./tests/assets/setuptools-44.0.0-py2.py3-none-any.whl",
         "pkginfo<1.8,>=1.4.2": "./tests/assets/pkginfo-1.5.0.1-py2.py3-none-any.whl",
-        "packaging>=17": "./tests/assets/packaging-20.0-py2.py3-none-any.whl",
-        "click>=7": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
         "click": "./tests/assets/Click-7.0-py2.py3-none-any.whl",
-        "anytree>=2.4.1": "./tests/assets/anytree-2.7.3-py2.py3-none-any.whl",
         "six": "./tests/assets/six-1.13.0-py2.py3-none-any.whl",
-        "wheel": "./tests/assets/wheel-0.33.6-py2.py3-none-any.whl",
         "pyparsing>=2.0.2": "./tests/assets/pyparsing-2.4.6-py2.py3-none-any.whl",
         "requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
         "requests==2.22.0": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",
@@ -71,8 +66,6 @@ def mock_download_wheel(package, *args, **kwargs):
         "keras-preprocessing": "./tests/assets/Keras_Preprocessing-1.1.0-py2.py3-none-any.whl",
         "keras-applications==1.0.4": "./tests/assets/Keras_Applications-1.0.4-py2.py3-none-any.whl",
         "h5py": "./tests/assets/h5py-2.10.0-cp27-cp27m-macosx_10_6_intel.whl",
-        "pip>=7.1.0": "./tests/assets/pip-20.0.2-py2.py3-none-any.whl",
-        "pip>=22.2": "./tests/assets/pip-23.2.1-py3-none-any.whl",
         "requests[socks]@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 2.7
         "requests[socks] @ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 3.x
         "requests@ git+https://github.com/psf/requests": "./tests/assets/requests-2.22.0-py2.py3-none-any.whl",  # 2.7
@@ -100,13 +93,9 @@ def mock_get_package_report(package, *args, **kwargs):
 
 def mock_get_available_versions(package, *args, **kwargs):
     versions = {
-        "setuptools": ["44.0.0"],
         "pkginfo": ["1.5.0.1"],
-        "packaging": ["20.0"],
         "click": ["7.0"],
-        "anytree": ["2.7.3"],
         "six": ["1.13.0"],
-        "wheel": ["0.33.6"],
         "pyparsing": ["2.4.6"],
         "requests": ["2.22.0"],
         "urllib3": ["1.25.7"],
@@ -120,7 +109,6 @@ def mock_get_available_versions(package, *args, **kwargs):
         "keras-preprocessing": ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4", "1.0.5", "1.0.6", "1.0.8", "1.0.9", "1.1.0"],
         "keras-applications": ["1.0.0", "1.0.1", "1.0.2", "1.0.4", "1.0.5", "1.0.6", "1.0.7", "1.0.8"],
         "h5py": ["2.10.0"],
-        "pip": ["20.0.2", "23.2.1"],
         "pysocks": ["1.7.1"],
         "etils": ["0.9.0"],
         "zipp": ["3.10.0"],

@@ -40,9 +40,9 @@ import subprocess
 import sys
 from tempfile import NamedTemporaryFile, mkdtemp
 
-import pkg_resources
 from click import echo as _echo
 from packaging.markers import default_environment
+from packaging.requirements import Requirement as PkgRequirement
 from packaging.utils import canonicalize_name
 
 from pipgrip.compat import PIP_VERSION, urlparse
@@ -65,6 +65,34 @@ def read_requirements(path):
         raise RuntimeError("{} is broken".format(path))
 
 
+class ParsedRequirement(object):
+    """Parsed requirement with attributes compatible with the old pkg_resources interface."""
+
+    __slots__ = (
+        "key",
+        "name",
+        "extras",
+        "extras_name",
+        "specs",
+        "url",
+        "marker",
+        "_str",
+    )
+
+    def __init__(self, key, name, extras, extras_name, specs, url, marker, full_str):
+        self.key = key
+        self.name = name
+        self.extras = extras
+        self.extras_name = extras_name
+        self.specs = specs
+        self.url = url
+        self.marker = marker
+        self._str = full_str
+
+    def __str__(self):
+        return self._str
+
+
 _parse_req_cache = {}
 
 
@@ -74,32 +102,37 @@ def parse_req(requirement, extras=None):
     if cache_key in _parse_req_cache:
         return _parse_req_cache[cache_key]
     if requirement == "_root_" or requirement == "." or requirement.startswith(".["):
-        req = pkg_resources.Requirement.parse(
+        parsed = PkgRequirement(
             requirement.replace(".", "rubbish", 1)
             if requirement.startswith(".[")
             else "rubbish"
         )
         if extras:
-            req.extras = extras
-        req.key = "." if requirement.startswith(".[") else requirement
-        full_str = req.__str__().replace(req.name, req.key)
-        req.name = req.key
+            parsed.extras = extras
+        key = "." if requirement.startswith(".[") else requirement
+        full_str = str(parsed).replace(parsed.name, key)
     else:
-        req = pkg_resources.Requirement.parse(requirement)
+        parsed = PkgRequirement(requirement)
         if extras:
-            req.extras = extras
-        req.key = canonicalize_name(req.key)
-        req.name = req.key
-        full_str = req.__str__()  # .replace(req.name, req.key)
+            parsed.extras = extras
+        key = canonicalize_name(parsed.name)
+        full_str = str(parsed).replace(parsed.name, key, 1)
 
-    def __str__():
-        return full_str
-
-    req.__str__ = __str__
-    req.extras_name = (
-        req.name + "[" + ",".join(sorted(req.extras)) + "]" if req.extras else req.name
+    extras_frozen = frozenset(parsed.extras)
+    extras_name = (
+        key + "[" + ",".join(sorted(extras_frozen)) + "]" if extras_frozen else key
     )
-    req.extras = frozenset(req.extras)
+    specs = [(s.operator, s.version) for s in parsed.specifier]
+    req = ParsedRequirement(
+        key=key,
+        name=key,
+        extras=extras_frozen,
+        extras_name=extras_name,
+        specs=specs,
+        url=parsed.url,
+        marker=parsed.marker,
+        full_str=full_str,
+    )
     _parse_req_cache[cache_key] = req
     return req
 

@@ -129,12 +129,11 @@ Exhaustive dependency trees without the need to install any packages ([at most b
 ```
 $ pipgrip --tree pipgrip
 
-pipgrip (0.12.0)
+pipgrip (0.13.0)
 ├── anytree>=2.4.1 (2.13.0)
 ├── click>=7 (8.3.1)
 ├── packaging>=17 (26.0)
-├── pip>=22.2 (26.0)
-├── setuptools<81,>=38.3 (80.10.2)
+├── pip>=22.2 (26.0.1)
 └── wheel (0.46.3)
     └── packaging>=24.0 (26.0)
 ```

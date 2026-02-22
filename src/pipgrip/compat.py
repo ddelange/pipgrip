@@ -31,7 +31,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 import pip
-from pkg_resources import parse_version
+from packaging.version import Version
 
 try:
     from urllib.parse import urlparse
@@ -39,4 +39,4 @@ except ImportError:
     # Python 2
     from urlparse import urlparse  # noqa:F401
 
-PIP_VERSION = list(parse_version(pip.__version__)._version.release)
+PIP_VERSION = list(Version(pip.__version__).release)
