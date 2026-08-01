@@ -23,7 +23,7 @@ jobs:
 
     - name: Set up Python ${{ matrix.python-version }}
       if: matrix.python-version != '2.7'
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -79,7 +79,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: 3.13
 
@@ -110,7 +110,7 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: 3.x
 
@@ -120,12 +120,12 @@ jobs:
         python setup.py sdist bdist_wheel --universal
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v3.0.1
+      uses: softprops/action-gh-release@v3.0.2
       with:
         files: dist/*
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.14.0
+      uses: pypa/gh-action-pypi-publish@v1.14.2
 
     - uses: apexskier/github-release-commenter@v1.4.1
       with:
