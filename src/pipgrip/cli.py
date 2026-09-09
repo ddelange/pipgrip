@@ -210,7 +210,7 @@ def _recurse_dependencies(
                 tree_node.extras_name,
                 tree_parent.extras_name,
             )
-            setattr(tree_node, "cyclic", True)
+            tree_node.cyclic = True
             packages[(name, str(resolved_version))] = {}
             continue
 
