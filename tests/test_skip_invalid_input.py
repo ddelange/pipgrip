@@ -31,8 +31,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""
-Tests for --skip-invalid-input functionality and exception handling.
+"""Tests for --skip-invalid-input functionality and exception handling.
 
 The CLI catches InvalidRequirement (from packaging.requirements) when parsing
 invalid requirement strings. Test patterns like 'invalid::syntax' trigger

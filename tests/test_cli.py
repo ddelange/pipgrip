@@ -41,6 +41,12 @@ from pipgrip.cli import flatten, main
 from pipgrip.pipper import _extract_metadata
 
 
+def mock_stream_bash_command(*args, **kwargs):
+    return "I passed"
+
+
+# black 26 collapses the blank lines before a `# fmt: off` that directly follows the import
+# block, which ruff then reports as I001, so keep a definition in between
 # fmt: off
 def mock_download_wheel(package, *args, **kwargs):
     wheelhouse = {
@@ -117,10 +123,6 @@ def mock_get_available_versions(package, *args, **kwargs):
     }
     return versions[package]
 # fmt: on
-
-
-def mock_stream_bash_command(*args, **kwargs):
-    return "I passed"
 
 
 def mock_stream_bash_command_failure(*args, **kwargs):

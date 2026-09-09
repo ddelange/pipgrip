@@ -1,0 +1,33 @@
+# Config lives here rather than in pyproject.toml because this project still ships setup.py for Python 2.7.
+# target-version is the lowest ruff supports; the package itself supports Python 2.7, so no pyupgrade (UP) or future-annotations (FA) rules.
+target-version = "py37"
+line-length = 88
+output-format = "concise"
+
+[lint]
+# vendored, formatted but not linted, same as the old flake8 exclude
+exclude = ["src/pipgrip/libs/**", "tests/tests_mixology/**", "tests/tests_semver/**"]
+select = [
+  "A", # flake8-builtins
+  "B", # flake8-bugbear, covers flake8-mutable
+  "C4", # flake8-comprehensions
+  "D", # pydocstyle
+  "E", # pycodestyle errors
+  "F", # pyflakes
+  "I", # isort
+  "Q", # flake8-quotes
+  "T20", # flake8-print
+  "W", # pycodestyle warnings
+]
+ignore = [
+  "D10", # docstrings are not mandatory
+  "E501", # ruff format handles line length
+  "F401", # re-exports in compat.py
+  "B904", # `raise ... from` is Python 3 only
+]
+
+[lint.isort]
+known-first-party = ["tests"]
+
+[lint.pydocstyle]
+convention = "google"

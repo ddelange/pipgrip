@@ -284,7 +284,7 @@ def install_packages(
     try:
         return stream_bash_command(args, echo=True)
     except subprocess.CalledProcessError as err:
-        output = getattr(err, "output") or ""
+        output = err.output or ""
         logger.error(output)
         raise
     finally:
@@ -313,7 +313,7 @@ def _get_available_versions(package, index_url, extra_index_url, pre):
         out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
         # expected. we forced this by using a non-existing version number.
-        out = getattr(err, "output") or ""
+        out = err.output or ""
     else:
         logger.warning(out)
         raise RuntimeError("Unexpected success:" + " ".join(args))
@@ -388,7 +388,7 @@ def _get_package_report(
     try:
         stream_bash_command(args)
     except subprocess.CalledProcessError as err:
-        output = getattr(err, "output") or ""
+        output = err.output or ""
         logger.error(
             "Getting report for {} failed with output:\n{}".format(
                 package, output.strip()
@@ -428,7 +428,7 @@ def _download_wheel(
     try:
         out = stream_bash_command(args)
     except subprocess.CalledProcessError as err:
-        output = getattr(err, "output") or ""
+        output = err.output or ""
         logger.error(
             "Downloading/building wheel for {} failed with output:\n{}".format(
                 package, output.strip()

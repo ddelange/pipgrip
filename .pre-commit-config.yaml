@@ -1,4 +1,19 @@
 repos:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.6
+    hooks:
+    -   id: ruff-check
+        args: ['--fix', '--exit-non-zero-on-fix']
+    # markdown only: ruff format ignores `# fmt: off` inside expressions and strips the u"" prefixes
+    # in tests/test_cli.py, which are not no-ops on python 2.7, so black keeps the .py files
+    -   id: ruff-format
+        files: \.md$
+
+-   repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 26.5.1
+    hooks:
+    -   id: black
+
 -   repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
@@ -7,47 +22,8 @@ repos:
         exclude: .*/tests/.*
         additional_dependencies: ['gibberish-detector']
 
--   repo: https://github.com/psf/black-pre-commit-mirror
-    # when updating this version, also update blacken-docs hook below
-    rev: 25.1.0
-    hooks:
-    -   id: black
-
--   repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.19.1
-    hooks:
-    -   id: blacken-docs
-        additional_dependencies: ['black==25.1.0']
-
--   repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
-    hooks:
-    -   id: isort
-
--   repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
-    hooks:
-    -   id: flake8
-        additional_dependencies: [
-            # 'darglint~=1.5.4',
-            'flake8-absolute-import~=1.0',
-            'flake8-blind-except~=0.2.1',
-            'flake8-builtins~=2.2.0',
-            'flake8-cognitive-complexity~=0.1.0',
-            'flake8-comprehensions~=3.14.0',
-            # 'flake8-docstrings~=1.7.0',
-            # 'flake8-logging-format~=0.9.0',
-            'flake8-mutable~=1.2.0',
-            'flake8-print~=4.0.0',
-            'flake8-printf-formatting~=1.1.2',
-            'flake8-pytest-style~=1.6.0',
-            'flake8-quotes~=3.3.1',
-            'flake8-tuple~=0.4.1',
-            'pep8-naming~=0.12.1'
-        ]
-
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
     -   id: mixed-line-ending
         args: ['--fix=lf']
@@ -61,7 +37,7 @@ repos:
     -   id: debug-statements
 
 -   repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.2
+    rev: 0.38.0
     hooks:
     -   id: check-dependabot
     -   id: check-github-workflows
